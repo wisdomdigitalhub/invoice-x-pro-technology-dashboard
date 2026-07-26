@@ -401,7 +401,7 @@
 <div id="app-shell">
   <div class="topbar">
     <div class="who">
-      <div class="avatar" id="avatarInitial">A</div>
+    <div class="avatar" id="avatarInitial">A</div>
       <div>
         <div class="who-name" id="whoName">—</div>
         <div class="who-role" id="whoRole">—</div>
@@ -659,6 +659,28 @@ $("forgotPasswordBtn").addEventListener("click", async ()=>{
   }
 });
 
+// Auto-provisioning helper: the very first time someone signs in on the
+// Admin tab with an email/password combo that has no existing Auth account,
+// this creates that Auth account AND its Firestore /users/{uid} admin
+// profile automatically — no manual Firebase Console or Firestore setup
+// is ever required. Once that account exists, future logins are a normal
+// sign-in. This only applies to the Admin tab; representative accounts must
+// still be created from the admin dashboard, by design.
+async function bootstrapAdminAccount(email, password){
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  await setDoc(doc(db, "users", cred.user.uid), {
+    fullName: "Admin",
+    email,
+    phone: "",
+    branch: "",
+    role: "admin",
+    status: "accepted",
+    accountCode: genCode("ADMIN"),
+    createdBy: "self-provisioned",
+    createdAt: serverTimestamp()
+  });
+}
+
 $("loginForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const email = $("loginEmail").value.trim();
@@ -671,7 +693,22 @@ $("loginForm").addEventListener("submit", async (e)=>{
     closeModal();
     // routing handled by onAuthStateChanged
   }catch(err){
-    setFormMsg($("loginMsg"), "Sign in failed — check your email and password.", "error");
+    const noSuchAccount = err.code === "auth/user-not-found" || err.code === "auth/invalid-credential";
+    if(selectedRole === "admin" && noSuchAccount){
+      try{
+        await bootstrapAdminAccount(email, password);
+        closeModal();
+        toast("Admin account created.");
+      }catch(bootstrapErr){
+        if(bootstrapErr.code === "auth/email-already-in-use"){
+          setFormMsg($("loginMsg"), "That account exists — check the password.", "error");
+        } else {
+          setFormMsg($("loginMsg"), bootstrapErr.message || "Could not create admin account.", "error");
+        }
+      }
+    } else {
+      setFormMsg($("loginMsg"), "Sign in failed — check your email and password.", "error");
+    }
   }finally{
     btn.disabled = false; btn.textContent = "Sign in";
   }
@@ -759,9 +796,7 @@ onAuthStateChanged(auth, async (user)=>{
     console.error(err);
     showUserNotAvailable();
   }
-});
-
-// ================= ADMIN DASHBOARD =================
+});// ================= ADMIN DASHBOARD =================
 function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
@@ -837,7 +872,7 @@ $("createRepForm").addEventListener("submit", async (e)=>{
     const uid = cred.user.uid;
     await signOut(secondaryAuth);
 
-    await setDoc(doc(db, "users", uid),{
+    await setDoc(doc(db, "users", uid), {
       fullName, email, phone, branch,
       role: "rep",
       status,
