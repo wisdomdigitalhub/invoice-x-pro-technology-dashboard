@@ -497,7 +497,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Client</th><th>Rep</th><th>Package</th><th>Payment</th><th>Approval</th><th>Note</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Client</th><th>Rep</th><th>Package</th><th>Account No.</th><th>Payment</th><th>Approval</th><th>Note</th><th>Actions</th></tr></thead>
           <tbody id="clientTableBodyAdmin"></tbody>
         </table>
       </div>
@@ -539,6 +539,18 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h3>Payment details</h3>
+        <span class="hint">Visible to representatives only</span>
+      </div>
+      <div class="cred-box">
+        <div><b>Account number:</b> 9041498427</div>
+        <div><b>Bank:</b> Opay</div>
+        <div><b>Account name:</b> Daniel Princewill</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h3>Submit a new client</h3>
         <span class="hint">Goes to admin as pending until payment is confirmed</span>
       </div>
@@ -548,6 +560,7 @@
           <div class="field"><label>Phone</label><input type="tel" id="cPhone" required /></div>
           <div class="field"><label>Email</label><input type="email" id="cEmail" /></div>
           <div class="field"><label>Package</label><input type="text" id="cPackage" required /></div>
+          <div class="field"><label>Your account number</label><input type="text" id="cRepAccountNumber" required /></div>
         </div>
         <div class="field"><label>Address</label><input type="text" id="cAddress" required /></div>
         <div class="field"><label>Notes</label><textarea id="cNotes" rows="2"></textarea></div>
@@ -563,7 +576,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Client</th><th>Package</th><th>Payment</th><th>Approval</th><th>Submitted</th></tr></thead>
+          <thead><tr><th>Client</th><th>Package</th><th>Account No.</th><th>Payment</th><th>Approval</th><th>Submitted</th></tr></thead>
           <tbody id="clientTableBodyRep"></tbody>
         </table>
       </div>
@@ -1015,6 +1028,7 @@ function renderClientTableAdmin(clients){
       <td>${escapeHtml(c.clientName||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45)">${escapeHtml(c.phone||"")}</div></td>
       <td>${escapeHtml(c.repName||"—")}</td>
       <td>${escapeHtml(c.package||"—")}</td>
+      <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
       <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span></td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
       <td><input class="note-input" data-id="${c.id}" placeholder="Add note" value="${escapeHtml(c.adminNote||"")}" /></td>
@@ -1089,6 +1103,7 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
       email: $("cEmail").value.trim(),
       address: $("cAddress").value.trim(),
       package: $("cPackage").value.trim(),
+      repAccountNumber: $("cRepAccountNumber").value.trim(),
       notes: $("cNotes").value.trim(),
       paymentStatus: "pending",
       approvalStatus: "pending",
@@ -1128,6 +1143,7 @@ function renderClientTableRep(clients){
     tr.innerHTML = `
       <td>${escapeHtml(c.clientName||"—")}</td>
       <td>${escapeHtml(c.package||"—")}</td>
+      <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
       <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span></td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
       <td>${fmtDate(c.createdAt)}</td>`;
