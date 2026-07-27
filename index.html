@@ -394,6 +394,7 @@
 <div class="status-msg-page hidden" id="userNotAvailableScreen">
   <h2>User not available</h2>
   <p>We couldn't find an account record for this login. Please contact your admin.</p>
+  <p class="mono" id="debugInfo" style="font-size:11px; color:rgba(15,26,46,0.4); word-break:break-all; max-width:90vw;"></p>
   <button class="nav-cta" style="margin-top:20px;" id="userNotAvailableLogout">Sign out</button>
 </div>
 
@@ -401,7 +402,7 @@
 <div id="app-shell">
   <div class="topbar">
     <div class="who">
-    <div class="avatar" id="avatarInitial">A</div>
+      <div class="avatar" id="avatarInitial">A</div>
       <div>
         <div class="who-name" id="whoName">—</div>
         <div class="who-role" id="whoRole">—</div>
@@ -533,7 +534,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, signInWithEmailAndPassword, sendPasswordResetEmail,
-  onAuthStateChanged, signOut, createUserWithEmailAndPassword
+  onAuthStateChanged, signOut, createUserWithEmailAndPassword,
+  setPersistence, inMemoryPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
@@ -769,6 +771,7 @@ onAuthStateChanged(auth, async (user)=>{
   try{
     const userSnap = await getDoc(doc(db, "users", user.uid));
     if(!userSnap.exists()){
+      $("debugInfo").textContent = `No profile document found for UID: ${user.uid}`;
       showUserNotAvailable();
       return;
     }
@@ -790,13 +793,17 @@ onAuthStateChanged(auth, async (user)=>{
         showNotAccepted();
       }
     } else {
+      $("debugInfo").textContent = `Profile found but role is "${data.role}" (expected "admin" or "rep").`;
       showUserNotAvailable();
     }
   }catch(err){
     console.error(err);
+    $("debugInfo").textContent = `Error reading profile (UID: ${user.uid}): ${err.code || ""} ${err.message || err}`;
     showUserNotAvailable();
   }
-});// ================= ADMIN DASHBOARD =================
+});
+
+// ================= ADMIN DASHBOARD =================
 function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
@@ -865,9 +872,16 @@ $("createRepForm").addEventListener("submit", async (e)=>{
   const refNumber = genCode("REF");
 
   try{
-    // Create rep in a secondary, isolated auth context so the admin session is not replaced
+    // Create the rep in a secondary, isolated auth context so the admin
+    // session is not replaced. IMPORTANT: force in-memory persistence on
+    // this secondary instance — Firebase's default browser persistence is
+    // keyed by API key (not by app name), so two app instances against the
+    // same project can otherwise collide and corrupt each other's stored
+    // session. In-memory persistence keeps this secondary session fully
+    // isolated and disposable.
     const secondaryApp = initializeApp(firebaseConfig, "secondary-" + Date.now());
     const secondaryAuth = getAuth(secondaryApp);
+    await setPersistence(secondaryAuth, inMemoryPersistence);
     const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
     const uid = cred.user.uid;
     await signOut(secondaryAuth);
@@ -883,7 +897,14 @@ $("createRepForm").addEventListener("submit", async (e)=>{
       ...(generatedPassword ? { demoPassword: password } : {})
     });
 
-    setFormMsg($("createRepMsg"), "Representative account created.", "success");
+    // Verify the write actually landed before telling the admin it worked —
+    // catches silent permission issues instead of showing a false success.
+    const verifySnap = await getDoc(doc(db, "users", uid));
+    if(!verifySnap.exists()){
+      throw new Error("Profile write could not be verified. Check Firestore rules are published.");
+    }
+
+    setFormMsg($("createRepMsg"), "Representative account created and verified.", "success");
     $("credBox").classList.remove("hidden");
     $("credBox").innerHTML = `
       <div><b>Email:</b> ${escapeHtml(email)}</div>
