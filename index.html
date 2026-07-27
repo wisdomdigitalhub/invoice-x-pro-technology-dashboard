@@ -272,6 +272,32 @@
   }
   .status-msg-page h2{font-size:24px; margin:16px 0 8px;}
   .status-msg-page p{color:rgba(15,26,46,0.6); max-width:36ch;}
+
+  /* ===== Marketing materials ===== */
+  .materials-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px;}
+  .material-card{
+    border:1px solid var(--line); border-radius:12px; padding:16px; background:var(--paper);
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .material-icon{
+    width:38px; height:38px; border-radius:9px; background:var(--ink); color:var(--brass-light);
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700;
+    font-family:'JetBrains Mono',monospace; text-transform:uppercase;
+  }
+  .material-title{font-weight:600; font-size:14px; line-height:1.3;}
+  .material-meta{font-size:11.5px; color:rgba(15,26,46,0.5);}
+  .material-actions{display:flex; gap:8px; margin-top:auto;}
+  .material-actions a, .material-actions button{
+    flex:1; text-align:center; padding:8px; border-radius:7px; font-size:12.5px; font-weight:600;
+    text-decoration:none; border:none;
+  }
+  .material-download{background:var(--ink); color:var(--paper-2);}
+  .material-delete{background:var(--reject-bg); color:var(--reject); cursor:pointer;}
+  .upload-row{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;}
+  .upload-row .field{flex:1; min-width:180px; margin-bottom:0;}
+  .progress-bar{height:5px; border-radius:3px; background:var(--line); overflow:hidden; margin-top:10px; display:none;}
+  .progress-bar.active{display:block;}
+  .progress-bar-fill{height:100%; background:var(--brass); width:0%; transition:width .2s ease;}
 </style>
 </head>
 <body>
@@ -477,6 +503,24 @@
       </div>
       <div class="empty-state hidden" id="clientEmptyStateAdmin">No client submissions yet.</div>
     </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Marketing materials</h3>
+        <span class="hint">Any file type — reps see these instantly</span>
+      </div>
+      <form id="uploadMaterialForm">
+        <div class="upload-row">
+          <div class="field"><label>Title</label><input type="text" id="materialTitle" placeholder="e.g. Q3 Flyer" required /></div>
+          <div class="field"><label>File</label><input type="file" id="materialFile" required /></div>
+          <button type="submit" class="btn-primary" id="uploadMaterialBtn" style="max-width:160px; margin-top:0;">Upload</button>
+        </div>
+        <div class="progress-bar" id="uploadProgressBar"><div class="progress-bar-fill" id="uploadProgressFill"></div></div>
+        <div class="form-msg" id="uploadMaterialMsg"></div>
+      </form>
+      <div class="materials-grid" id="materialsGridAdmin" style="margin-top:18px;"></div>
+      <div class="empty-state hidden" id="materialsEmptyStateAdmin">No materials uploaded yet.</div>
+    </div>
   </div>
 
   <!-- ===== REP DASHBOARD ===== -->
@@ -525,6 +569,15 @@
       </div>
       <div class="empty-state hidden" id="clientEmptyStateRep">You haven't submitted any clients yet.</div>
     </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Marketing materials</h3>
+        <span class="hint">Provided by your office — download and use freely</span>
+      </div>
+      <div class="materials-grid" id="materialsGridRep"></div>
+      <div class="empty-state hidden" id="materialsEmptyStateRep">No materials have been posted yet.</div>
+    </div>
   </div>
 </div>
 
@@ -541,6 +594,9 @@ import {
   getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
   deleteDoc, collection, query, where, serverTimestamp, onSnapshot, orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB_wmCZ7i8ls7AIaqklmXYdpWgbSOMdfvw",
@@ -555,6 +611,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 // ---------- Helpers ----------
 const $ = (id) => document.getElementById(id);
@@ -591,6 +648,7 @@ let currentUser = null;
 let currentUserDoc = null;
 let unsubClients = null;
 let unsubReps = null;
+let unsubMaterials = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -721,6 +779,7 @@ function wireLogout(id){
   $(id).addEventListener("click", async ()=>{
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
+    if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
     await signOut(auth);
   });
 }
@@ -764,6 +823,7 @@ onAuthStateChanged(auth, async (user)=>{
     currentUser = null; currentUserDoc = null;
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
+    if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
     showLanding();
     return;
   }
@@ -807,6 +867,7 @@ onAuthStateChanged(auth, async (user)=>{
 function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
+  loadMaterialsForAdmin();
 }
 
 async function loadReps(){
@@ -1006,6 +1067,7 @@ function initRepDashboard(uid, data){
   $("repStatCommissions").textContent = `$${(data.commissions||0).toFixed ? data.commissions.toFixed(2) : (data.commissions||0)}`;
   $("repStatWallet").textContent = `$${(data.wallet||0).toFixed ? data.wallet.toFixed(2) : (data.wallet||0)}`;
   loadClientsForRep(uid);
+  loadMaterialsForRep();
 }
 
 $("submitClientForm").addEventListener("submit", async (e)=>{
@@ -1068,6 +1130,96 @@ function renderClientTableRep(clients){
     tbody.appendChild(tr);
   }
 }
+
+// ================= MARKETING MATERIALS =================
+async function loadMaterialsForAdmin(){
+  if(unsubMaterials) unsubMaterials();
+  const q = query(collection(db, "materials"), orderBy("createdAt","desc"));
+  unsubMaterials = onSnapshot(q, (snap)=>{
+    const materials = [];
+    snap.forEach(d=> materials.push({ id:d.id, ...d.data() }));
+    renderMaterialsGrid(materials, "materialsGridAdmin", "materialsEmptyStateAdmin", true);
+  }, (err)=> console.error(err));
+}
+
+async function loadMaterialsForRep(){
+  if(unsubMaterials) unsubMaterials();
+  const q = query(collection(db, "materials"), orderBy("createdAt","desc"));
+  unsubMaterials = onSnapshot(q, (snap)=>{
+    const materials = [];
+    snap.forEach(d=> materials.push({ id:d.id, ...d.data() }));
+    renderMaterialsGrid(materials, "materialsGridRep", "materialsEmptyStateRep", false);
+  }, (err)=> console.error(err));
+}
+
+function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
+  const grid = $(gridId);
+  if(!grid) return;
+  grid.innerHTML = "";
+  $(emptyId).classList.toggle("hidden", materials.length > 0);
+  for(const m of materials){
+    const ext = (m.fileName || "file").split(".").pop().slice(0,4).toUpperCase();
+    const card = document.createElement("div");
+    card.className = "material-card";
+    card.innerHTML = `
+      <div class="material-icon">${escapeHtml(ext)}</div>
+      <div class="material-title">${escapeHtml(m.title || "Untitled")}</div>
+      <div class="material-meta">${fmtDate(m.createdAt)}</div>
+      <div class="material-actions">
+        <a href="${m.url}" target="_blank" rel="noopener" class="material-download">Download</a>
+        ${isAdmin ? `<button type="button" class="material-delete" data-id="${m.id}" data-path="${escapeHtml(m.storagePath || "")}">Delete</button>` : ""}
+      </div>`;
+    grid.appendChild(card);
+  }
+  if(isAdmin){
+    grid.querySelectorAll("button.material-delete").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        try{
+          if(btn.dataset.path){
+            await deleteObject(ref(storage, btn.dataset.path));
+          }
+          await deleteDoc(doc(db, "materials", btn.dataset.id));
+          toast("Material deleted.");
+        }catch(err){ toast("Could not delete material."); }
+      });
+    });
+  }
+}
+
+$("uploadMaterialForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const file = $("materialFile").files[0];
+  const title = $("materialTitle").value.trim();
+  if(!file) return;
+  const btn = $("uploadMaterialBtn");
+  btn.disabled = true; btn.textContent = "Uploading…";
+  setFormMsg($("uploadMaterialMsg"), "", "");
+  $("uploadProgressBar").classList.add("active");
+  $("uploadProgressFill").style.width = "30%";
+  try{
+    const path = `materials/${Date.now()}_${file.name}`;
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    $("uploadProgressFill").style.width = "80%";
+    const url = await getDownloadURL(storageRef);
+    await addDoc(collection(db, "materials"), {
+      title, fileName: file.name, url, storagePath: path,
+      uploadedBy: currentUser?.uid || "admin",
+      createdAt: serverTimestamp()
+    });
+    $("uploadProgressFill").style.width = "100%";
+    setFormMsg($("uploadMaterialMsg"), "Uploaded.", "success");
+    $("uploadMaterialForm").reset();
+  }catch(err){
+    setFormMsg($("uploadMaterialMsg"), err.message || "Upload failed.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Upload";
+    setTimeout(()=>{
+      $("uploadProgressBar").classList.remove("active");
+      $("uploadProgressFill").style.width = "0%";
+    }, 600);
+  }
+});
 
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
