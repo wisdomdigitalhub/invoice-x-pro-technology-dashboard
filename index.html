@@ -844,11 +844,13 @@ onAuthStateChanged(auth, async (user)=>{
 
     if(data.role === "admin"){
       showAppShell("admin");
-      initAdminDashboard();
+      try{ initAdminDashboard(); }
+      catch(dashErr){ console.error(dashErr); toast("Dashboard error: " + (dashErr.message || dashErr)); }
     } else if(data.role === "rep"){
       if(data.status === "accepted"){
         showAppShell("rep");
-        initRepDashboard(user.uid, data);
+        try{ initRepDashboard(user.uid, data); }
+        catch(dashErr){ console.error(dashErr); toast("Dashboard error: " + (dashErr.message || dashErr)); }
       } else {
         showNotAccepted();
       }
@@ -1064,8 +1066,10 @@ function renderClientTableAdmin(clients){
 function initRepDashboard(uid, data){
   $("repWelcomeName").textContent = (data.fullName || "").split(" ")[0] || "there";
   $("repStatStatus").textContent = data.status || "—";
-  $("repStatCommissions").textContent = `$${(data.commissions||0).toFixed ? data.commissions.toFixed(2) : (data.commissions||0)}`;
-  $("repStatWallet").textContent = `$${(data.wallet||0).toFixed ? data.wallet.toFixed(2) : (data.wallet||0)}`;
+  const commissions = Number(data.commissions) || 0;
+  const wallet = Number(data.wallet) || 0;
+  $("repStatCommissions").textContent = `$${commissions.toFixed(2)}`;
+  $("repStatWallet").textContent = `$${wallet.toFixed(2)}`;
   loadClientsForRep(uid);
   loadMaterialsForRep();
 }
