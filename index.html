@@ -323,6 +323,84 @@
   .progress-bar{height:5px; border-radius:3px; background:var(--line); overflow:hidden; margin-top:10px; display:none;}
   .progress-bar.active{display:block;}
   .progress-bar-fill{height:100%; background:var(--brass); width:0%; transition:width .2s ease;}
+  /* ===== Recognition & Awards module ===== */
+  .subnav{display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; margin-bottom:20px; border-bottom:1px solid var(--line);}
+  .subnav button{
+    background:none; border:none; padding:10px 4px; margin-right:22px; font-size:13.5px; font-weight:600;
+    color:rgba(15,26,46,0.45); white-space:nowrap; border-bottom:2px solid transparent; transition:color .15s ease;
+  }
+  .subnav button.active{color:var(--ink); border-bottom-color:var(--brass);}
+  .subpanel{display:none;}
+  .subpanel.active{display:block;}
+
+  .badge-chip{
+    display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px;
+    font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:#fff;
+  }
+  .badge-bronze{background:linear-gradient(135deg,#8a5a34,#c68a52);}
+  .badge-silver{background:linear-gradient(135deg,#8b8f96,#c9ccd1); color:#1c1206;}
+  .badge-gold{background:linear-gradient(135deg,#b8863e,#e8c27a); color:#1c1206;}
+  .badge-platinum{background:linear-gradient(135deg,#6f7b8c,#d8dee6); color:#1c1206;}
+  .badge-diamond{background:linear-gradient(135deg,#3a7ca5,#a7e0f2); color:#0F1A2E;}
+  .badge-elite{background:linear-gradient(135deg,#4b2e83,#9b6bd1);}
+  .badge-legend{background:linear-gradient(135deg,#96402F,#e0a04a);}
+  .badge-none{background:rgba(15,26,46,0.12); color:rgba(15,26,46,0.55);}
+
+  .award-card{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:14px; padding:20px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .award-card h4{margin:0; font-size:15.5px; font-family:'Fraunces',serif;}
+  .award-card p{margin:0; font-size:13px; color:rgba(15,26,46,0.6); line-height:1.5;}
+  .award-cards-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px;}
+
+  .cert-canvas-wrap{
+    width:100%; overflow-x:auto; background:#1c1206; border-radius:14px; padding:16px; text-align:center;
+  }
+  .cert-canvas-wrap canvas{max-width:100%; height:auto; border-radius:6px; box-shadow:0 10px 30px rgba(0,0,0,0.4);}
+
+  .share-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .share-row button, .share-row a{
+    padding:8px 16px; border-radius:8px; font-size:12.5px; font-weight:600; border:1px solid var(--line);
+    background:#fff; color:var(--ink); text-decoration:none; display:inline-flex; align-items:center;
+  }
+  .share-row button:hover, .share-row a:hover{background:var(--paper);}
+
+  .hof-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px;}
+  .hof-card{
+    background:var(--ink); color:var(--paper-2); border-radius:14px; padding:20px; position:relative; overflow:hidden;
+    border:1px solid rgba(217,174,108,0.25);
+  }
+  .hof-card .hof-award{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--brass-light); font-weight:700;}
+  .hof-card h4{font-family:'Fraunces',serif; font-size:18px; margin:8px 0 4px;}
+  .hof-card .hof-meta{font-size:12px; color:rgba(247,244,236,0.55);}
+
+  .ambassador-banner{
+    background:linear-gradient(135deg,var(--ink),var(--ink-2)); color:var(--paper-2); border-radius:16px;
+    padding:26px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between; gap:20px;
+    border:1px solid rgba(217,174,108,0.3); flex-wrap:wrap;
+  }
+  .ambassador-banner .label{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--brass-light); font-weight:700;}
+  .ambassador-banner h3{font-family:'Fraunces',serif; font-size:22px; margin:6px 0 0;}
+
+  .verify-result{
+    border-radius:14px; padding:26px; margin-top:16px;
+  }
+  .verify-result.valid{background:var(--confirm-bg); border:1px solid rgba(51,104,75,0.3);}
+  .verify-result.invalid{background:var(--reject-bg); border:1px solid rgba(150,64,47,0.3);}
+  .verify-result dl{display:grid; grid-template-columns:auto 1fr; gap:8px 18px; margin:14px 0 0; font-size:13.5px;}
+  .verify-result dt{font-weight:600; color:rgba(15,26,46,0.55);}
+  .verify-result dd{margin:0;}
+
+  .rank-bar-track{background:var(--paper); border-radius:6px; height:8px; overflow:hidden; width:100%;}
+  .rank-bar-fill{background:linear-gradient(90deg,var(--brass),var(--brass-light)); height:100%;}
+
+  .public-verify-page{
+    min-height:100vh; background:var(--paper); padding:40px 5vw; display:flex; align-items:flex-start; justify-content:center;
+  }
+  .public-verify-card{
+    max-width:520px; width:100%; background:var(--paper-2); border:1px solid var(--line); border-radius:18px; padding:34px;
+  }
 </style>
 </head>
 <body>
@@ -409,6 +487,21 @@
     <span>Invoice X Pro Technology</span>
     <span>&copy; 2026</span>
   </footer>
+</div>
+
+<!-- ============ PUBLIC CERTIFICATE VERIFICATION (no login required) ============ -->
+<div class="public-verify-page hidden" id="publicVerifyPage">
+  <div class="public-verify-card">
+    <h3 style="margin-top:0;">Certificate Verification</h3>
+    <p class="sub">Enter a certificate ID, or scan the QR code on a certificate, to confirm it's genuine.</p>
+    <div class="field">
+      <label>Certificate ID</label>
+      <input type="text" id="publicVerifyInput" placeholder="IXP-CERT-2026-08-LAG-000001" />
+    </div>
+    <button type="button" class="btn-primary" id="publicVerifyBtn" style="max-width:160px;">Verify</button>
+    <div id="publicVerifyResult"></div>
+    <div class="modal-footer-link"><button type="button" id="backToSiteBtn">← Back to Invoice X Pro</button></div>
+  </div>
 </div>
 
 <!-- ============ LOGIN MODAL ============ -->
@@ -549,6 +642,205 @@
       <div class="materials-grid" id="materialsGridAdmin" style="margin-top:18px;"></div>
       <div class="empty-state hidden" id="materialsEmptyStateAdmin">No materials uploaded yet.</div>
     </div>
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Recognition &amp; Awards</h3>
+        <span class="hint">Certificates, awards, badges, rankings &amp; ambassadors</span>
+      </div>
+
+      <div class="subnav" id="adminAwardsSubnav">
+        <button type="button" data-tab="recCenter" class="active">Recognition Center</button>
+        <button type="button" data-tab="awards">Awards</button>
+        <button type="button" data-tab="badges">Badge Manager</button>
+        <button type="button" data-tab="prizes">Prize Manager</button>
+        <button type="button" data-tab="certificates">Certificates</button>
+        <button type="button" data-tab="rankings">Rankings</button>
+        <button type="button" data-tab="hof">Hall of Fame</button>
+        <button type="button" data-tab="ambassadors">Ambassadors</button>
+        <button type="button" data-tab="verify">Verification</button>
+      </div>
+
+      <!-- Recognition Center -->
+      <div class="subpanel active" data-panel="recCenter">
+        <div class="cards-row">
+          <div class="stat-card"><div class="label">Certificates issued</div><div class="value" id="rcCertCount">0</div></div>
+          <div class="stat-card"><div class="label">This month</div><div class="value brass" id="rcMonthCount">0</div></div>
+          <div class="stat-card"><div class="label">Active awards</div><div class="value" id="rcActiveAwards">0</div></div>
+          <div class="stat-card"><div class="label">Ambassadors</div><div class="value" id="rcAmbassadorCount">0</div></div>
+        </div>
+      </div>
+
+      <!-- Awards -->
+      <div class="subpanel" data-panel="awards">
+        <form id="createAwardForm" style="margin-bottom:22px;">
+          <div class="grid-2">
+            <div class="field"><label>Award title</label>
+              <select id="awardTitleSelect">
+                <option>Representative of the Month</option>
+                <option>State Representative of the Month</option>
+                <option>National Representative of the Month</option>
+                <option>Top 10 Representatives</option>
+                <option>Best New Representative</option>
+                <option>Most Improved Representative</option>
+                <option>Highest Revenue Generator</option>
+                <option>Customer Excellence Award</option>
+                <option>Outstanding Marketing Excellence</option>
+                <option>National Ambassador of the Year</option>
+                <option>Lifetime Achievement Award</option>
+                <option value="__custom">Custom…</option>
+              </select>
+            </div>
+            <div class="field"><label>Custom title (if selected above)</label><input type="text" id="awardCustomTitle" /></div>
+          </div>
+          <div class="field"><label>Description</label><input type="text" id="awardDescription" /></div>
+          <button type="submit" class="btn-primary" id="createAwardBtn" style="max-width:200px;">Add award</button>
+          <div class="form-msg" id="createAwardMsg"></div>
+        </form>
+        <div class="award-cards-grid" id="awardsGrid"></div>
+        <div class="empty-state hidden" id="awardsEmptyState">No awards created yet.</div>
+      </div>
+
+      <!-- Badge Manager -->
+      <div class="subpanel" data-panel="badges">
+        <p class="hint" style="margin-bottom:14px;">Minimum verified referrals required to earn each badge.</p>
+        <form id="badgeThresholdForm">
+          <div class="grid-2">
+            <div class="field"><label>Bronze</label><input type="number" min="0" id="thBronze" required /></div>
+            <div class="field"><label>Silver</label><input type="number" min="0" id="thSilver" required /></div>
+            <div class="field"><label>Gold</label><input type="number" min="0" id="thGold" required /></div>
+            <div class="field"><label>Platinum</label><input type="number" min="0" id="thPlatinum" required /></div>
+            <div class="field"><label>Diamond</label><input type="number" min="0" id="thDiamond" required /></div>
+            <div class="field"><label>Elite</label><input type="number" min="0" id="thElite" required /></div>
+            <div class="field"><label>Legend</label><input type="number" min="0" id="thLegend" required /></div>
+          </div>
+          <button type="submit" class="btn-primary" id="saveBadgeThresholdsBtn" style="max-width:200px;">Save thresholds</button>
+          <div class="form-msg" id="badgeThresholdMsg"></div>
+        </form>
+      </div>
+
+      <!-- Prize Manager -->
+      <div class="subpanel" data-panel="prizes">
+        <form id="createPrizeForm" style="margin-bottom:22px;">
+          <div class="grid-2">
+            <div class="field"><label>Prize title</label><input type="text" id="prizeTitle" required /></div>
+            <div class="field"><label>Type</label>
+              <select id="prizeType">
+                <option value="cash">Cash Prize</option>
+                <option value="phone">Phone</option>
+                <option value="laptop">Laptop</option>
+                <option value="tablet">Tablet</option>
+                <option value="voucher">Gift Voucher</option>
+                <option value="certificate">Certificate Only</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div class="field"><label>Value (e.g. ₦20,000)</label><input type="text" id="prizeValue" /></div>
+            <div class="field"><label>Note</label><input type="text" id="prizeNote" /></div>
+          </div>
+          <button type="submit" class="btn-primary" id="createPrizeBtn" style="max-width:180px;">Add prize</button>
+          <div class="form-msg" id="createPrizeMsg"></div>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Title</th><th>Type</th><th>Value</th><th>Note</th><th>Actions</th></tr></thead>
+            <tbody id="prizesTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="prizesEmptyState">No prizes created yet.</div>
+      </div>
+
+      <!-- Certificates -->
+      <div class="subpanel" data-panel="certificates">
+        <form id="generateCertForm" style="margin-bottom:22px;">
+          <div class="grid-2">
+            <div class="field"><label>Representative</label>
+              <select id="certRepSelect" required></select>
+            </div>
+            <div class="field"><label>Award</label>
+              <select id="certAwardSelect" required></select>
+            </div>
+            <div class="field"><label>Prize (optional)</label>
+              <select id="certPrizeSelect"><option value="">— none —</option></select>
+            </div>
+            <div class="field"><label>State / region code</label><input type="text" id="certState" maxlength="6" placeholder="e.g. LAG" required /></div>
+            <div class="field"><label>Month</label>
+              <select id="certMonth"></select>
+            </div>
+            <div class="field"><label>Year</label><input type="number" id="certYear" required /></div>
+          </div>
+          <button type="submit" class="btn-primary" id="generateCertBtn" style="max-width:220px;">Generate certificate</button>
+          <div class="form-msg" id="generateCertMsg"></div>
+        </form>
+
+        <div class="cert-canvas-wrap hidden" id="certCanvasWrap">
+          <canvas id="certCanvas" width="1754" height="1241"></canvas>
+        </div>
+        <div class="share-row hidden" id="certActionsRow">
+          <button type="button" id="certDownloadPngBtn">Download PNG</button>
+          <button type="button" id="certDownloadJpgBtn">Download JPG</button>
+          <button type="button" id="certDownloadPdfBtn">Download PDF</button>
+        </div>
+
+        <div class="table-wrap" style="margin-top:26px;">
+          <table>
+            <thead><tr><th>Certificate ID</th><th>Recipient</th><th>Award</th><th>Badge</th><th>Issued</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="certTableBodyAdmin"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="certEmptyStateAdmin">No certificates issued yet.</div>
+      </div>
+
+      <!-- Rankings -->
+      <div class="subpanel" data-panel="rankings">
+        <div class="panel-head" style="margin-bottom:14px;">
+          <span class="hint">Recalculates automatically whenever a payment is confirmed/rejected</span>
+          <button type="button" class="btn-sm approve" id="recalcRankingsBtn">Recalculate now</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rank</th><th>Representative</th><th>State/Branch</th><th>Badge</th><th>Verified</th><th>Revenue</th><th></th></tr></thead>
+            <tbody id="rankingsTableBodyAdmin"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="rankingsEmptyStateAdmin">No ranking data yet.</div>
+      </div>
+
+      <!-- Hall of Fame -->
+      <div class="subpanel" data-panel="hof">
+        <div id="ambassadorBannerAdmin"></div>
+        <div class="hof-grid" id="hofGridAdmin"></div>
+        <div class="empty-state hidden" id="hofEmptyStateAdmin">No award winners yet.</div>
+      </div>
+
+      <!-- Ambassadors -->
+      <div class="subpanel" data-panel="ambassadors">
+        <form id="assignAmbassadorForm" style="margin-bottom:22px;">
+          <div class="grid-2">
+            <div class="field"><label>Representative</label><select id="ambassadorRepSelect" required></select></div>
+            <div class="field"><label>Note (optional)</label><input type="text" id="ambassadorNote" /></div>
+          </div>
+          <button type="submit" class="btn-primary" id="assignAmbassadorBtn" style="max-width:220px;">Assign as ambassador</button>
+          <div class="form-msg" id="assignAmbassadorMsg"></div>
+        </form>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Representative</th><th>Since</th><th>Note</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="ambassadorsTableBodyAdmin"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="ambassadorsEmptyStateAdmin">No ambassadors assigned yet.</div>
+      </div>
+
+      <!-- Verification -->
+      <div class="subpanel" data-panel="verify">
+        <div class="field" style="max-width:360px;">
+          <label>Certificate ID</label>
+          <input type="text" id="verifyCertInputAdmin" placeholder="IXP-CERT-2026-08-LAG-000001" />
+        </div>
+        <button type="button" class="btn-primary" id="verifyCertBtnAdmin" style="max-width:160px;">Verify</button>
+        <div id="verifyResultAdmin"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ===== REP DASHBOARD ===== -->
@@ -619,6 +911,82 @@
       <div class="materials-grid" id="materialsGridRep"></div>
       <div class="empty-state hidden" id="materialsEmptyStateRep">No materials have been posted yet.</div>
     </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Recognition &amp; Awards</h3>
+        <span class="hint">View-only — certificates, rankings &amp; hall of fame</span>
+      </div>
+
+      <div class="subnav" id="repAwardsSubnav">
+        <button type="button" data-tab="recCenterRep" class="active">Recognition Center</button>
+        <button type="button" data-tab="awardsRep">Awards</button>
+        <button type="button" data-tab="certsRep">My Certificates</button>
+        <button type="button" data-tab="rankingsRep">Rankings</button>
+        <button type="button" data-tab="hofRep">Hall of Fame</button>
+        <button type="button" data-tab="ambassadorsRep">Ambassadors</button>
+        <button type="button" data-tab="verifyRep">Verify a Certificate</button>
+      </div>
+
+      <div class="subpanel active" data-panel="recCenterRep">
+        <div class="cards-row">
+          <div class="stat-card"><div class="label">My badge</div><div class="value" id="repBadgeDisplay" style="font-size:16px;">—</div></div>
+          <div class="stat-card"><div class="label">Verified referrals</div><div class="value brass" id="repVerifiedCount">0</div></div>
+          <div class="stat-card"><div class="label">National rank</div><div class="value" id="repNationalRank">—</div></div>
+          <div class="stat-card"><div class="label">My certificates</div><div class="value" id="repCertCount">0</div></div>
+        </div>
+      </div>
+
+      <div class="subpanel" data-panel="awardsRep">
+        <div class="award-cards-grid" id="awardsGridRep"></div>
+        <div class="empty-state hidden" id="awardsEmptyStateRep">No active awards right now.</div>
+      </div>
+
+      <div class="subpanel" data-panel="certsRep">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Certificate ID</th><th>Award</th><th>Badge</th><th>Issued</th><th>Actions</th></tr></thead>
+            <tbody id="certTableBodyRep"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="certEmptyStateRep">You haven't been issued a certificate yet.</div>
+      </div>
+
+      <div class="subpanel" data-panel="rankingsRep">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Rank</th><th>Representative</th><th>State/Branch</th><th>Badge</th><th>Verified</th></tr></thead>
+            <tbody id="rankingsTableBodyRep"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="rankingsEmptyStateRep">No ranking data yet.</div>
+      </div>
+
+      <div class="subpanel" data-panel="hofRep">
+        <div id="ambassadorBannerRep"></div>
+        <div class="hof-grid" id="hofGridRep"></div>
+        <div class="empty-state hidden" id="hofEmptyStateRep">No award winners yet.</div>
+      </div>
+
+      <div class="subpanel" data-panel="ambassadorsRep">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Representative</th><th>Since</th><th>Status</th></tr></thead>
+            <tbody id="ambassadorsTableBodyRep"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="ambassadorsEmptyStateRep">No ambassadors assigned yet.</div>
+      </div>
+
+      <div class="subpanel" data-panel="verifyRep">
+        <div class="field" style="max-width:360px;">
+          <label>Certificate ID</label>
+          <input type="text" id="verifyCertInputRep" placeholder="IXP-CERT-2026-08-LAG-000001" />
+        </div>
+        <button type="button" class="btn-primary" id="verifyCertBtnRep" style="max-width:160px;">Verify</button>
+        <div id="verifyResultRep"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -645,6 +1013,10 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- Recognition & Awards module dependencies: QR codes + PDF export -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -654,7 +1026,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
-  deleteDoc, collection, query, where, serverTimestamp, onSnapshot, orderBy
+  deleteDoc, collection, query, where, serverTimestamp, onSnapshot, orderBy,
+  runTransaction, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {
   getStorage, ref, uploadBytes, getDownloadURL, deleteObject
@@ -960,6 +1333,7 @@ function showAppShell(role){
 
 // ---------- Auth state / routing ----------
 onAuthStateChanged(auth, async (user)=>{
+  if(window.__isVerifyMode) return; // public certificate verification runs independent of login
   if(!user){
     currentUser = null; currentUserDoc = null;
     if(unsubClients){ unsubClients(); unsubClients = null; }
@@ -1011,6 +1385,7 @@ function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
   loadMaterialsForAdmin();
+  initRecognitionModuleAdmin();
 }
 
 async function loadReps(){
@@ -1132,6 +1507,7 @@ async function loadClientsForAdmin(){
     const clients = [];
     snap.forEach(d=> clients.push({ id:d.id, ...d.data() }));
     renderClientTableAdmin(clients);
+    allClientsCache = clients; // used by the Recognition & Awards module for rankings
     const pending = clients.filter(c=>c.paymentStatus === "pending").length;
     const confirmed = clients.filter(c=>c.paymentStatus === "confirmed").length;
     const approved = clients.filter(c=>c.approvalStatus === "approved").length;
@@ -1195,9 +1571,13 @@ function renderClientTableAdmin(clients){
           }
           await updateDoc(ref, { approvalStatus: "approved", updatedAt: serverTimestamp() });
           toast("Client approved.");
+          recalcRankingForRep(data.repId);
         } else if(action === "reject"){
+          const snap = await getDoc(ref);
+          const data = snap.data();
           await updateDoc(ref, { approvalStatus: "rejected", updatedAt: serverTimestamp() });
           toast("Client rejected.");
+          recalcRankingForRep(data.repId);
         }
       }catch(err){ toast("Action failed."); }
     });
@@ -1208,6 +1588,7 @@ function renderClientTableAdmin(clients){
 function initRepDashboard(uid, data){
   $("repWelcomeName").textContent = (data.fullName || "").split(" ")[0] || "there";
   $("repStatStatus").textContent = data.status || "—";
+  initRecognitionModuleRep(uid);
   const commissions = Number(data.commissions) || 0;
   const wallet = Number(data.wallet) || 0;
   $("repStatCommissions").textContent = `$${commissions.toFixed(2)}`;
@@ -1368,6 +1749,998 @@ $("uploadMaterialForm").addEventListener("submit", async (e)=>{
     }, 600);
   }
 });
+
+// ================= RECOGNITION & AWARDS MODULE =================
+// Design notes (so future edits stay consistent):
+// - Awards, Prizes, Ambassadors, Badge thresholds, Certificates and the
+//   certificate-counter are all admin-write / read-restricted per the
+//   Firestore rules shipped alongside this file.
+// - Rankings are a DELIBERATE denormalized collection (`rankings/{repUid}`)
+//   recomputed by admin actions (see recalcRankingForRep), rather than
+//   reps scanning the full `clients` collection live — the existing
+//   Firestore rules only let a rep read their OWN client records, and that
+//   privacy boundary is intentional. Denormalizing keeps rep-visible
+//   rankings non-sensitive (name/branch/badge/counts only) without loosening
+//   that boundary.
+// - "Revenue Generated" on rankings/certificates reuses the existing
+//   `commissions` field already tracked per rep — no new monetary field
+//   was invented.
+// - Certificate PNGs are stored in Firebase Storage; JPG/PDF are generated
+//   on demand client-side from that PNG (or the live canvas right after
+//   generation), so nothing extra needs to be stored per format.
+
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const BADGE_TIERS = ["bronze","silver","gold","platinum","diamond","elite","legend"];
+const DEFAULT_BADGE_THRESHOLDS = { bronze:1, silver:5, gold:15, platinum:30, diamond:50, elite:75, legend:100 };
+
+let badgeThresholds = { ...DEFAULT_BADGE_THRESHOLDS };
+let allClientsCache = [];
+let unsubAwards = null, unsubPrizes = null, unsubAmbassadors = null;
+let unsubRankings = null, unsubCertsAdmin = null, unsubCertsRep = null;
+
+function computeBadge(verifiedCount){
+  let earned = "none";
+  for(const tier of BADGE_TIERS){
+    if(verifiedCount >= (badgeThresholds[tier] ?? Infinity)) earned = tier;
+  }
+  return earned;
+}
+function badgeChipHtml(tier){
+  const label = tier === "none" ? "Unranked" : tier.charAt(0).toUpperCase()+tier.slice(1);
+  return `<span class="badge-chip badge-${tier}">${label}</span>`;
+}
+async function ensureFontsReady(){ try{ await document.fonts.ready; }catch(e){} }
+
+// ---------- shared tab switching ----------
+function wireSubnav(navId){
+  const nav = $(navId);
+  if(!nav) return;
+  nav.querySelectorAll("button[data-tab]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      nav.querySelectorAll("button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const container = nav.parentElement;
+      container.querySelectorAll(".subpanel").forEach(p=>p.classList.remove("active"));
+      const target = container.querySelector(`.subpanel[data-panel="${btn.dataset.tab}"]`);
+      if(target) target.classList.add("active");
+    });
+  });
+}
+
+// ---------- module entry points ----------
+function initRecognitionModuleAdmin(){
+  wireSubnav("adminAwardsSubnav");
+  populateCertMonthYear();
+  loadBadgeThresholds();
+  loadAwards();
+  loadPrizes();
+  loadAmbassadors();
+  loadRankings();
+  loadCertificatesForAdmin();
+}
+function initRecognitionModuleRep(uid){
+  wireSubnav("repAwardsSubnav");
+  loadBadgeThresholds();
+  loadAwards();
+  loadAmbassadors();
+  loadRankings();
+  loadCertificatesForRep(uid);
+}
+
+function populateCertMonthYear(){
+  const monthSel = $("certMonth");
+  if(monthSel && !monthSel.dataset.filled){
+    monthSel.innerHTML = MONTH_NAMES.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
+    monthSel.value = new Date().getMonth()+1;
+    monthSel.dataset.filled = "1";
+  }
+  const yearInput = $("certYear");
+  if(yearInput && !yearInput.value) yearInput.value = new Date().getFullYear();
+}
+
+// ---------- Awards ----------
+function loadAwards(){
+  if(unsubAwards) unsubAwards();
+  unsubAwards = onSnapshot(collection(db,"awards"), (snap)=>{
+    const awards = [];
+    snap.forEach(d=> awards.push({ id:d.id, ...d.data() }));
+    awards.sort((a,b)=> (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    renderAwardsAdmin(awards);
+    renderAwardsRep(awards.filter(a=>a.active));
+    populateAwardSelect(awards.filter(a=>a.active));
+    const rc = $("rcActiveAwards"); if(rc) rc.textContent = awards.filter(a=>a.active).length;
+  }, err=>console.error(err));
+}
+
+function renderAwardsAdmin(awards){
+  const grid = $("awardsGrid");
+  if(!grid) return;
+  grid.innerHTML = "";
+  $("awardsEmptyState")?.classList.toggle("hidden", awards.length>0);
+  for(const a of awards){
+    const card = document.createElement("div");
+    card.className = "award-card";
+    card.innerHTML = `
+      <h4>${escapeHtml(a.title)}</h4>
+      <p>${escapeHtml(a.description||"")}</p>
+      <span class="status-chip ${a.active?"approved":"rejected"}" style="width:fit-content;">${a.active?"Active":"Inactive"}</span>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <button type="button" class="btn-sm ${a.active?"reject":"confirm"}" data-id="${a.id}" data-action="toggle">${a.active?"Deactivate":"Activate"}</button>
+        <button type="button" class="btn-sm reject" data-id="${a.id}" data-action="delete">Delete</button>
+      </div>`;
+    grid.appendChild(card);
+  }
+  grid.querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const award = awards.find(a=>a.id===btn.dataset.id);
+      try{
+        if(btn.dataset.action === "toggle"){
+          await updateDoc(doc(db,"awards",btn.dataset.id), { active: !award.active });
+        } else {
+          await deleteDoc(doc(db,"awards",btn.dataset.id));
+        }
+        toast("Updated.");
+      }catch(err){ toast("Action failed."); }
+    });
+  });
+}
+function renderAwardsRep(activeAwards){
+  const grid = $("awardsGridRep");
+  if(!grid) return;
+  grid.innerHTML = "";
+  $("awardsEmptyStateRep")?.classList.toggle("hidden", activeAwards.length>0);
+  for(const a of activeAwards){
+    const card = document.createElement("div");
+    card.className = "award-card";
+    card.innerHTML = `<h4>${escapeHtml(a.title)}</h4><p>${escapeHtml(a.description||"")}</p>`;
+    grid.appendChild(card);
+  }
+}
+function populateAwardSelect(activeAwards){
+  const sel = $("certAwardSelect");
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = activeAwards.map(a=>`<option value="${a.id}" data-title="${escapeHtml(a.title)}">${escapeHtml(a.title)}</option>`).join("");
+  if(current) sel.value = current;
+}
+
+$("createAwardForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = $("createAwardBtn");
+  btn.disabled = true; btn.textContent = "Adding…";
+  setFormMsg($("createAwardMsg"), "", "");
+  try{
+    const selectVal = $("awardTitleSelect").value;
+    const title = selectVal === "__custom" ? $("awardCustomTitle").value.trim() : selectVal;
+    if(!title){ setFormMsg($("createAwardMsg"), "Enter a title.", "error"); return; }
+    await addDoc(collection(db,"awards"), {
+      title, description: $("awardDescription").value.trim(), active: true, createdAt: serverTimestamp()
+    });
+    setFormMsg($("createAwardMsg"), "Award added.", "success");
+    $("createAwardForm").reset();
+  }catch(err){
+    setFormMsg($("createAwardMsg"), err.message || "Could not add award.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Add award";
+  }
+});
+
+// ---------- Badge Manager ----------
+async function loadBadgeThresholds(){
+  try{
+    const snap = await getDoc(doc(db,"settings","badgeThresholds"));
+    if(snap.exists()) badgeThresholds = { ...DEFAULT_BADGE_THRESHOLDS, ...snap.data() };
+  }catch(err){ console.error(err); }
+  for(const tier of BADGE_TIERS){
+    const input = $("th"+tier.charAt(0).toUpperCase()+tier.slice(1));
+    if(input) input.value = badgeThresholds[tier];
+  }
+}
+$("badgeThresholdForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = $("saveBadgeThresholdsBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  setFormMsg($("badgeThresholdMsg"), "", "");
+  try{
+    const next = {};
+    for(const tier of BADGE_TIERS){
+      const input = $("th"+tier.charAt(0).toUpperCase()+tier.slice(1));
+      next[tier] = Number(input.value) || 0;
+    }
+    await setDoc(doc(db,"settings","badgeThresholds"), next);
+    badgeThresholds = next;
+    setFormMsg($("badgeThresholdMsg"), "Thresholds saved.", "success");
+    toast("Recalculating rankings against new thresholds…");
+    await recalcAllRankings();
+  }catch(err){
+    setFormMsg($("badgeThresholdMsg"), err.message || "Could not save.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Save thresholds";
+  }
+});
+
+// ---------- Prize Manager ----------
+function loadPrizes(){
+  if(unsubPrizes) unsubPrizes();
+  unsubPrizes = onSnapshot(collection(db,"prizes"), (snap)=>{
+    const prizes = [];
+    snap.forEach(d=> prizes.push({ id:d.id, ...d.data() }));
+    renderPrizesAdmin(prizes);
+    populatePrizeSelect(prizes);
+  }, err=>console.error(err));
+}
+function renderPrizesAdmin(prizes){
+  const tbody = $("prizesTableBody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  $("prizesEmptyState")?.classList.toggle("hidden", prizes.length>0);
+  for(const p of prizes){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(p.title)}</td>
+      <td>${escapeHtml(p.type)}</td>
+      <td>${escapeHtml(p.value||"—")}</td>
+      <td>${escapeHtml(p.note||"—")}</td>
+      <td><button type="button" class="btn-sm reject" data-id="${p.id}">Delete</button></td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      try{ await deleteDoc(doc(db,"prizes",btn.dataset.id)); toast("Prize deleted."); }
+      catch(err){ toast("Could not delete."); }
+    });
+  });
+}
+function populatePrizeSelect(prizes){
+  const sel = $("certPrizeSelect");
+  if(!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— none —</option>' + prizes.map(p=>
+    `<option value="${p.id}" data-title="${escapeHtml(p.title)}" data-value="${escapeHtml(p.value||"")}">${escapeHtml(p.title)}${p.value?" — "+escapeHtml(p.value):""}</option>`
+  ).join("");
+  if(current) sel.value = current;
+}
+$("createPrizeForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = $("createPrizeBtn");
+  btn.disabled = true; btn.textContent = "Adding…";
+  setFormMsg($("createPrizeMsg"), "", "");
+  try{
+    await addDoc(collection(db,"prizes"), {
+      title: $("prizeTitle").value.trim(),
+      type: $("prizeType").value,
+      value: $("prizeValue").value.trim(),
+      note: $("prizeNote").value.trim(),
+      createdAt: serverTimestamp()
+    });
+    setFormMsg($("createPrizeMsg"), "Prize added.", "success");
+    $("createPrizeForm").reset();
+  }catch(err){
+    setFormMsg($("createPrizeMsg"), err.message || "Could not add prize.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Add prize";
+  }
+});
+
+// ---------- Rankings ----------
+async function recalcRankingForRep(repUid){
+  if(!repUid || !window.__repsById) return;
+  const rep = window.__repsById[repUid];
+  if(!rep) return;
+  const repClients = allClientsCache.filter(c=>c.repId===repUid);
+  const verified = repClients.filter(c=>c.approvalStatus==="approved").length;
+  const rejected = repClients.filter(c=>c.approvalStatus==="rejected").length;
+  const revenue = Number(rep.commissions)||0;
+  const badge = computeBadge(verified);
+  try{
+    await setDoc(doc(db,"rankings",repUid), {
+      repId: repUid, repName: rep.fullName || rep.email || "—", branch: rep.branch || "—",
+      verifiedReferrals: verified, rejectedReferrals: rejected, revenue, badge,
+      updatedAt: serverTimestamp()
+    });
+  }catch(err){ console.error(err); }
+}
+async function recalcAllRankings(){
+  if(!window.__repsById) return;
+  for(const uid of Object.keys(window.__repsById)){
+    await recalcRankingForRep(uid);
+  }
+  toast("Rankings recalculated.");
+}
+$("recalcRankingsBtn")?.addEventListener("click", recalcAllRankings);
+
+function loadRankings(){
+  if(unsubRankings) unsubRankings();
+  const q = query(collection(db,"rankings"), orderBy("verifiedReferrals","desc"));
+  unsubRankings = onSnapshot(q, (snap)=>{
+    const rankings = [];
+    snap.forEach(d=> rankings.push({ id:d.id, ...d.data() }));
+    renderRankings(rankings, "rankingsTableBodyAdmin", "rankingsEmptyStateAdmin", true);
+    renderRankings(rankings, "rankingsTableBodyRep", "rankingsEmptyStateRep", false);
+    if(currentUserDoc?.role === "rep" && currentUser){
+      const idx = rankings.findIndex(r=>r.id===currentUser.uid);
+      const rankEl = $("repNationalRank"); if(rankEl) rankEl.textContent = idx>=0 ? `#${idx+1}` : "—";
+      const mine = rankings[idx];
+      if(mine){
+        const vEl = $("repVerifiedCount"); if(vEl) vEl.textContent = mine.verifiedReferrals||0;
+        const bEl = $("repBadgeDisplay"); if(bEl) bEl.innerHTML = badgeChipHtml(mine.badge||"none");
+      }
+    }
+  }, err=>console.error(err));
+}
+function renderRankings(rankings, tbodyId, emptyId, isAdmin){
+  const tbody = $(tbodyId);
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  $(emptyId)?.classList.toggle("hidden", rankings.length>0);
+  const maxVerified = Math.max(1, ...rankings.map(r=>r.verifiedReferrals||0));
+  rankings.forEach((r,i)=>{
+    const pct = Math.round(((r.verifiedReferrals||0)/maxVerified)*100);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono">#${i+1}</td>
+      <td>${escapeHtml(r.repName||"—")}</td>
+      <td>${escapeHtml(r.branch||"—")}</td>
+      <td>${badgeChipHtml(r.badge||"none")}</td>
+      <td>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="rank-bar-track" style="max-width:80px;"><div class="rank-bar-fill" style="width:${pct}%;"></div></div>
+          <span>${r.verifiedReferrals||0}</span>
+        </div>
+      </td>
+      ${isAdmin ? `<td>$${(Number(r.revenue)||0).toFixed(2)}</td><td></td>` : ""}`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ---------- Ambassadors ----------
+function loadAmbassadors(){
+  if(unsubAmbassadors) unsubAmbassadors();
+  unsubAmbassadors = onSnapshot(collection(db,"ambassadors"), (snap)=>{
+    const ambassadors = [];
+    snap.forEach(d=> ambassadors.push({ id:d.id, ...d.data() }));
+    renderAmbassadors(ambassadors);
+    populateAmbassadorRepSelect();
+    const rc = $("rcAmbassadorCount"); if(rc) rc.textContent = ambassadors.filter(a=>a.active).length;
+    renderAmbassadorBanner(ambassadors.filter(a=>a.active));
+  }, err=>console.error(err));
+}
+function renderAmbassadors(ambassadors){
+  const tbodyA = $("ambassadorsTableBodyAdmin");
+  if(tbodyA){
+    tbodyA.innerHTML = "";
+    $("ambassadorsEmptyStateAdmin")?.classList.toggle("hidden", ambassadors.length>0);
+    for(const a of ambassadors){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(a.repName||"—")}</td>
+        <td>${fmtDate(a.since)}</td>
+        <td>${escapeHtml(a.note||"—")}</td>
+        <td><span class="status-chip ${a.active?"approved":"rejected"}">${a.active?"Active":"Retired"}</span></td>
+        <td>
+          <button type="button" class="btn-sm ${a.active?"reject":"confirm"}" data-id="${a.id}" data-action="toggle">${a.active?"Retire":"Reinstate"}</button>
+          <button type="button" class="btn-sm reject" data-id="${a.id}" data-action="delete">Delete</button>
+        </td>`;
+      tbodyA.appendChild(tr);
+    }
+    tbodyA.querySelectorAll("button[data-action]").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        const amb = ambassadors.find(a=>a.id===btn.dataset.id);
+        try{
+          if(btn.dataset.action === "toggle") await updateDoc(doc(db,"ambassadors",btn.dataset.id), { active: !amb.active });
+          else await deleteDoc(doc(db,"ambassadors",btn.dataset.id));
+          toast("Updated.");
+        }catch(err){ toast("Action failed."); }
+      });
+    });
+  }
+  const tbodyR = $("ambassadorsTableBodyRep");
+  if(tbodyR){
+    tbodyR.innerHTML = "";
+    $("ambassadorsEmptyStateRep")?.classList.toggle("hidden", ambassadors.length>0);
+    for(const a of ambassadors){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${escapeHtml(a.repName||"—")}</td><td>${fmtDate(a.since)}</td><td><span class="status-chip ${a.active?"approved":"rejected"}">${a.active?"Active":"Retired"}</span></td>`;
+      tbodyR.appendChild(tr);
+    }
+  }
+}
+function renderAmbassadorBanner(activeAmbassadors){
+  const html = activeAmbassadors.map(a=>`
+    <div class="ambassador-banner">
+      <div><div class="label">National Ambassador</div><h3>${escapeHtml(a.repName||"—")}</h3></div>
+      <div class="mono" style="font-size:12px; color:rgba(247,244,236,0.6);">Since ${fmtDate(a.since)}</div>
+    </div>`).join("");
+  const a1 = $("ambassadorBannerAdmin"); if(a1) a1.innerHTML = html;
+  const a2 = $("ambassadorBannerRep"); if(a2) a2.innerHTML = html;
+}
+function populateAmbassadorRepSelect(){
+  const sel = $("ambassadorRepSelect");
+  if(!sel || !window.__repsById) return;
+  const current = sel.value;
+  sel.innerHTML = Object.entries(window.__repsById)
+    .filter(([,r])=>r.status==="accepted")
+    .map(([uid,r])=>`<option value="${uid}">${escapeHtml(r.fullName||r.email)}</option>`).join("");
+  if(current) sel.value = current;
+}
+$("assignAmbassadorForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = $("assignAmbassadorBtn");
+  btn.disabled = true; btn.textContent = "Assigning…";
+  setFormMsg($("assignAmbassadorMsg"), "", "");
+  try{
+    const uid = $("ambassadorRepSelect").value;
+    const rep = window.__repsById?.[uid];
+    if(!rep){ setFormMsg($("assignAmbassadorMsg"), "Select a representative.", "error"); return; }
+    await addDoc(collection(db,"ambassadors"), {
+      uid, repName: rep.fullName || rep.email, note: $("ambassadorNote").value.trim(),
+      active: true, since: serverTimestamp(), createdAt: serverTimestamp()
+    });
+    setFormMsg($("assignAmbassadorMsg"), "Ambassador assigned.", "success");
+    $("assignAmbassadorForm").reset();
+  }catch(err){
+    setFormMsg($("assignAmbassadorMsg"), err.message || "Could not assign.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Assign as ambassador";
+  }
+});
+
+// ---------- Certificate canvas rendering ----------
+function drawCertificate(canvas, data){
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+
+  const bg = ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0, "#0F1A2E"); bg.addColorStop(1, "#152442");
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+  // faint diagonal anti-copy watermark
+  ctx.save();
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "700 42px Inter, sans-serif";
+  ctx.translate(W/2, H/2);
+  ctx.rotate(-Math.PI/11);
+  for(let y=-H; y<H*1.5; y+=95){
+    for(let x=-W; x<W*1.5; x+=430){
+      ctx.fillText("INVOICE X PRO TECHNOLOGY", x, y);
+    }
+  }
+  ctx.restore();
+
+  // luxury border frame
+  const pad = 46;
+  ctx.strokeStyle = "#B8863E"; ctx.lineWidth = 6;
+  ctx.strokeRect(pad, pad, W-pad*2, H-pad*2);
+  ctx.strokeStyle = "rgba(217,174,108,0.55)"; ctx.lineWidth = 2;
+  ctx.strokeRect(pad+16, pad+16, W-(pad+16)*2, H-(pad+16)*2);
+
+  function corner(cx0, cy0, fx, fy){
+    ctx.save(); ctx.translate(cx0, cy0); ctx.scale(fx, fy);
+    ctx.strokeStyle = "#D9AE6C"; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(0,60); ctx.quadraticCurveTo(0,0,60,0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,40); ctx.quadraticCurveTo(0,0,40,0); ctx.stroke();
+    ctx.restore();
+  }
+  corner(pad+16, pad+16, 1, 1);
+  corner(W-pad-16, pad+16, -1, 1);
+  corner(pad+16, H-pad-16, 1, -1);
+  corner(W-pad-16, H-pad-16, -1, -1);
+
+  const cx = W/2;
+  ctx.textAlign = "center";
+
+  ctx.strokeStyle = "#D9AE6C"; ctx.lineWidth = 2;
+  ctx.strokeRect(cx-38, 105, 76, 76);
+  ctx.fillStyle = "#D9AE6C"; ctx.font = "700 40px Fraunces, serif";
+  ctx.fillText("IX", cx, 155);
+
+  ctx.font = "700 22px Inter, sans-serif";
+  ctx.fillText("INVOICE X PRO TECHNOLOGY", cx, 225);
+
+  ctx.fillStyle = "#FDFCF8"; ctx.font = "700 56px Fraunces, serif";
+  ctx.fillText("CERTIFICATE OF RECOGNITION", cx, 300);
+
+  ctx.strokeStyle = "#D9AE6C"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(cx-70,325); ctx.lineTo(cx+70,325); ctx.stroke();
+
+  ctx.fillStyle = "rgba(253,252,248,0.75)"; ctx.font = "400 26px Inter, sans-serif";
+  ctx.fillText("This certifies that", cx, 375);
+
+  ctx.fillStyle = "#FDFCF8"; ctx.font = "italic 700 72px Fraunces, serif";
+  ctx.fillText(data.recipientName, cx, 460);
+  ctx.strokeStyle = "rgba(217,174,108,0.6)"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(cx-260,485); ctx.lineTo(cx+260,485); ctx.stroke();
+
+  ctx.fillStyle = "#D9AE6C"; ctx.font = "700 32px Inter, sans-serif";
+  ctx.fillText("has been honored with", cx, 530);
+  ctx.fillStyle = "#FDFCF8"; ctx.font = "700 42px Fraunces, serif";
+  ctx.fillText(data.awardTitle, cx, 585);
+
+  const stats = [
+    ["STATE", data.state], ["PERIOD", `${data.monthName} ${data.year}`], ["BADGE", data.badge.toUpperCase()],
+    ["VERIFIED REFERRALS", String(data.verifiedReferrals)], ["REVENUE GENERATED", `$${Number(data.revenue).toFixed(2)}`],
+    ["NATIONAL RANK", data.rank ? "#"+data.rank : "—"],
+  ];
+  const statY = 655;
+  const colW = (W - pad*2 - 64) / stats.length;
+  stats.forEach((s,i)=>{
+    const x = pad+32 + colW*i + colW/2;
+    ctx.fillStyle = "#D9AE6C"; ctx.font = "700 15px Inter, sans-serif";
+    ctx.fillText(s[0], x, statY);
+    ctx.fillStyle = "#FDFCF8"; ctx.font = "700 25px Inter, sans-serif";
+    ctx.fillText(s[1], x, statY+36);
+  });
+
+  if(data.prizeTitle){
+    ctx.fillStyle = "rgba(253,252,248,0.8)"; ctx.font = "400 22px Inter, sans-serif";
+    ctx.fillText(`Prize: ${data.prizeTitle}${data.prizeValue?" — "+data.prizeValue:""}`, cx, 740);
+  }
+
+  // gold seal
+  const sealX = W-pad-190, sealY = H-pad-190, sealR = 80;
+  const sealGrad = ctx.createRadialGradient(sealX,sealY,10,sealX,sealY,sealR);
+  sealGrad.addColorStop(0,"#F0D9A8"); sealGrad.addColorStop(1,"#B8863E");
+  ctx.fillStyle = sealGrad; ctx.beginPath(); ctx.arc(sealX,sealY,sealR,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = "#7a5a28"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.arc(sealX,sealY,sealR-8,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle = "#3a2a10"; ctx.font = "700 20px Fraunces, serif"; ctx.fillText("IXP", sealX, sealY-4);
+  ctx.font = "700 12px Inter, sans-serif"; ctx.fillText("CERTIFIED", sealX, sealY+18);
+
+  // signatures (typography only, no handwriting image)
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#D9AE6C"; ctx.font = "italic 700 30px Fraunces, serif";
+  ctx.fillText("Invoice X Pro Technology", pad+80, H-pad-140);
+  ctx.strokeStyle = "rgba(217,174,108,0.5)"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad+80,H-pad-120); ctx.lineTo(pad+330,H-pad-120); ctx.stroke();
+  ctx.fillStyle = "rgba(253,252,248,0.6)"; ctx.font = "400 16px Inter, sans-serif";
+  ctx.fillText("Company Signature", pad+80, H-pad-98);
+
+  ctx.fillStyle = "#D9AE6C"; ctx.font = "italic 700 30px Fraunces, serif";
+  ctx.fillText("D. Princewill", pad+400, H-pad-140);
+  ctx.beginPath(); ctx.moveTo(pad+400,H-pad-120); ctx.lineTo(pad+650,H-pad-120); ctx.stroke();
+  ctx.fillStyle = "rgba(253,252,248,0.6)"; ctx.font = "400 16px Inter, sans-serif";
+  ctx.fillText("Administrator Signature", pad+400, H-pad-98);
+
+  ctx.fillStyle = "rgba(253,252,248,0.55)"; ctx.font = "400 18px 'JetBrains Mono', monospace";
+  ctx.fillText(data.certId, pad+80, H-pad-40);
+  ctx.fillText(`Issued ${data.issueDateStr}`, pad+80, H-pad-16);
+}
+
+function drawQRCodeOntoCanvas(ctx, url, x, y, size){
+  return new Promise((resolve, reject)=>{
+    if(!window.QRCode){ resolve(); return; } // degrade gracefully if the CDN failed to load
+    window.QRCode.toDataURL(url, { width:size, margin:1, color:{ dark:"#0F1A2E", light:"#FDFCF8" } }, (err, dataUrl)=>{
+      if(err) return reject(err);
+      const img = new Image();
+      img.onload = ()=>{
+        ctx.save();
+        ctx.fillStyle = "#FDFCF8";
+        ctx.fillRect(x-8, y-8, size+16, size+16);
+        ctx.drawImage(img, x, y, size, size);
+        ctx.restore();
+        resolve();
+      };
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  });
+}
+
+// ---------- Certificate generation ----------
+function populateCertRepSelect(){
+  const sel = $("certRepSelect");
+  if(!sel || !window.__repsById) return;
+  const current = sel.value;
+  sel.innerHTML = Object.entries(window.__repsById)
+    .filter(([,r])=>r.status==="accepted")
+    .map(([uid,r])=>`<option value="${uid}">${escapeHtml(r.fullName||r.email)}</option>`).join("");
+  if(current) sel.value = current;
+}
+
+$("generateCertForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  populateCertRepSelect(); // ensure fresh in case reps list just changed
+  const btn = $("generateCertBtn");
+  btn.disabled = true; btn.textContent = "Generating…";
+  setFormMsg($("generateCertMsg"), "", "");
+  try{
+    const uid = $("certRepSelect").value;
+    const rep = window.__repsById?.[uid];
+    if(!rep){ setFormMsg($("generateCertMsg"), "Select a representative.", "error"); return; }
+    if(rep.status !== "accepted"){
+      setFormMsg($("generateCertMsg"), "Representative must be an active (accepted) account.", "error"); return;
+    }
+    const repClients = allClientsCache.filter(c=>c.repId===uid);
+    const verified = repClients.filter(c=>c.approvalStatus==="approved").length;
+    const rejected = repClients.filter(c=>c.approvalStatus==="rejected").length;
+    if(verified <= 0){
+      setFormMsg($("generateCertMsg"), "Representative has no verified referrals yet.", "error"); return;
+    }
+    if(rejected > 3){
+      setFormMsg($("generateCertMsg"), "Representative has more than three rejected referrals and is not eligible.", "error"); return;
+    }
+
+    const awardSel = $("certAwardSelect");
+    const awardTitle = awardSel.options[awardSel.selectedIndex]?.dataset.title || awardSel.value;
+    const prizeSel = $("certPrizeSelect");
+    const prizeTitle = prizeSel.options[prizeSel.selectedIndex]?.dataset.title || "";
+    const prizeValue = prizeSel.options[prizeSel.selectedIndex]?.dataset.value || "";
+
+    const state = ($("certState").value.trim() || rep.branch || "GEN").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6) || "GEN";
+    const month = Number($("certMonth").value);
+    const year = Number($("certYear").value);
+    const monthStr = String(month).padStart(2,"0");
+    const monthName = MONTH_NAMES[month-1];
+    const badge = computeBadge(verified);
+
+    let rank = null;
+    try{
+      const rankingsSnap = await getDocs(query(collection(db,"rankings"), orderBy("verifiedReferrals","desc")));
+      let idx = 0;
+      rankingsSnap.forEach(d=>{ idx++; if(d.id===uid) rank = idx; });
+    }catch(err){ /* rankings optional for the certificate; ignore failure */ }
+
+    // Atomically allocate a unique, never-duplicated certificate ID
+    const counterKey = `${year}-${monthStr}-${state}`;
+    const counterRef = doc(db, "certCounters", counterKey);
+    const certId = await runTransaction(db, async (tx)=>{
+      const counterSnap = await tx.get(counterRef);
+      const next = (counterSnap.exists() ? counterSnap.data().count : 0) + 1;
+      tx.set(counterRef, { count: next });
+      return `IXP-CERT-${year}-${monthStr}-${state}-${String(next).padStart(6,"0")}`;
+    });
+
+    const issueDate = new Date();
+    const verifyUrl = `${window.location.origin}${window.location.pathname}?verify=${encodeURIComponent(certId)}`;
+
+    await ensureFontsReady();
+    const canvas = $("certCanvas");
+    const ctx = canvas.getContext("2d");
+    const revenue = Number(rep.commissions)||0;
+    const certData = {
+      certId, recipientName: rep.fullName || rep.email, awardTitle, state, monthName, year,
+      badge, verifiedReferrals: verified, revenue, rank, prizeTitle, prizeValue,
+      issueDateStr: issueDate.toLocaleDateString()
+    };
+    drawCertificate(canvas, certData);
+    await drawQRCodeOntoCanvas(ctx, verifyUrl, canvas.width-46-380, canvas.height-46-195, 150);
+
+    $("certCanvasWrap").classList.remove("hidden");
+    $("certActionsRow").classList.remove("hidden");
+
+    // No Firebase Storage involved: only the certificate's data fields are
+    // persisted. The image itself (PNG/JPG/PDF) is regenerated on demand from
+    // this data — by this same drawCertificate() function — every time it's
+    // previewed, downloaded, or shared, from the certificate list below.
+    await setDoc(doc(db,"certificates",certId), {
+      certificateId: certId, recipientUid: uid, recipientName: certData.recipientName,
+      accountCode: rep.accountCode || "", awardTitle, state, month, monthName, year,
+      prizeTitle, prizeValue, verifiedReferrals: verified, rejectedReferrals: rejected,
+      revenue, badge, rank, issueDate: serverTimestamp(), status: "active",
+      verifyUrl, createdBy: currentUser?.uid || "admin", createdAt: serverTimestamp()
+    });
+
+    window.__lastCertCanvas = canvas;
+    window.__lastCertId = certId;
+
+    setFormMsg($("generateCertMsg"), `Certificate ${certId} generated.`, "success");
+    toast("Certificate generated.");
+  }catch(err){
+    console.error(err);
+    setFormMsg($("generateCertMsg"), err.message || "Could not generate certificate.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Generate certificate";
+  }
+});
+
+$("certDownloadPngBtn")?.addEventListener("click", ()=>{
+  const canvas = window.__lastCertCanvas; if(!canvas) return;
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/png"); a.download = `${window.__lastCertId||"certificate"}.png`; a.click();
+});
+$("certDownloadJpgBtn")?.addEventListener("click", ()=>{
+  const canvas = window.__lastCertCanvas; if(!canvas) return;
+  const a = document.createElement("a");
+  a.href = canvas.toDataURL("image/jpeg", 0.92); a.download = `${window.__lastCertId||"certificate"}.jpg`; a.click();
+});
+$("certDownloadPdfBtn")?.addEventListener("click", ()=>{
+  const canvas = window.__lastCertCanvas;
+  if(!canvas || !window.jspdf){ toast("PDF library still loading — try again in a moment."); return; }
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ orientation:"landscape", unit:"pt", format:"a4" });
+  const pageW = pdf.internal.pageSize.getWidth(), pageH = pdf.internal.pageSize.getHeight();
+  pdf.addImage(canvas.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, pageW, pageH);
+  pdf.save(`${window.__lastCertId||"certificate"}.pdf`);
+});
+
+// Regenerate a certificate's image entirely client-side from its Firestore
+// data fields — no Firebase Storage involved anywhere in this module. Used
+// for every download/preview/share action on a previously-issued certificate.
+async function regenerateCertCanvas(cert){
+  await ensureFontsReady();
+  const canvas = document.createElement("canvas");
+  canvas.width = 1754; canvas.height = 1241;
+  const ctx = canvas.getContext("2d");
+  const certId = cert.certificateId || cert.id;
+  const verifyUrl = cert.verifyUrl || `${window.location.origin}${window.location.pathname}?verify=${encodeURIComponent(certId)}`;
+  const issueDateStr = cert.issueDate?.toDate ? cert.issueDate.toDate().toLocaleDateString() : new Date().toLocaleDateString();
+  drawCertificate(canvas, {
+    certId, recipientName: cert.recipientName, awardTitle: cert.awardTitle,
+    state: cert.state, monthName: cert.monthName, year: cert.year, badge: cert.badge,
+    verifiedReferrals: cert.verifiedReferrals, revenue: cert.revenue, rank: cert.rank,
+    prizeTitle: cert.prizeTitle, prizeValue: cert.prizeValue, issueDateStr
+  });
+  await drawQRCodeOntoCanvas(ctx, verifyUrl, canvas.width-46-380, canvas.height-46-195, 150);
+  return canvas;
+}
+
+async function downloadCertificate(cert, format){
+  try{
+    const canvas = await regenerateCertCanvas(cert);
+    const certId = cert.certificateId || cert.id;
+    if(format === "png"){
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png"); a.download = `${certId}.png`; a.click();
+    } else if(format === "jpg"){
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/jpeg",0.92); a.download = `${certId}.jpg`; a.click();
+    } else if(format === "pdf"){
+      if(!window.jspdf){ toast("PDF library still loading — try again in a moment."); return; }
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation:"landscape", unit:"pt", format:"a4" });
+      const pageW = pdf.internal.pageSize.getWidth(), pageH = pdf.internal.pageSize.getHeight();
+      pdf.addImage(canvas.toDataURL("image/jpeg",0.95), "JPEG", 0, 0, pageW, pageH);
+      pdf.save(`${certId}.pdf`);
+    } else if(format === "preview"){
+      const visible = $("certCanvas");
+      visible.getContext("2d").drawImage(canvas, 0, 0, visible.width, visible.height);
+      $("certCanvasWrap").classList.remove("hidden");
+      $("certActionsRow").classList.remove("hidden");
+      window.__lastCertCanvas = canvas;
+      window.__lastCertId = certId;
+      $("certCanvasWrap").scrollIntoView({ behavior:"smooth", block:"center" });
+    }
+  }catch(err){
+    console.error(err);
+    toast("Could not prepare that download.");
+  }
+}
+
+// ---------- Share ----------
+function buildShareUrls(url, text){
+  const enc = encodeURIComponent;
+  return {
+    whatsapp: `https://wa.me/?text=${enc(text+" "+url)}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${enc(url)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${enc(text)}&url=${enc(url)}`,
+    telegram: `https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`,
+    email: `mailto:?subject=${enc(text)}&body=${enc(url)}`
+  };
+}
+function openShareRow(url, title, evt){
+  if(!url){ toast("No verification link available for this certificate."); return; }
+  document.getElementById("__shareMenu")?.remove();
+  const urls = buildShareUrls(url, `Certificate: ${title}`);
+  const menu = document.createElement("div");
+  menu.id = "__shareMenu";
+  menu.style.cssText = "position:fixed; z-index:400; background:#FDFCF8; border:1px solid rgba(15,26,46,0.15); border-radius:12px; padding:14px; box-shadow:0 12px 30px rgba(15,26,46,0.25); display:flex; flex-direction:column; gap:4px; max-width:220px;";
+  const items = [["WhatsApp",urls.whatsapp],["Facebook",urls.facebook],["LinkedIn",urls.linkedin],["Twitter/X",urls.twitter],["Telegram",urls.telegram],["Email",urls.email]];
+  menu.innerHTML = items.map(([label,href])=>`<a href="${href}" target="_blank" rel="noopener" style="font-size:13px; font-weight:600; color:#0F1A2E; text-decoration:none; padding:6px 8px; border-radius:6px;">${label}</a>`).join("")
+    + `<button type="button" id="__copyLinkBtn" style="text-align:left; font-size:13px; font-weight:600; background:none; border:none; padding:6px 8px; color:#0F1A2E; cursor:pointer;">Copy link</button>`;
+  document.body.appendChild(menu);
+  const rect = evt?.currentTarget?.getBoundingClientRect?.() || { left:20, bottom:20 };
+  menu.style.left = Math.min(rect.left, window.innerWidth-240)+"px";
+  menu.style.top = (rect.bottom+8)+"px";
+  document.getElementById("__copyLinkBtn").addEventListener("click", ()=>{
+    navigator.clipboard?.writeText(url).then(()=>toast("Link copied.")).catch(()=>{});
+    menu.remove();
+  });
+  setTimeout(()=>{
+    document.addEventListener("click", function outside(ev){
+      if(!menu.contains(ev.target)){ menu.remove(); document.removeEventListener("click", outside); }
+    });
+  }, 0);
+}
+
+// ---------- Certificates: admin list ----------
+function loadCertificatesForAdmin(){
+  if(unsubCertsAdmin) unsubCertsAdmin();
+  const q = query(collection(db,"certificates"), orderBy("createdAt","desc"));
+  unsubCertsAdmin = onSnapshot(q, (snap)=>{
+    const certs = [];
+    snap.forEach(d=> certs.push({ id:d.id, ...d.data() }));
+    populateCertRepSelect();
+    renderCertsAdmin(certs);
+    const rc = $("rcCertCount"); if(rc) rc.textContent = certs.length;
+    const now = new Date();
+    const thisMonth = certs.filter(c=>{
+      const d = c.createdAt?.toDate ? c.createdAt.toDate() : null;
+      return d && d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    }).length;
+    const rm = $("rcMonthCount"); if(rm) rm.textContent = thisMonth;
+    renderHallOfFame(certs);
+  }, err=>console.error(err));
+}
+function renderCertsAdmin(certs){
+  const tbody = $("certTableBodyAdmin");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  $("certEmptyStateAdmin")?.classList.toggle("hidden", certs.length>0);
+  for(const c of certs){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono" style="font-size:12px;">${escapeHtml(c.certificateId||c.id)}</td>
+      <td>${escapeHtml(c.recipientName||"—")}</td>
+      <td>${escapeHtml(c.awardTitle||"—")}</td>
+      <td>${badgeChipHtml(c.badge||"none")}</td>
+      <td>${fmtDate(c.createdAt)}</td>
+      <td><span class="status-chip ${c.status==="revoked"?"rejected":"approved"}">${c.status||"active"}</span></td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-sm approve" data-action="preview" data-id="${c.id}">Preview</button>
+        <button type="button" class="btn-sm confirm" data-action="png" data-id="${c.id}">PNG</button>
+        <button type="button" class="btn-sm confirm" data-action="jpg" data-id="${c.id}">JPG</button>
+        <button type="button" class="btn-sm confirm" data-action="pdf" data-id="${c.id}">PDF</button>
+        <button type="button" class="btn-sm reject" data-action="revoke" data-id="${c.id}">${c.status==="revoked"?"Reinstate":"Revoke"}</button>
+        <button type="button" class="btn-sm reject" data-action="delete" data-id="${c.id}">Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const { action, id } = btn.dataset;
+      const cert = certs.find(c=>c.id===id);
+      if(!cert) return;
+      if(action==="preview") return downloadCertificate(cert, "preview");
+      if(action==="png") return downloadCertificate(cert, "png");
+      if(action==="jpg") return downloadCertificate(cert, "jpg");
+      if(action==="pdf") return downloadCertificate(cert, "pdf");
+      if(action==="revoke"){
+        try{ await updateDoc(doc(db,"certificates",id), { status: cert.status==="revoked" ? "active" : "revoked" }); toast("Updated."); }
+        catch(err){ toast("Could not update."); }
+        return;
+      }
+      if(action==="delete"){
+        try{ await deleteDoc(doc(db,"certificates",id)); toast("Certificate deleted."); }
+        catch(err){ toast("Could not delete."); }
+      }
+    });
+  });
+}
+
+// ---------- Certificates: rep list ----------
+function loadCertificatesForRep(uid){
+  if(unsubCertsRep) unsubCertsRep();
+  const q = query(collection(db,"certificates"), where("recipientUid","==",uid));
+  unsubCertsRep = onSnapshot(q, (snap)=>{
+    const certs = [];
+    snap.forEach(d=> certs.push({ id:d.id, ...d.data() }));
+    certs.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    renderCertsRep(certs);
+    const rc = $("repCertCount"); if(rc) rc.textContent = certs.length;
+  }, err=>console.error(err));
+}
+function renderCertsRep(certs){
+  const tbody = $("certTableBodyRep");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  $("certEmptyStateRep")?.classList.toggle("hidden", certs.length>0);
+  for(const c of certs){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono" style="font-size:12px;">${escapeHtml(c.certificateId||c.id)}</td>
+      <td>${escapeHtml(c.awardTitle||"—")}</td>
+      <td>${badgeChipHtml(c.badge||"none")}</td>
+      <td>${fmtDate(c.createdAt)}</td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-sm approve" data-action="preview" data-id="${c.id}">Preview</button>
+        <button type="button" class="btn-sm confirm" data-action="png" data-id="${c.id}">PNG</button>
+        <button type="button" class="btn-sm confirm" data-action="jpg" data-id="${c.id}">JPG</button>
+        <button type="button" class="btn-sm confirm" data-action="pdf" data-id="${c.id}">PDF</button>
+        <button type="button" class="btn-sm approve" data-action="share" data-url="${c.verifyUrl||''}" data-title="${escapeHtml(c.awardTitle||'')}">Share</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click", (evt)=>{
+      const { action, id, url, title } = btn.dataset;
+      const cert = certs.find(c=>c.id===id);
+      if(action==="preview" && cert) return downloadCertificate(cert, "preview");
+      if(action==="png" && cert) return downloadCertificate(cert, "png");
+      if(action==="jpg" && cert) return downloadCertificate(cert, "jpg");
+      if(action==="pdf" && cert) return downloadCertificate(cert, "pdf");
+      if(action==="share") return openShareRow(url, title, evt);
+    });
+  });
+}
+
+// ---------- Hall of Fame ----------
+function renderHallOfFame(certs){
+  const sorted = [...certs].filter(c=>c.status!=="revoked")
+    .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)).slice(0,24);
+  [["hofGridAdmin","hofEmptyStateAdmin"], ["hofGridRep","hofEmptyStateRep"]].forEach(([gridId,emptyId])=>{
+    const grid = $(gridId);
+    if(!grid) return;
+    grid.innerHTML = "";
+    $(emptyId)?.classList.toggle("hidden", sorted.length>0);
+    for(const c of sorted){
+      const card = document.createElement("div");
+      card.className = "hof-card";
+      card.innerHTML = `
+        <div class="hof-award">${escapeHtml(c.awardTitle||"—")}</div>
+        <h4>${escapeHtml(c.recipientName||"—")}</h4>
+        <div class="hof-meta">${escapeHtml(c.state||"")} · ${escapeHtml(c.monthName||"")} ${c.year||""}</div>
+        <div style="margin-top:10px;">${badgeChipHtml(c.badge||"none")}</div>`;
+      grid.appendChild(card);
+    }
+  });
+}
+
+// ---------- Verification (works with zero login) ----------
+async function lookupCertificate(certId){
+  certId = (certId||"").trim();
+  if(!certId) return null;
+  const snap = await getDoc(doc(db,"certificates",certId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+function renderVerifyResult(container, cert){
+  if(!container) return;
+  if(!cert){
+    container.innerHTML = `<div class="verify-result invalid"><h3 style="margin:0;">Invalid Certificate</h3><p style="margin:8px 0 0;">No certificate was found with that ID.</p></div>`;
+    return;
+  }
+  const revoked = cert.status === "revoked";
+  container.innerHTML = `
+    <div class="verify-result ${revoked?"invalid":"valid"}">
+      <h3 style="margin:0;">${revoked?"Certificate Revoked":"Verified Certificate"}</h3>
+      <dl>
+        <dt>Recipient</dt><dd>${escapeHtml(cert.recipientName||"—")}</dd>
+        <dt>Award</dt><dd>${escapeHtml(cert.awardTitle||"—")}</dd>
+        <dt>State</dt><dd>${escapeHtml(cert.state||"—")}</dd>
+        <dt>Period</dt><dd>${escapeHtml(cert.monthName||"")} ${cert.year||""}</dd>
+        <dt>Badge</dt><dd>${badgeChipHtml(cert.badge||"none")}</dd>
+        <dt>Prize</dt><dd>${escapeHtml(cert.prizeTitle||"—")}${cert.prizeValue?" — "+escapeHtml(cert.prizeValue):""}</dd>
+        <dt>Rank</dt><dd>${cert.rank ? "#"+cert.rank : "—"}</dd>
+        <dt>Issued</dt><dd>${fmtDate(cert.issueDate)}</dd>
+      </dl>
+    </div>`;
+}
+async function runVerify(inputId, resultId){
+  const val = $(inputId)?.value;
+  const container = $(resultId);
+  if(container) container.innerHTML = `<p class="hint">Checking…</p>`;
+  try{
+    const cert = await lookupCertificate(val);
+    renderVerifyResult(container, cert);
+  }catch(err){
+    if(container) container.innerHTML = `<div class="verify-result invalid"><h3 style="margin:0;">Could not verify</h3><p style="margin:8px 0 0;">${escapeHtml(err.message||"Try again.")}</p></div>`;
+  }
+}
+$("verifyCertBtnAdmin")?.addEventListener("click", ()=> runVerify("verifyCertInputAdmin","verifyResultAdmin"));
+$("verifyCertBtnRep")?.addEventListener("click", ()=> runVerify("verifyCertInputRep","verifyResultRep"));
+$("publicVerifyBtn")?.addEventListener("click", ()=> runVerify("publicVerifyInput","publicVerifyResult"));
+$("backToSiteBtn")?.addEventListener("click", ()=>{
+  window.__isVerifyMode = false;
+  $("publicVerifyPage").classList.add("hidden");
+  const url = new URL(window.location.href);
+  url.searchParams.delete("verify");
+  window.history.replaceState({}, "", url.pathname);
+  showLanding();
+});
+
+// Auto-run verification if the URL was opened with ?verify=<certId> (e.g. from a QR scan)
+(function checkVerifyParam(){
+  const params = new URLSearchParams(window.location.search);
+  const certId = params.get("verify");
+  if(certId){
+    window.__isVerifyMode = true;
+    $("publicVerifyPage").classList.remove("hidden");
+    $("landing").classList.add("hidden");
+    $("publicVerifyInput").value = certId;
+    runVerify("publicVerifyInput","publicVerifyResult");
+  }
+})();
 
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
