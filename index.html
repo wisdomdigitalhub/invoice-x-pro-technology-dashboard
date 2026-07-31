@@ -504,6 +504,19 @@
   </div>
 </div>
 
+<!-- ============ PUBLIC CLIENT PAYMENT PAGE (no login required) ============ -->
+<div class="public-verify-page hidden" id="publicPayPage">
+  <div class="public-verify-card">
+    <h3 style="margin-top:0;">Complete your payment</h3>
+    <p class="sub" id="payClientSummary">Loading…</p>
+    <div id="payAmountBlock"></div>
+    <button type="button" class="btn-primary hidden" id="payNowBtn" style="max-width:220px;">Pay with Paystack</button>
+    <div id="payResultMsg" style="margin-top:14px;"></div>
+    <p style="font-size:11.5px; color:rgba(15,26,46,0.45); margin-top:18px;">Payments are processed securely by Paystack. Invoice X Pro Technology never sees or stores your card details.</p>
+    <div class="modal-footer-link"><button type="button" id="backToSiteBtnPay">← Back to Invoice X Pro</button></div>
+  </div>
+</div>
+
 <!-- ============ LOGIN MODAL ============ -->
 <div class="overlay hidden" id="loginOverlay">
   <div class="modal">
@@ -613,15 +626,14 @@
 
     <div class="panel">
       <div class="panel-head">
-        <h3>Commission rates</h3>
-        <span class="hint">Credited automatically to a rep's wallet the moment their client is approved</span>
+        <h3>Commission rate</h3>
+        <span class="hint">Percentage of the client's package amount, credited to the rep's wallet on approval</span>
       </div>
       <form id="commissionRatesForm">
         <div class="grid-2">
-          <div class="field"><label>Single package — commission (₦)</label><input type="number" min="0" step="1" id="rateSingle" required /></div>
-          <div class="field"><label>Bundle package — commission (₦)</label><input type="number" min="0" step="1" id="rateBundle" required /></div>
+          <div class="field"><label>Commission percentage (%)</label><input type="number" min="0" max="100" step="0.1" id="ratePercent" required /></div>
         </div>
-        <button type="submit" class="btn-primary" id="saveCommissionRatesBtn" style="max-width:220px;">Save rates</button>
+        <button type="submit" class="btn-primary" id="saveCommissionRatesBtn" style="max-width:220px;">Save rate</button>
         <div class="form-msg" id="commissionRatesMsg"></div>
       </form>
     </div>
@@ -893,14 +905,9 @@
         <div class="grid-2">
           <div class="field"><label>Client name</label><input type="text" id="cName" required /></div>
           <div class="field"><label>Phone</label><input type="tel" id="cPhone" required /></div>
-          <div class="field"><label>Email</label><input type="email" id="cEmail" /></div>
+          <div class="field"><label>Email</label><input type="email" id="cEmail" required /></div>
           <div class="field"><label>Package</label><input type="text" id="cPackage" required /></div>
-          <div class="field"><label>Package type</label>
-            <select id="cPackageType" required>
-              <option value="single">Single package</option>
-              <option value="bundle">Bundle package</option>
-            </select>
-          </div>
+          <div class="field"><label>Package amount (₦)</label><input type="number" min="1" step="1" id="cPackageAmount" required /></div>
           <div class="field"><label>Your account number</label><input type="text" id="cRepAccountNumber" required /></div>
         </div>
         <div class="field"><label>Address</label><input type="text" id="cAddress" required /></div>
@@ -917,7 +924,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Client</th><th>Package</th><th>Account No.</th><th>Payment</th><th>Approval</th><th>Commission</th><th>Submitted</th></tr></thead>
+          <thead><tr><th>Client</th><th>Package</th><th>Account No.</th><th>Payment</th><th>Approval</th><th>Commission</th><th>Submitted</th><th>Actions</th></tr></thead>
           <tbody id="clientTableBodyRep"></tbody>
         </table>
       </div>
@@ -1037,6 +1044,8 @@
 <!-- Recognition & Awards module dependencies: QR codes + PDF export -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!-- Payment: Paystack inline checkout, used by the public client payment page -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -1067,6 +1076,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Paystack PUBLIC key only — this is safe to expose client-side (it can only
+// initiate a payment, never move money or read transactions on its own).
+// Replace with your real key from Paystack Dashboard → Settings → API Keys & Webhooks.
+// Use a pk_test_... key while testing, pk_live_... once you go live.
+const PAYSTACK_PUBLIC_KEY = "pk_test_replace_with_your_paystack_public_key";
 
 // ================= PWA: install, service worker, updates =================
 (function setupPWA(){
@@ -1556,9 +1571,9 @@ function renderClientTableAdmin(clients){
     tr.innerHTML = `
       <td>${escapeHtml(c.clientName||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45)">${escapeHtml(c.phone||"")}</div></td>
       <td>${escapeHtml(c.repName||"—")}</td>
-      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45); text-transform:capitalize;">${escapeHtml(c.packageType||"single")} package</div></td>
+      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">₦${Number(c.packageAmount||0).toLocaleString()}</div></td>
       <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
-      <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span></td>
+      <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span>${c.paymentReference ? `<div style="font-size:10.5px; color:rgba(15,26,46,.5); margin-top:4px;" class="mono">ref: ${escapeHtml(c.paymentReference)}<br/>₦${Number(c.paidAmount||0).toLocaleString()} paid</div>` : ""}</td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
       <td class="mono">${c.commissionAmount!=null ? "₦"+Number(c.commissionAmount).toLocaleString() : "—"}</td>
       <td><input class="note-input" data-id="${c.id}" placeholder="Add note" value="${escapeHtml(c.adminNote||"")}" /></td>
@@ -1640,7 +1655,7 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
       email: $("cEmail").value.trim(),
       address: $("cAddress").value.trim(),
       package: $("cPackage").value.trim(),
-      packageType: $("cPackageType").value,
+      packageAmount: Number($("cPackageAmount").value) || 0,
       repAccountNumber: $("cRepAccountNumber").value.trim(),
       notes: $("cNotes").value.trim(),
       paymentStatus: "pending",
@@ -1680,14 +1695,22 @@ function renderClientTableRep(clients){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(c.clientName||"—")}</td>
-      <td>${escapeHtml(c.package||"—")}</td>
+      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">₦${Number(c.packageAmount||0).toLocaleString()}</div></td>
       <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
       <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span></td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
       <td class="mono">${c.commissionAmount!=null ? ngn(c.commissionAmount) : "—"}</td>
-      <td>${fmtDate(c.createdAt)}</td>`;
+      <td>${fmtDate(c.createdAt)}</td>
+      <td>${c.paymentStatus==="pending" ? `<button type="button" class="btn-sm approve" data-action="paylink" data-id="${c.id}">Copy payment link</button>` : "—"}</td>`;
     tbody.appendChild(tr);
   }
+  tbody.querySelectorAll("button[data-action='paylink']").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const link = `${window.location.origin}${window.location.pathname}?pay=${encodeURIComponent(btn.dataset.id)}`;
+      navigator.clipboard?.writeText(link).then(()=> toast("Payment link copied — send it to your client."))
+        .catch(()=> toast("Could not copy link."));
+    });
+  });
 }
 
 // ================= MARKETING MATERIALS =================
@@ -1805,16 +1828,15 @@ const DEFAULT_BADGE_THRESHOLDS = { bronze:1, silver:5, gold:15, platinum:30, dia
 
 let badgeThresholds = { ...DEFAULT_BADGE_THRESHOLDS };
 let allClientsCache = [];
-let commissionRates = { single: 2000, bundle: 3000 };
+let commissionRates = { percent: 10 };
 
-// ---------- Commission rates (admin-configurable, Naira) ----------
+// ---------- Commission rate (admin-configurable percentage of package amount) ----------
 async function loadCommissionRates(){
   try{
     const snap = await getDoc(doc(db, "settings", "commissionRates"));
-    if(snap.exists()) commissionRates = { single: 2000, bundle: 3000, ...snap.data() };
+    if(snap.exists()) commissionRates = { percent: 10, ...snap.data() };
   }catch(err){ console.error(err); }
-  const s = $("rateSingle"); if(s) s.value = commissionRates.single;
-  const b = $("rateBundle"); if(b) b.value = commissionRates.bundle;
+  const p = $("ratePercent"); if(p) p.value = commissionRates.percent;
 }
 
 $("commissionRatesForm")?.addEventListener("submit", async (e)=>{
@@ -1823,15 +1845,15 @@ $("commissionRatesForm")?.addEventListener("submit", async (e)=>{
   btn.disabled = true; btn.textContent = "Saving…";
   setFormMsg($("commissionRatesMsg"), "", "");
   try{
-    const rates = { single: Number($("rateSingle").value)||0, bundle: Number($("rateBundle").value)||0 };
+    const rates = { percent: Number($("ratePercent").value) || 0 };
     await setDoc(doc(db, "settings", "commissionRates"), rates);
     commissionRates = rates;
-    setFormMsg($("commissionRatesMsg"), "Commission rates saved.", "success");
-    toast("Commission rates updated.");
+    setFormMsg($("commissionRatesMsg"), "Commission rate saved.", "success");
+    toast("Commission rate updated.");
   }catch(err){
-    setFormMsg($("commissionRatesMsg"), err.message || "Could not save rates.", "error");
+    setFormMsg($("commissionRatesMsg"), err.message || "Could not save rate.", "error");
   }finally{
-    btn.disabled = false; btn.textContent = "Save rates";
+    btn.disabled = false; btn.textContent = "Save rate";
   }
 });
 
@@ -1854,7 +1876,7 @@ async function approveClientAndCreditCommission(clientId){
     const repRef = doc(db, "users", client.repId);
     const repSnap = await tx.get(repRef);
     const repData = repSnap.exists() ? repSnap.data() : {};
-    const amount = client.packageType === "bundle" ? (commissionRates.bundle||0) : (commissionRates.single||0);
+    const amount = Math.round((Number(client.packageAmount)||0) * ((commissionRates.percent||0) / 100));
     const newCommissions = (Number(repData.commissions)||0) + amount;
     const newWallet = (Number(repData.wallet)||0) + amount;
     tx.update(clientRef, { approvalStatus: "approved", commissionAmount: amount, updatedAt: serverTimestamp() });
@@ -2852,6 +2874,119 @@ $("backToSiteBtn")?.addEventListener("click", ()=>{
     runVerify("publicVerifyInput","publicVerifyResult");
   }
 })();
+
+// ================= PUBLIC CLIENT PAYMENT PAGE =================
+// Opened via a ?pay=<clientDocId> link that a rep copies and sends to their
+// client (see "Copy payment link" in the rep dashboard). No login required.
+//
+// IMPORTANT — honest security note: this app has no backend server, so this
+// payment flow uses Paystack's public key directly in the browser (safe —
+// a public key can only *start* a payment, never move money or read past
+// transactions). After Paystack confirms payment in the popup, the browser
+// records the reference/amount on the client's record — but that reference
+// is NOT cryptographically re-verified against Paystack's servers here,
+// since doing that safely requires a secret key, which must never live in
+// client-side code. That's exactly why the admin's "Confirm payment" button
+// stays a required, separate, manual step: admin cross-checks the reference
+// shown against their real Paystack dashboard before approving. For fully
+// automatic, tamper-proof verification with no manual check, the correct
+// upgrade path is a Firebase Cloud Function (a small backend) that verifies
+// the reference server-side with your Paystack secret key — happy to build
+// that if you want to remove the manual cross-check step later.
+(function checkPayParam(){
+  const params = new URLSearchParams(window.location.search);
+  const clientId = params.get("pay");
+  if(clientId){
+    window.__isVerifyMode = true; // reuse the same guard so login routing doesn't fight this page
+    $("landing").classList.add("hidden");
+    $("publicPayPage").classList.remove("hidden");
+    loadPaymentClient(clientId);
+  }
+})();
+
+async function loadPaymentClient(clientId){
+  const summary = $("payClientSummary");
+  try{
+    const snap = await getDoc(doc(db, "clients", clientId));
+    if(!snap.exists()){
+      summary.textContent = "We couldn't find this payment request. Please ask your representative for a new link.";
+      return;
+    }
+    const client = snap.data();
+    if(client.paymentStatus !== "pending"){
+      summary.textContent = client.paymentStatus === "confirmed"
+        ? "This payment has already been confirmed — no further action is needed."
+        : "This payment request is no longer active. Please contact your representative.";
+      return;
+    }
+    summary.innerHTML = `<b>${escapeHtml(client.clientName||"")}</b> — ${escapeHtml(client.package||"package")}`;
+    $("payAmountBlock").innerHTML = `<div style="font-family:'Fraunces',serif; font-size:32px; margin:14px 0; color:var(--ink);">₦${Number(client.packageAmount||0).toLocaleString()}</div>`;
+    const payBtn = $("payNowBtn");
+    payBtn.classList.remove("hidden");
+    payBtn.onclick = ()=> startPaystackPayment(clientId, client);
+  }catch(err){
+    console.error(err);
+    summary.textContent = "Something went wrong loading this payment request.";
+  }
+}
+
+function startPaystackPayment(clientId, client){
+  if(!window.PaystackPop){
+    $("payResultMsg").innerHTML = `<div class="verify-result invalid">Payment system is still loading — please try again in a moment.</div>`;
+    return;
+  }
+  if(!client.email){
+    $("payResultMsg").innerHTML = `<div class="verify-result invalid">This payment request has no email on file. Please contact your representative.</div>`;
+    return;
+  }
+  const handler = window.PaystackPop.setup({
+    key: PAYSTACK_PUBLIC_KEY,
+    email: client.email,
+    amount: Math.round(Number(client.packageAmount||0) * 100), // Paystack expects kobo
+    currency: "NGN",
+    ref: `IXP-PAY-${clientId}-${Date.now()}`,
+    metadata: { clientId, clientName: client.clientName || "", package: client.package || "" },
+    callback: function(response){
+      recordClientPayment(clientId, response.reference, client.packageAmount);
+    },
+    onClose: function(){
+      toast("Payment window closed.");
+    }
+  });
+  handler.openIframe();
+}
+
+async function recordClientPayment(clientId, reference, amount){
+  try{
+    await updateDoc(doc(db, "clients", clientId), {
+      paymentReference: reference,
+      paidAmount: Number(amount) || 0,
+      paidAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    $("payResultMsg").innerHTML = `
+      <div class="verify-result valid">
+        <h3 style="margin:0;">Payment received</h3>
+        <p style="margin:8px 0 0;">Reference: <b>${escapeHtml(reference)}</b>. Your representative's office will confirm this shortly.</p>
+      </div>`;
+    $("payNowBtn").classList.add("hidden");
+  }catch(err){
+    console.error(err);
+    $("payResultMsg").innerHTML = `
+      <div class="verify-result invalid">
+        Payment went through, but we couldn't save the reference automatically. Please keep this reference and share it with your representative: <b>${escapeHtml(reference)}</b>
+      </div>`;
+  }
+}
+
+$("backToSiteBtnPay")?.addEventListener("click", ()=>{
+  window.__isVerifyMode = false;
+  $("publicPayPage").classList.add("hidden");
+  const url = new URL(window.location.href);
+  url.searchParams.delete("pay");
+  window.history.replaceState({}, "", url.pathname);
+  showLanding();
+});
 
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
