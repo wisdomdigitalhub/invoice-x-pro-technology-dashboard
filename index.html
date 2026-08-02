@@ -235,6 +235,36 @@
   }
   .btn-ghost:hover{background:rgba(247,244,236,0.16);}
 
+  /* ===== Notifications ===== */
+  .notif-wrap{ position:relative; }
+  .notif-bell{
+    position:relative; background:rgba(247,244,236,0.08); border:1px solid rgba(247,244,236,0.2); color:var(--paper-2);
+    width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  }
+  .notif-bell:hover{ background:rgba(247,244,236,0.16); }
+  .notif-badge{
+    position:absolute; top:-4px; right:-4px; background:var(--brass); color:#1c1206; font-size:10px; font-weight:800;
+    min-width:17px; height:17px; border-radius:999px; display:flex; align-items:center; justify-content:center; padding:0 3px;
+    border:2px solid var(--ink);
+  }
+  .notif-panel{
+    position:absolute; top:48px; right:0; width:340px; max-width:88vw; background:var(--paper-2); color:var(--ink);
+    border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); z-index:200; overflow:hidden;
+  }
+  .notif-panel-head{
+    display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);
+    font-weight:700; font-size:14px;
+  }
+  .notif-panel-head button{ background:none; border:none; color:var(--brass); font-size:12px; font-weight:600; }
+  .notif-list{ max-height:360px; overflow-y:auto; }
+  .notif-item{ padding:13px 16px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .notif-item:last-child{ border-bottom:none; }
+  .notif-item:hover{ background:var(--paper); }
+  .notif-item.unread{ background:#FBF4E6; }
+  .notif-item .notif-title{ font-size:13.5px; font-weight:700; margin-bottom:3px; }
+  .notif-item .notif-body{ font-size:12.5px; color:rgba(15,26,46,0.6); line-height:1.4; }
+  .notif-item .notif-time{ font-size:10.5px; color:rgba(15,26,46,0.4); margin-top:5px; font-family:'JetBrains Mono',monospace; }
+
   .dash{padding:34px 5vw 70px; max-width:1280px; margin:0 auto;}
   .dash-head{margin-bottom:28px;}
   .dash-head h2{font-size:26px; margin:0 0 4px; font-weight:600;}
@@ -630,7 +660,23 @@
         <div class="who-role" id="whoRole">—</div>
       </div>
     </div>
-    <button class="btn-ghost" id="logoutBtn">Sign out</button>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div class="notif-wrap">
+        <button class="notif-bell" id="notifBellBtn" aria-label="Notifications">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span class="notif-badge hidden" id="notifBadge">0</span>
+        </button>
+        <div class="notif-panel hidden" id="notifPanel">
+          <div class="notif-panel-head">
+            <span>Notifications</span>
+            <button type="button" id="notifMarkAllBtn">Mark all read</button>
+          </div>
+          <div class="notif-list" id="notifList"></div>
+          <div class="empty-state hidden" id="notifEmptyState" style="padding:24px 16px;">No notifications yet.</div>
+        </div>
+      </div>
+      <button class="btn-ghost" id="logoutBtn">Sign out</button>
+    </div>
   </div>
 
   <!-- ===== ADMIN DASHBOARD ===== -->
@@ -1394,6 +1440,7 @@ let currentUserDoc = null;
 let unsubClients = null;
 let unsubReps = null;
 let unsubMaterials = null;
+let unsubNotifications = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -1531,6 +1578,8 @@ function wireLogout(id){
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
+    if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
+    $("notifPanel").classList.add("hidden");
     await signOut(auth);
   });
 }
@@ -1580,6 +1629,7 @@ function showAppShell(role){
   $("adminDash").classList.toggle("hidden", role !== "admin");
   $("repDash").classList.toggle("hidden", role !== "rep");
   $("clientDash").classList.toggle("hidden", role !== "client");
+  if(currentUser) initNotifications(currentUser.uid, role);
 }
 
 // ---------- Auth state / routing ----------
@@ -1590,6 +1640,7 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
+    if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     showLanding();
     return;
   }
@@ -1700,6 +1751,9 @@ function renderRepTable(reps){
       try{
         await updateDoc(doc(db,"users",uid), { status: newStatus, updatedAt: serverTimestamp() });
         toast(newStatus === "accepted" ? "Representative accepted." : "Representative put on hold.");
+        if(newStatus === "accepted"){
+          sendNotification(uid, "Account accepted 🎉", "Your representative account has been accepted. You can now log in and start submitting clients.", "rep-accepted");
+        }
       }catch(err){ toast("Could not update representative."); }
     });
   });
@@ -1834,8 +1888,12 @@ function renderClientTableAdmin(clients){
       const ref = doc(db, "clients", id);
       try{
         if(action === "confirm-payment"){
+          const snap = await getDoc(ref);
+          const data = snap.data();
           await updateDoc(ref, { paymentStatus: "confirmed", updatedAt: serverTimestamp() });
           toast("Payment marked as confirmed.");
+          sendNotification(data.repId, "Payment confirmed",
+            `Payment for ${data.clientName} has been confirmed. You can now wait for admin approval.`, "payment-confirmed");
         } else if(action === "approve"){
           try{
             const result = await approveClientAndCreditCommission(id);
@@ -1844,6 +1902,12 @@ function renderClientTableAdmin(clients){
             } else {
               toast(`Client approved — ₦${result.amount.toLocaleString()} credited to ${result.repName}.`);
               recalcRankingForRep(result.repId);
+              sendNotification(result.repId, "Client approved 🎉",
+                `${result.clientName} was approved — ₦${result.amount.toLocaleString()} commission credited to your wallet.`, "approved");
+              if(result.clientUid){
+                sendNotification(result.clientUid, "You're approved!",
+                  `Your account is approved. Log in to create your invoices and receipts.`, "client-approved");
+              }
             }
           }catch(err){
             toast(err.message || "Could not approve.");
@@ -1854,6 +1918,8 @@ function renderClientTableAdmin(clients){
           await updateDoc(ref, { approvalStatus: "rejected", updatedAt: serverTimestamp() });
           toast("Client rejected.");
           recalcRankingForRep(data.repId);
+          sendNotification(data.repId, "Client rejected",
+            `${data.clientName} was not approved. Check the admin note for details.`, "rejected");
         }
       }catch(err){ toast("Action failed."); }
     });
@@ -1929,6 +1995,9 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
     });
 
     setFormMsg($("submitClientMsg"), "Client submitted, with their app login ready. Awaiting admin payment confirmation.", "success");
+    sendNotification("ADMIN_BROADCAST", "New client submitted",
+      `${currentUserDoc.fullName || currentUser.email} submitted ${$("cName").value.trim()} — ₦${(Number($("cPackageAmount").value)||0).toLocaleString()} package.`,
+      "client-submitted");
     $("submitClientForm").reset();
   }catch(err){
     setFormMsg($("submitClientMsg"), err.message || "Could not submit client.", "error");
@@ -2135,7 +2204,7 @@ async function approveClientAndCreditCommission(clientId){
       throw new Error("Confirm payment before approving.");
     }
     if(client.approvalStatus === "approved"){
-      return { alreadyApproved: true, repId: client.repId, repName: client.repName, amount: client.commissionAmount||0 };
+      return { alreadyApproved: true, repId: client.repId, repName: client.repName, amount: client.commissionAmount||0, clientName: client.clientName, clientUid: client.clientUid||null };
     }
     const repRef = doc(db, "users", client.repId);
     const repSnap = await tx.get(repRef);
@@ -2147,7 +2216,7 @@ async function approveClientAndCreditCommission(clientId){
     if(repSnap.exists()){
       tx.update(repRef, { commissions: newCommissions, wallet: newWallet });
     }
-    return { alreadyApproved: false, repId: client.repId, repName: client.repName || "the representative", amount };
+    return { alreadyApproved: false, repId: client.repId, repName: client.repName || "the representative", amount, clientName: client.clientName, clientUid: client.clientUid||null };
   });
   return result;
 }
@@ -2823,6 +2892,8 @@ $("generateCertForm")?.addEventListener("submit", async (e)=>{
 
     setFormMsg($("generateCertMsg"), `Certificate ${certId} generated.`, "success");
     toast("Certificate generated.");
+    sendNotification(uid, "You've been awarded a certificate! 🏆",
+      `${awardTitle} — certificate ${certId} is ready to view and download.`, "certificate-issued");
   }catch(err){
     console.error(err);
     setFormMsg($("generateCertMsg"), err.message || "Could not generate certificate.", "error");
@@ -3447,6 +3518,135 @@ async function downloadDoc(elementId, filename, format, pdfLayout){
   pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight);
   pdf.save(`${filename}.pdf`);
 }
+
+// ================= NOTIFICATIONS =================
+// Real, working notifications with no backend required:
+//  - Every key event (client submitted, payment confirmed, approved +
+//    commission, rejected, rep accepted, certificate issued) writes a
+//    notification document in Firestore for the right person.
+//  - While that person has the app open, onSnapshot delivers it instantly —
+//    shown both in the in-app bell/panel AND as a real OS-level notification
+//    (via the Notification API / service worker), if they've granted
+//    permission.
+//  - Honest limit: without a backend (Firebase Cloud Functions + FCM), a
+//    truly closed app can't be woken up to show a notification — this fires
+//    the moment Firestore delivers the update, which needs the app open or
+//    recently backgrounded. Say the word if you want the full closed-app
+//    push version built later; it needs a small Cloud Function.
+let notifSeenIds = new Set();
+let notifFirstLoad = true;
+
+async function sendNotification(userId, title, body, type){
+  try{
+    await addDoc(collection(db, "notifications"), {
+      userId, title, body, type: type || "info", read: false, createdAt: serverTimestamp()
+    });
+  }catch(err){ console.error("Notification send failed:", err); }
+}
+
+async function requestNotificationPermission(){
+  if(!("Notification" in window)) return;
+  if(Notification.permission === "default"){
+    try{ await Notification.requestPermission(); }catch(err){ /* ignore */ }
+  }
+}
+
+function showOsNotification(title, body){
+  if(!("Notification" in window) || Notification.permission !== "granted") return;
+  if(navigator.serviceWorker && navigator.serviceWorker.getRegistration){
+    navigator.serviceWorker.getRegistration().then(reg=>{
+      if(reg){ reg.showNotification(title, { body, icon: undefined, tag: "ixp-" + Date.now() }); }
+      else { new Notification(title, { body }); }
+    }).catch(()=> new Notification(title, { body }));
+  } else {
+    new Notification(title, { body });
+  }
+}
+
+function initNotifications(uid, role){
+  requestNotificationPermission();
+  notifSeenIds = new Set();
+  notifFirstLoad = true;
+
+  if(unsubNotifications) unsubNotifications();
+  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : [uid];
+  const q = query(collection(db, "notifications"), where("userId", "in", targets), orderBy("createdAt", "desc"), limit(40));
+  unsubNotifications = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+
+    if(!notifFirstLoad){
+      snap.docChanges().forEach(change=>{
+        if(change.type === "added" && !notifSeenIds.has(change.doc.id)){
+          const data = change.doc.data();
+          showOsNotification(data.title || "Invoice X Pro", data.body || "");
+          toast(data.title || "New notification");
+        }
+      });
+    }
+    notifFirstLoad = false;
+    items.forEach(it=> notifSeenIds.add(it.id));
+
+    renderNotifications(items);
+  }, (err)=> console.error(err));
+}
+
+function renderNotifications(items){
+  const list = $("notifList");
+  const badge = $("notifBadge");
+  const empty = $("notifEmptyState");
+  list.innerHTML = "";
+  empty.classList.toggle("hidden", items.length > 0);
+
+  const unreadCount = items.filter(n => !n.read).length;
+  if(unreadCount > 0){
+    badge.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+
+  for(const n of items){
+    const row = document.createElement("div");
+    row.className = "notif-item" + (n.read ? "" : " unread");
+    row.innerHTML = `
+      <div class="notif-title">${escapeHtml(n.title || "Notification")}</div>
+      <div class="notif-body">${escapeHtml(n.body || "")}</div>
+      <div class="notif-time">${fmtDate(n.createdAt)}</div>`;
+    row.addEventListener("click", async ()=>{
+      if(!n.read){
+        try{ await updateDoc(doc(db, "notifications", n.id), { read: true }); }
+        catch(err){ console.error(err); }
+      }
+    });
+    list.appendChild(row);
+  }
+}
+
+$("notifBellBtn").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  $("notifPanel").classList.toggle("hidden");
+});
+document.addEventListener("click", (e)=>{
+  const panel = $("notifPanel");
+  const bell = $("notifBellBtn");
+  if(!panel.classList.contains("hidden") && !panel.contains(e.target) && !bell.contains(e.target)){
+    panel.classList.add("hidden");
+  }
+});
+$("notifMarkAllBtn").addEventListener("click", async ()=>{
+  const unread = document.querySelectorAll(".notif-item.unread");
+  const ids = [];
+  // Re-query current items from the last render via list DOM is unreliable for IDs,
+  // so mark-all re-reads the live query once and updates every unread doc.
+  try{
+    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : [currentUser.uid];
+    const snap = await getDocs(query(collection(db, "notifications"), where("userId", "in", targets), where("read", "==", false)));
+    const updates = [];
+    snap.forEach(d => updates.push(updateDoc(doc(db, "notifications", d.id), { read: true })));
+    await Promise.all(updates);
+  }catch(err){ console.error(err); toast("Could not mark all as read."); }
+});
 
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
