@@ -432,6 +432,66 @@
     max-width:520px; width:100%; background:var(--paper-2); border:1px solid var(--line); border-radius:18px; padding:34px;
   }
 
+  /* ===== Freemium / Premium ===== */
+  .plan-card{
+    border-radius:16px; padding:20px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap; margin-bottom:24px;
+  }
+  .plan-card.plan-free{ background:var(--paper-2); border:1px solid var(--line); }
+  .plan-card.plan-pending{ background:var(--pending-bg); border:1px solid rgba(138,116,49,0.25); }
+  .plan-card.plan-approved{ background:var(--confirm-bg); border:1px solid rgba(51,104,75,0.25); }
+  .plan-card.plan-rejected{ background:var(--reject-bg); border:1px solid rgba(150,64,47,0.25); }
+  .plan-card.plan-premium{
+    background:linear-gradient(135deg,var(--ink),var(--ink-2)); color:var(--paper-2); border:1px solid rgba(217,174,108,0.4);
+  }
+  .plan-card .plan-title{ font-family:'Fraunces',serif; font-weight:700; font-size:18px; }
+  .plan-card .plan-sub{ font-size:13px; opacity:0.75; margin-top:3px; }
+  .plan-card .plan-usage-track{ width:140px; height:6px; background:rgba(0,0,0,0.1); border-radius:4px; overflow:hidden; margin-top:8px; }
+  .plan-card.plan-premium .plan-usage-track{ background:rgba(255,255,255,0.15); }
+  .plan-card .plan-usage-fill{ height:100%; background:var(--brass); }
+
+  .premium-hero{
+    background:linear-gradient(155deg,var(--ink),var(--ink-2)); border-radius:20px; padding:40px 34px; text-align:center;
+    color:var(--paper-2); position:relative; overflow:hidden; border:1px solid rgba(217,174,108,0.3); margin-bottom:24px;
+  }
+  .premium-hero::before{
+    content:""; position:absolute; inset:0; background:radial-gradient(700px 340px at 50% -10%, rgba(217,174,108,0.18), transparent 60%);
+  }
+  .premium-hero .premium-badge{
+    display:inline-block; background:var(--brass); color:#1c1206; font-size:11px; font-weight:800; letter-spacing:.08em;
+    text-transform:uppercase; padding:6px 16px; border-radius:999px; position:relative;
+  }
+  .premium-hero h2{ font-family:'Fraunces',serif; font-size:clamp(24px,4vw,34px); margin:16px 0 6px; position:relative; }
+  .premium-hero .price{ font-family:'Fraunces',serif; font-size:42px; font-weight:700; color:var(--brass-light); margin:12px 0; position:relative; }
+  .premium-hero .price span{ font-size:15px; color:rgba(247,244,236,0.6); font-weight:400; }
+  .premium-features{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:10px; text-align:left; max-width:640px;
+    margin:22px auto 0; position:relative;
+  }
+  .premium-features .feat{ display:flex; align-items:center; gap:9px; font-size:13.5px; color:rgba(247,244,236,0.9); }
+  .premium-features .feat::before{ content:"✓"; color:var(--brass-light); font-weight:800; }
+
+  .bank-card{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:16px; padding:24px; margin-bottom:22px;
+  }
+  .bank-card .bank-row{ display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px dashed var(--line); }
+  .bank-card .bank-row:last-of-type{ border-bottom:none; }
+  .bank-card .bank-label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:rgba(15,26,46,0.5); }
+  .bank-card .bank-value{ font-weight:700; font-family:'JetBrains Mono',monospace; font-size:15px; }
+  .bank-card .copy-btn{
+    background:var(--ink); color:var(--paper-2); border:none; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:600; margin-top:12px;
+  }
+
+  .upload-drop{
+    border:2px dashed var(--line); border-radius:14px; padding:26px; text-align:center; cursor:pointer; background:var(--paper-2);
+  }
+  .upload-drop:hover{ border-color:var(--brass-light); }
+  .upload-drop.has-image{ padding:14px; }
+  .upload-preview{ max-width:100%; max-height:280px; border-radius:8px; margin-top:10px; }
+
+  .premium-status-msg{ font-size:14px; line-height:1.6; }
+  .premium-thumb{ width:52px; height:52px; object-fit:cover; border-radius:6px; cursor:pointer; border:1px solid var(--line); }
+
   /* ===== Client invoice/receipt documents ===== */
   .doc-item-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-bottom:10px; }
   .doc-item-row input{ padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; font-family:inherit; }
@@ -758,6 +818,20 @@
         </table>
       </div>
       <div class="empty-state hidden" id="clientEmptyStateAdmin">No client submissions yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Premium verification</h3>
+        <span class="hint">Client payment proof for the ₦30,000 Premium upgrade</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Amount</th><th>Screenshot</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="premiumTableBodyAdmin"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="premiumEmptyStateAdmin">No premium payment submissions yet.</div>
     </div>
 
     <div class="panel">
@@ -1141,6 +1215,69 @@
       <p id="clientBizAddressHead">Address</p>
     </div>
 
+    <div id="planStatusCard"></div>
+
+    <!-- Premium upgrade page -->
+    <div class="subpanel" data-panel="premiumUpgradeTab" id="premiumUpgradePanel">
+      <div class="premium-hero">
+        <span class="premium-badge">Premium Plan</span>
+        <h2>Unlock everything.</h2>
+        <div class="price">₦30,000 <span>one-time payment</span></div>
+        <div class="premium-features">
+          <div class="feat">Unlimited invoice creation</div>
+          <div class="feat">Unlimited receipt creation</div>
+          <div class="feat">Unlimited customers</div>
+          <div class="feat">Unlimited products</div>
+          <div class="feat">Unlimited history</div>
+          <div class="feat">Priority updates</div>
+          <div class="feat">Premium badge on your account</div>
+        </div>
+      </div>
+
+      <div class="bank-card">
+        <div class="panel-head" style="margin-bottom:8px;"><h3>Pay directly to our account</h3></div>
+        <div class="bank-row"><span class="bank-label">Bank</span><span class="bank-value">OPay</span></div>
+        <div class="bank-row"><span class="bank-label">Account name</span><span class="bank-value">Daniel C Princewill</span></div>
+        <div class="bank-row"><span class="bank-label">Account number</span><span class="bank-value" id="premBankAccNo">9041498427</span></div>
+        <button type="button" class="copy-btn" id="copyBankAccBtn">Copy account number</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Upload payment proof</h3><span class="hint">JPG or PNG, up to 5MB</span></div>
+        <div class="upload-drop" id="uploadDropZone">
+          <div id="uploadPromptText">Tap to choose a screenshot of your payment</div>
+          <img class="upload-preview hidden" id="uploadPreviewImg" />
+          <input type="file" id="proofFileInput" accept="image/png,image/jpeg,image/jpg" class="hidden" />
+        </div>
+        <div class="form-msg" id="uploadMsg"></div>
+
+        <form id="premiumPaymentForm" style="margin-top:20px;">
+          <div class="grid-2">
+            <div class="field"><label>Full name</label><input type="text" id="premFullName" required /></div>
+            <div class="field"><label>Email</label><input type="email" id="premEmail" required /></div>
+            <div class="field"><label>Phone number</label><input type="tel" id="premPhone" required /></div>
+            <div class="field"><label>Amount paid (₦)</label><input type="number" id="premAmount" value="30000" required /></div>
+            <div class="field"><label>Bank used to pay</label><input type="text" id="premBankUsed" required /></div>
+            <div class="field"><label>Payment date</label><input type="date" id="premPaymentDate" required /></div>
+            <div class="field"><label>Transaction reference (optional)</label><input type="text" id="premTxnRef" /></div>
+          </div>
+          <button type="submit" class="btn-primary" id="premSubmitBtn" style="max-width:240px;">Submit for verification</button>
+          <div class="form-msg" id="premSubmitMsg"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Premium submission success -->
+    <div class="subpanel" data-panel="premiumSuccessTab" id="premiumSuccessPanel">
+      <div class="panel" style="text-align:center; padding:44px 30px;">
+        <h2 class="fraunces" style="font-size:26px; margin-bottom:10px;">Payment submitted successfully</h2>
+        <p class="premium-status-msg" style="max-width:44ch; margin:0 auto; color:rgba(15,26,46,0.65);">
+          Your payment proof has been received. Our team will review your payment. Once confirmed, Premium will be activated automatically on your account — this usually takes a short time. Thank you for choosing Invoice X Pro Technology.
+        </p>
+        <button type="button" class="btn-primary" id="premReturnBtn" style="max-width:220px; margin:24px auto 0;">Return to dashboard</button>
+      </div>
+    </div>
+
     <div class="subnav" id="clientDocSubnav">
       <button type="button" data-tab="clientInvoiceTab" class="active">Invoice</button>
       <button type="button" data-tab="clientReceiptTab">Receipt</button>
@@ -1149,7 +1286,10 @@
     <!-- Invoice -->
     <div class="subpanel active" data-panel="clientInvoiceTab" id="clientInvoicePanel">
       <div class="panel">
-        <div class="panel-head"><h3>Bill to</h3><span class="hint">Your customer's details for this invoice</span></div>
+        <div class="panel-head">
+          <h3>Bill to</h3>
+          <button type="button" class="btn-sm reject" id="invNewBtn">New invoice</button>
+        </div>
         <div class="grid-2">
           <div class="field"><label>Customer name</label><input type="text" id="invClientName" /></div>
           <div class="field"><label>Customer address</label><input type="text" id="invClientAddress" /></div>
@@ -1195,15 +1335,20 @@
         </div>
       </div>
       <div class="doc-actions">
-        <button type="button" class="btn-sm approve" id="invDownloadPdfBtn">Download PDF</button>
-        <button type="button" class="btn-sm confirm" id="invDownloadPngBtn">Download PNG</button>
+        <button type="button" class="btn-primary" id="invGenerateBtn" style="max-width:200px;">Generate invoice</button>
+        <button type="button" class="btn-sm approve hidden" id="invDownloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn-sm confirm hidden" id="invDownloadPngBtn">Download PNG</button>
       </div>
+      <div class="form-msg" id="invGenerateMsg"></div>
     </div>
 
     <!-- Receipt -->
     <div class="subpanel" data-panel="clientReceiptTab" id="clientReceiptPanel">
       <div class="panel">
-        <div class="panel-head"><h3>Receipt details</h3></div>
+        <div class="panel-head">
+          <h3>Receipt details</h3>
+          <button type="button" class="btn-sm reject" id="rcpNewBtn">New receipt</button>
+        </div>
         <div class="grid-2">
           <div class="field"><label>Received from (customer)</label><input type="text" id="rcpClientName" /></div>
           <div class="field"><label>Customer address</label><input type="text" id="rcpClientAddress" /></div>
@@ -1212,6 +1357,7 @@
           <div class="field"><label>Amount paid (₦)</label><input type="number" id="rcpPaid" min="0" /></div>
         </div>
         <button type="button" class="btn-primary" id="rcpGenerateBtn" style="max-width:200px;">Generate receipt</button>
+        <div class="form-msg" id="rcpGenerateMsg"></div>
       </div>
 
       <div class="doc-preview-wrap">
@@ -1247,14 +1393,22 @@
         </div>
       </div>
       <div class="doc-actions">
-        <button type="button" class="btn-sm approve" id="rcpDownloadPdfBtn">Download PDF</button>
-        <button type="button" class="btn-sm confirm" id="rcpDownloadPngBtn">Download PNG</button>
+        <button type="button" class="btn-sm approve hidden" id="rcpDownloadPdfBtn">Download PDF</button>
+        <button type="button" class="btn-sm confirm hidden" id="rcpDownloadPngBtn">Download PNG</button>
       </div>
     </div>
   </div>
 </div>
 
 <!-- ============ iOS INSTALL INSTRUCTIONS ============ -->
+<div class="overlay hidden" id="screenshotLightbox">
+  <div class="modal" style="max-width:640px; text-align:center;">
+    <button class="modal-close" id="closeScreenshotLightbox">&times;</button>
+    <h3 style="margin-top:0;">Payment screenshot</h3>
+    <img id="lightboxImg" style="max-width:100%; border-radius:10px; margin-top:10px;" />
+  </div>
+</div>
+
 <div class="overlay hidden" id="iosInstallOverlay">
   <div class="modal">
     <button class="modal-close" id="closeIosInstallBtn">&times;</button>
@@ -1282,6 +1436,8 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <!-- Payment: Paystack inline checkout, used by the public client payment page -->
 <script src="https://js.paystack.co/v1/inline.js"></script>
+<!-- Email: EmailJS, used to email premium payment proof to the business with no backend -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- Client invoice/receipt document rendering -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -1320,6 +1476,19 @@ const db = getFirestore(app);
 // Replace with your real key from Paystack Dashboard → Settings → API Keys & Webhooks.
 // Use a pk_test_... key while testing, pk_live_... once you go live.
 const PAYSTACK_PUBLIC_KEY = "pk_test_replace_with_your_paystack_public_key";
+
+// EmailJS config — free, no-backend email sending, same "safe public key"
+// idea as Paystack's key above. Sign up free at emailjs.com, connect Gmail
+// as your "Email Service", create a Template with the variable names used
+// below (customer_name, email, phone, amount, bank_used, payment_date,
+// transaction_reference, screenshot_data), and set the template's "To Email"
+// to invoicexpro3@gmail.com. Then replace these three placeholders.
+const EMAILJS_PUBLIC_KEY = "replace_with_your_emailjs_public_key";
+const EMAILJS_SERVICE_ID = "replace_with_your_emailjs_service_id";
+const EMAILJS_TEMPLATE_ID = "replace_with_your_emailjs_template_id";
+if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+}
 
 // ================= PWA: install, service worker, updates =================
 (function setupPWA(){
@@ -1579,6 +1748,9 @@ function wireLogout(id){
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
+    if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
+    if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
+    if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     $("notifPanel").classList.add("hidden");
     await signOut(auth);
   });
@@ -1641,6 +1813,9 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
+    if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
+    if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
+    if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     showLanding();
     return;
   }
@@ -1709,6 +1884,7 @@ function initAdminDashboard(){
   loadClientsForAdmin();
   loadMaterialsForAdmin();
   loadCommissionRates();
+  loadPremiumRequestsForAdmin();
   initRecognitionModuleAdmin();
 }
 
@@ -3373,35 +3549,78 @@ function initClientDashboard(clientRecordId, clientRecord){
   wireSubnav("clientDocSubnav");
   initInvoiceGenerator();
   initReceiptGenerator();
+  initPremiumSystem(currentUser.uid);
 }
 
 // ---------- Invoice ----------
-function initInvoiceGenerator(){
-  const invNo = "INV-" + (Math.floor(Math.random()*900000)+100000);
+let invNo = "";
+let invSessionConsumed = false;
+
+function resetInvoiceSession(){
+  invNo = "INV-" + (Math.floor(Math.random()*900000)+100000);
   $("invNoOut").textContent = invNo;
   $("invDateOut").textContent = new Date().toLocaleDateString('en-NG', {year:'numeric', month:'short', day:'numeric'});
-
-  function addInvoiceRow(){
-    const row = document.createElement("div");
-    row.className = "doc-item-row";
-    row.innerHTML = `
-      <input placeholder="Description" class="inv-desc" />
-      <input type="number" placeholder="Qty" value="1" min="1" class="inv-qty" />
-      <input type="number" placeholder="Price" value="0" min="0" class="inv-price" />
-      <button type="button" class="doc-remove-row">✕</button>`;
-    row.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", updateInvoicePreview));
-    row.querySelector(".doc-remove-row").addEventListener("click", ()=>{ row.remove(); updateInvoicePreview(); });
-    $("invItemRows").appendChild(row);
-  }
-  $("invAddItemBtn").onclick = addInvoiceRow;
+  $("invClientName").value = "";
+  $("invClientAddress").value = "";
+  $("invDiscount").value = 0;
+  $("invVat").value = 0;
   $("invItemRows").innerHTML = "";
   addInvoiceRow();
+  invSessionConsumed = false;
+  $("invDownloadPdfBtn").classList.add("hidden");
+  $("invDownloadPngBtn").classList.add("hidden");
+  $("invGenerateBtn").classList.remove("hidden");
+  setFormMsg($("invGenerateMsg"), "", "");
+  updateInvoicePreview();
+}
+
+function addInvoiceRow(){
+  const row = document.createElement("div");
+  row.className = "doc-item-row";
+  row.innerHTML = `
+    <input placeholder="Description" class="inv-desc" />
+    <input type="number" placeholder="Qty" value="1" min="1" class="inv-qty" />
+    <input type="number" placeholder="Price" value="0" min="0" class="inv-price" />
+    <button type="button" class="doc-remove-row">✕</button>`;
+  row.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", updateInvoicePreview));
+  row.querySelector(".doc-remove-row").addEventListener("click", ()=>{ row.remove(); updateInvoicePreview(); });
+  $("invItemRows").appendChild(row);
+}
+
+function initInvoiceGenerator(){
+  $("invAddItemBtn").onclick = addInvoiceRow;
+  $("invNewBtn").onclick = resetInvoiceSession;
 
   ["invClientName","invClientAddress","invDiscount","invVat"].forEach(id=>{
     $(id).addEventListener("input", updateInvoicePreview);
   });
 
-  updateInvoicePreview();
+  resetInvoiceSession();
+
+  $("invGenerateBtn").onclick = async ()=>{
+    if(invSessionConsumed){
+      $("invDownloadPdfBtn").classList.remove("hidden");
+      $("invDownloadPngBtn").classList.remove("hidden");
+      return;
+    }
+    if(!canCreateDocument()){
+      showPremiumUpgrade();
+      return;
+    }
+    const btn = $("invGenerateBtn");
+    btn.disabled = true; btn.textContent = "Generating…";
+    const ok = await consumeDocumentCredit();
+    btn.disabled = false; btn.textContent = "Generate invoice";
+    if(!ok){
+      showPremiumUpgrade();
+      return;
+    }
+    invSessionConsumed = true;
+    $("invGenerateBtn").classList.add("hidden");
+    $("invDownloadPdfBtn").classList.remove("hidden");
+    $("invDownloadPngBtn").classList.remove("hidden");
+    setFormMsg($("invGenerateMsg"), "Invoice generated — download below.", "success");
+  };
 
   $("invDownloadPdfBtn").onclick = ()=> downloadDoc("invoicePreview", `Proforma-${invNo}`, "pdf", "portrait-a4");
   $("invDownloadPngBtn").onclick = ()=> downloadDoc("invoicePreview", `Proforma-${invNo}`, "png");
@@ -3439,9 +3658,50 @@ function updateInvoicePreview(){
 }
 
 // ---------- Receipt ----------
-function initReceiptGenerator(){
-  $("rcpGenerateBtn").onclick = updateReceiptPreview;
+let rcpSessionConsumed = false;
+
+function resetReceiptSession(){
+  $("rcpClientName").value = "";
+  $("rcpClientAddress").value = "";
+  $("rcpPackage").value = "";
+  $("rcpTotal").value = "";
+  $("rcpPaid").value = "";
+  $("rcpNoOut").textContent = "";
+  rcpSessionConsumed = false;
+  $("rcpDownloadPdfBtn").classList.add("hidden");
+  $("rcpDownloadPngBtn").classList.add("hidden");
+  setFormMsg($("rcpGenerateMsg"), "", "");
   updateReceiptPreview();
+}
+
+function initReceiptGenerator(){
+  $("rcpNewBtn").onclick = resetReceiptSession;
+
+  $("rcpGenerateBtn").onclick = async ()=>{
+    if(rcpSessionConsumed){
+      updateReceiptPreview();
+      return;
+    }
+    if(!canCreateDocument()){
+      showPremiumUpgrade();
+      return;
+    }
+    const btn = $("rcpGenerateBtn");
+    btn.disabled = true; btn.textContent = "Generating…";
+    const ok = await consumeDocumentCredit();
+    btn.disabled = false; btn.textContent = "Generate receipt";
+    if(!ok){
+      showPremiumUpgrade();
+      return;
+    }
+    rcpSessionConsumed = true;
+    updateReceiptPreview();
+    $("rcpDownloadPdfBtn").classList.remove("hidden");
+    $("rcpDownloadPngBtn").classList.remove("hidden");
+    setFormMsg($("rcpGenerateMsg"), "Receipt generated — download below.", "success");
+  };
+
+  resetReceiptSession();
 
   $("rcpDownloadPdfBtn").onclick = ()=>{
     const receiptNo = $("rcpNoOut").textContent || "receipt";
@@ -3646,6 +3906,364 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
     snap.forEach(d => updates.push(updateDoc(doc(db, "notifications", d.id), { read: true })));
     await Promise.all(updates);
   }catch(err){ console.error(err); toast("Could not mark all as read."); }
+});
+
+// ================= FREEMIUM / PREMIUM SYSTEM =================
+// No Firebase Storage anywhere in this flow, per instruction: the payment
+// screenshot is compressed client-side and stored as inline data directly
+// in the Firestore paymentRequests document (so admin can view it in-app
+// too), and emailed to the business via EmailJS.
+const FREE_DOC_LIMIT = 5;
+let unsubClientUserDoc = null;
+let unsubPaymentRequest = null;
+let latestPaymentRequest = null;
+let currentProofDataUrl = null;
+
+function initPremiumSystem(uid){
+  if(unsubClientUserDoc) unsubClientUserDoc();
+  unsubClientUserDoc = onSnapshot(doc(db, "users", uid), (snap)=>{
+    if(!snap.exists()) return;
+    currentUserDoc = snap.data(); // keep live — this is what unlocks Premium instantly on approval
+    renderPlanStatusCard();
+  });
+
+  if(unsubPaymentRequest) unsubPaymentRequest();
+  const q = query(collection(db, "paymentRequests"), where("uid", "==", uid), orderBy("createdAt", "desc"), limit(1));
+  unsubPaymentRequest = onSnapshot(q, (snap)=>{
+    latestPaymentRequest = snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+    renderPlanStatusCard();
+  }, (err)=> console.error(err));
+
+  $("premFullName").value = "";
+  const d = new Date();
+  $("premPaymentDate").value = d.toISOString().slice(0,10);
+}
+
+function renderPlanStatusCard(){
+  const card = $("planStatusCard");
+  if(!card || !currentUserDoc) return;
+  const used = Number(currentUserDoc.documentsCreated) || 0;
+  const isPremium = currentUserDoc.premium === true;
+
+  if(isPremium){
+    card.innerHTML = `
+      <div class="plan-card plan-premium">
+        <div>
+          <div class="plan-title">⭐ Premium Active</div>
+          <div class="plan-sub">Unlimited invoices &amp; receipts. Thank you for upgrading to Invoice X Pro Technology Premium.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(latestPaymentRequest && latestPaymentRequest.paymentStatus === "Pending Review"){
+    card.innerHTML = `
+      <div class="plan-card plan-pending">
+        <div>
+          <div class="plan-title">Payment under review</div>
+          <div class="plan-sub">Your payment is currently under review. Please wait while our team verifies your payment.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if(latestPaymentRequest && latestPaymentRequest.paymentStatus === "Rejected"){
+    card.innerHTML = `
+      <div class="plan-card plan-rejected">
+        <div>
+          <div class="plan-title">Payment not verified</div>
+          <div class="plan-sub">Unfortunately, we could not verify your payment. Please check your details or contact support if you believe this is an error.</div>
+        </div>
+        <button type="button" class="btn-sm approve" id="planRetryBtn">Try again</button>
+      </div>`;
+    $("planRetryBtn")?.addEventListener("click", showPremiumUpgrade);
+    return;
+  }
+
+  const pct = Math.min(100, (used / FREE_DOC_LIMIT) * 100);
+  card.innerHTML = `
+    <div class="plan-card plan-free">
+      <div>
+        <div class="plan-title">Free Plan</div>
+        <div class="plan-sub">${used} of ${FREE_DOC_LIMIT} documents used</div>
+        <div class="plan-usage-track"><div class="plan-usage-fill" style="width:${pct}%;"></div></div>
+      </div>
+      <button type="button" class="btn-sm approve" id="planUpgradeBtn">Upgrade to Premium</button>
+    </div>`;
+  $("planUpgradeBtn")?.addEventListener("click", showPremiumUpgrade);
+}
+
+function canCreateDocument(){
+  if(currentUserDoc?.premium === true) return true;
+  return (Number(currentUserDoc?.documentsCreated) || 0) < FREE_DOC_LIMIT;
+}
+
+// Atomically checks-and-increments so two rapid clicks (or two tabs) can
+// never push the count past the free limit.
+async function consumeDocumentCredit(){
+  if(currentUserDoc?.premium === true) return true;
+  const uid = currentUser.uid;
+  try{
+    return await runTransaction(db, async (tx)=>{
+      const ref = doc(db, "users", uid);
+      const snap = await tx.get(ref);
+      const used = Number(snap.data()?.documentsCreated) || 0;
+      if(used >= FREE_DOC_LIMIT) return false;
+      tx.update(ref, { documentsCreated: used + 1 });
+      return true;
+    });
+  }catch(err){ console.error(err); return false; }
+}
+
+function showPremiumUpgrade(){
+  document.querySelectorAll('#clientDash .subpanel').forEach(p=> p.classList.remove('active'));
+  $("premiumUpgradePanel").classList.add("active");
+  $("clientDocSubnav").classList.add("hidden");
+  if(currentUserDoc && !$("premFullName").value){
+    $("premFullName").value = currentUserDoc.fullName || currentUserDoc.businessName || "";
+    $("premEmail").value = currentUserDoc.email || "";
+  }
+}
+
+function showPremiumSuccessScreen(){
+  document.querySelectorAll('#clientDash .subpanel').forEach(p=> p.classList.remove('active'));
+  $("premiumSuccessPanel").classList.add("active");
+}
+
+function hidePremiumPanels(){
+  $("clientDocSubnav").classList.remove("hidden");
+  const activeBtn = document.querySelector('#clientDocSubnav button:not(.hidden)');
+  if(activeBtn) activeBtn.click();
+}
+$("premReturnBtn").addEventListener("click", hidePremiumPanels);
+
+$("copyBankAccBtn").addEventListener("click", ()=>{
+  navigator.clipboard?.writeText("9041498427")
+    .then(()=> toast("Account number copied."))
+    .catch(()=> toast("Could not copy — copy it manually: 9041498427"));
+});
+
+// ---------- Payment proof upload (compressed, no Firebase Storage) ----------
+$("uploadDropZone").addEventListener("click", ()=> $("proofFileInput").click());
+$("proofFileInput").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  setFormMsg($("uploadMsg"), "", "");
+
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+  if(!allowedTypes.includes(file.type)){
+    setFormMsg($("uploadMsg"), "Please upload a JPG or PNG image.", "error");
+    return;
+  }
+  if(file.size > 5 * 1024 * 1024){
+    setFormMsg($("uploadMsg"), "Image must be under 5MB.", "error");
+    return;
+  }
+
+  try{
+    currentProofDataUrl = await compressImageFile(file, 300 * 1024);
+    $("uploadPreviewImg").src = currentProofDataUrl;
+    $("uploadPreviewImg").classList.remove("hidden");
+    $("uploadPromptText").textContent = "Tap to replace screenshot";
+    $("uploadDropZone").classList.add("has-image");
+  }catch(err){
+    console.error(err);
+    setFormMsg($("uploadMsg"), "Could not process that image — try a different file.", "error");
+  }
+});
+
+// Resizes/re-compresses in a loop until the result fits comfortably under a
+// target size, so it's safe to store directly in a Firestore document
+// (1MB doc limit) and safe to inline into an email.
+async function compressImageFile(file, targetBytes){
+  const img = await new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const im = new Image();
+      im.onload = ()=> resolve(im);
+      im.onerror = reject;
+      im.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  let maxW = 1100;
+  let quality = 0.82;
+  let dataUrl = "";
+  for(let attempt=0; attempt<6; attempt++){
+    const scale = Math.min(1, maxW / img.width);
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    dataUrl = canvas.toDataURL("image/jpeg", quality);
+    if(dataUrl.length <= targetBytes * 1.37 || (maxW <= 480 && quality <= 0.4)) break;
+    maxW = Math.round(maxW * 0.8);
+    quality = Math.max(0.35, quality - 0.12);
+  }
+  return dataUrl;
+}
+
+function resetUploadUI(){
+  currentProofDataUrl = null;
+  $("uploadPreviewImg").classList.add("hidden");
+  $("uploadPreviewImg").src = "";
+  $("uploadPromptText").textContent = "Tap to choose a screenshot of your payment";
+  $("uploadDropZone").classList.remove("has-image");
+  $("proofFileInput").value = "";
+}
+
+$("premiumPaymentForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  if(!currentProofDataUrl){
+    setFormMsg($("premSubmitMsg"), "Please upload your payment screenshot first.", "error");
+    return;
+  }
+  const btn = $("premSubmitBtn");
+  btn.disabled = true; btn.textContent = "Submitting…";
+  setFormMsg($("premSubmitMsg"), "", "");
+  try{
+    const payload = {
+      uid: currentUser.uid,
+      customerName: $("premFullName").value.trim(),
+      email: $("premEmail").value.trim(),
+      phone: $("premPhone").value.trim(),
+      amount: Number($("premAmount").value) || 0,
+      bankName: "OPay",
+      accountName: "Daniel C Princewill",
+      accountNumber: "9041498427",
+      bankUsed: $("premBankUsed").value.trim(),
+      paymentDate: $("premPaymentDate").value,
+      transactionReference: $("premTxnRef").value.trim(),
+      screenshotData: currentProofDataUrl,
+      paymentStatus: "Pending Review",
+      createdAt: serverTimestamp()
+    };
+    await addDoc(collection(db, "paymentRequests"), payload);
+
+    sendNotification("ADMIN_BROADCAST", "New Premium payment submitted",
+      `${payload.customerName} submitted payment proof for ₦${payload.amount.toLocaleString()}.`, "premium-payment");
+
+    if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
+      try{
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          customer_name: payload.customerName,
+          email: payload.email,
+          phone: payload.phone,
+          amount: payload.amount,
+          bank_used: payload.bankUsed,
+          payment_date: payload.paymentDate,
+          transaction_reference: payload.transactionReference || "—",
+          screenshot_data: payload.screenshotData
+        });
+      }catch(emailErr){
+        console.error("Email send failed (payment record was still saved):", emailErr);
+      }
+    }
+
+    showPremiumSuccessScreen();
+    $("premiumPaymentForm").reset();
+    resetUploadUI();
+  }catch(err){
+    console.error(err);
+    setFormMsg($("premSubmitMsg"), err.message || "Could not submit. Please try again.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Submit for verification";
+  }
+});
+
+// ---------- Admin: Premium verification ----------
+let unsubPremiumAdmin = null;
+
+function loadPremiumRequestsForAdmin(){
+  if(unsubPremiumAdmin) unsubPremiumAdmin();
+  const q = query(collection(db, "paymentRequests"), orderBy("createdAt", "desc"));
+  unsubPremiumAdmin = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+    renderPremiumTableAdmin(items);
+  }, (err)=> console.error(err));
+}
+
+function renderPremiumTableAdmin(items){
+  const tbody = $("premiumTableBodyAdmin");
+  tbody.innerHTML = "";
+  $("premiumEmptyStateAdmin").classList.toggle("hidden", items.length > 0);
+
+  for(const r of items){
+    const statusClass = r.paymentStatus === "Approved" ? "approved" : (r.paymentStatus === "Rejected" ? "rejected" : "pending");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.customerName || "—")}</td>
+      <td>${escapeHtml(r.email || "—")}</td>
+      <td>${escapeHtml(r.phone || "—")}</td>
+      <td class="mono">${ngn(r.amount)}</td>
+      <td>${r.screenshotData ? `<img class="premium-thumb" src="${r.screenshotData}" data-action="view" />` : "—"}</td>
+      <td>${escapeHtml(r.paymentDate || "—")}</td>
+      <td><span class="status-chip ${statusClass}">${escapeHtml(r.paymentStatus || "Pending Review")}</span></td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-sm confirm" data-action="approve" data-id="${r.id}" ${r.paymentStatus==="Approved"?"disabled":""}>Approve</button>
+        <button type="button" class="btn-sm reject" data-action="reject" data-id="${r.id}" ${r.paymentStatus==="Rejected"?"disabled":""}>Reject</button>
+        <button type="button" class="btn-sm reject" data-action="delete" data-id="${r.id}">Delete</button>
+      </td>`;
+    const thumb = tr.querySelector('img[data-action="view"]');
+    if(thumb){
+      thumb.addEventListener("click", ()=>{
+        $("lightboxImg").src = r.screenshotData;
+        $("screenshotLightbox").classList.remove("hidden");
+      });
+    }
+    tbody.appendChild(tr);
+  }
+
+  tbody.querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const { action, id } = btn.dataset;
+      const record = items.find(r=> r.id === id);
+      if(!record) return;
+
+      if(action === "delete"){
+        try{ await deleteDoc(doc(db, "paymentRequests", id)); toast("Payment request deleted."); }
+        catch(err){ toast("Could not delete."); }
+        return;
+      }
+
+      if(action === "approve"){
+        try{
+          await updateDoc(doc(db, "paymentRequests", id), {
+            paymentStatus: "Approved", reviewedAt: serverTimestamp(), reviewedBy: currentUser?.uid || "admin"
+          });
+          await updateDoc(doc(db, "users", record.uid), {
+            premium: true, plan: "Premium", paymentStatus: "Approved",
+            approvedDate: serverTimestamp(), approvedBy: currentUser?.uid || "admin"
+          });
+          toast(`${record.customerName} is now Premium.`);
+          sendNotification(record.uid, "🎉 Premium activated!",
+            "Your Premium account has been activated. Enjoy unlimited invoice and receipt creation.", "premium-approved");
+        }catch(err){ console.error(err); toast("Could not approve payment."); }
+        return;
+      }
+
+      if(action === "reject"){
+        try{
+          await updateDoc(doc(db, "paymentRequests", id), {
+            paymentStatus: "Rejected", reviewedAt: serverTimestamp(), reviewedBy: currentUser?.uid || "admin"
+          });
+          await updateDoc(doc(db, "users", record.uid), { premium: false, paymentStatus: "Rejected" });
+          toast(`${record.customerName}'s payment was rejected.`);
+          sendNotification(record.uid, "Payment not verified",
+            "Unfortunately, we could not verify your payment. Please check your details or contact support.", "premium-rejected");
+        }catch(err){ console.error(err); toast("Could not reject payment."); }
+      }
+    });
+  });
+}
+
+$("closeScreenshotLightbox").addEventListener("click", ()=> $("screenshotLightbox").classList.add("hidden"));
+$("screenshotLightbox").addEventListener("click", (e)=>{
+  if(e.target.id === "screenshotLightbox") $("screenshotLightbox").classList.add("hidden");
 });
 
 function escapeHtml(str){
