@@ -559,6 +559,7 @@
     </button>
     <div style="display:flex; align-items:center; gap:10px;">
       <button class="nav-cta hidden" id="installAppBtn" style="background:var(--brass); color:#1c1206;">Install App</button>
+      <button class="nav-cta" id="signUpNavBtn" style="background:var(--brass); color:#1c1206;">Sign Up</button>
       <button class="nav-cta" id="clientLoginNavBtn" style="background:none; color:var(--ink); border:1.5px solid var(--line);">Client Login</button>
       <button class="nav-cta" id="repLoginNavBtn">Representative Login</button>
     </div>
@@ -664,6 +665,38 @@
 </div>
 
 <!-- ============ LOGIN MODAL ============ -->
+<div class="overlay hidden" id="signUpOverlay">
+  <div class="modal">
+    <button class="modal-close" id="closeSignUpBtn">&times;</button>
+    <div class="role-toggle" id="signUpRoleToggle">
+      <button type="button" data-role="client" id="suRoleClientBtn" class="active">I'm a Business</button>
+      <button type="button" data-role="rep" id="suRoleRepBtn">I'm a Representative</button>
+    </div>
+    <h3 id="signUpTitle">Create your business account</h3>
+    <p class="sub" id="signUpSub">Free plan includes 5 invoices/receipts to start — no card required.</p>
+
+    <form id="signUpForm">
+      <div id="suClientFields">
+        <div class="field"><label>Business name</label><input type="text" id="suBusinessName" /></div>
+        <div class="field"><label>Business address</label><input type="text" id="suAddress" /></div>
+      </div>
+      <div id="suRepFields" class="hidden">
+        <div class="field"><label>Full name</label><input type="text" id="suFullName" /></div>
+        <div class="field"><label>Phone</label><input type="tel" id="suPhone" /></div>
+        <div class="field"><label>Branch / company</label><input type="text" id="suBranch" /></div>
+      </div>
+      <div class="field"><label>Email</label><input type="email" id="suEmail" required autocomplete="username" /></div>
+      <div class="field"><label>Password</label><input type="password" id="suPassword" required minlength="6" autocomplete="new-password" /></div>
+      <button type="submit" class="btn-primary" id="signUpSubmitBtn">Create account</button>
+      <div class="form-msg" id="signUpMsg"></div>
+    </form>
+    <div class="modal-footer-link">
+      <span>Already have an account? </span>
+      <button type="button" id="switchToLoginBtn">Log in</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay hidden" id="loginOverlay">
   <div class="modal">
     <button class="modal-close" id="closeModalBtn">&times;</button>
@@ -1671,6 +1704,87 @@ $("repLoginHeroBtn").addEventListener("click", ()=> openModal("rep"));
 $("repLoginCtaBtn").addEventListener("click", ()=> openModal("rep"));
 $("closeModalBtn").addEventListener("click", closeModal);
 $("loginOverlay").addEventListener("click", (e)=>{ if(e.target.id === "loginOverlay") closeModal(); });
+
+// ---------- Sign Up (open self-registration) ----------
+let signUpRole = "client";
+function openSignUp(role){
+  signUpRole = role || "client";
+  updateSignUpUI();
+  $("signUpOverlay").classList.remove("hidden");
+  $("signUpMsg").className = "form-msg";
+  $("signUpForm").reset();
+}
+function closeSignUp(){ $("signUpOverlay").classList.add("hidden"); }
+function updateSignUpUI(){
+  $("suRoleClientBtn").classList.toggle("active", signUpRole === "client");
+  $("suRoleRepBtn").classList.toggle("active", signUpRole === "rep");
+  $("suClientFields").classList.toggle("hidden", signUpRole !== "client");
+  $("suRepFields").classList.toggle("hidden", signUpRole !== "rep");
+  if(signUpRole === "rep"){
+    $("signUpTitle").textContent = "Become a representative";
+    $("signUpSub").textContent = "Your account is created instantly — admin approval unlocks full access.";
+  } else {
+    $("signUpTitle").textContent = "Create your business account";
+    $("signUpSub").textContent = "Free plan includes 5 invoices/receipts to start — no card required.";
+  }
+}
+$("signUpNavBtn").addEventListener("click", ()=> openSignUp("client"));
+$("closeSignUpBtn").addEventListener("click", closeSignUp);
+$("signUpOverlay").addEventListener("click", (e)=>{ if(e.target.id === "signUpOverlay") closeSignUp(); });
+$("suRoleClientBtn").addEventListener("click", ()=>{ signUpRole = "client"; updateSignUpUI(); });
+$("suRoleRepBtn").addEventListener("click", ()=>{ signUpRole = "rep"; updateSignUpUI(); });
+$("switchToLoginBtn").addEventListener("click", ()=>{ closeSignUp(); openModal(signUpRole === "rep" ? "rep" : "client"); });
+
+$("signUpForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = $("signUpSubmitBtn");
+  btn.disabled = true; btn.textContent = "Creating account…";
+  setFormMsg($("signUpMsg"), "", "");
+  const email = $("suEmail").value.trim();
+  const password = $("suPassword").value;
+  try{
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const uid = cred.user.uid;
+
+    if(signUpRole === "rep"){
+      await setDoc(doc(db, "users", uid), {
+        role: "rep",
+        fullName: $("suFullName").value.trim(),
+        email,
+        phone: $("suPhone").value.trim(),
+        branch: $("suBranch").value.trim(),
+        status: "pending",
+        accountCode: genCode("REP"),
+        createdBy: "self-signup",
+        createdAt: serverTimestamp()
+      });
+      sendNotification("ADMIN_BROADCAST", "New representative sign-up",
+        `${$("suFullName").value.trim() || email} signed up and is awaiting approval.`, "rep-signup");
+      setFormMsg($("signUpMsg"), "Account created — awaiting admin approval. We'll notify you once you're accepted.", "success");
+    } else {
+      await setDoc(doc(db, "users", uid), {
+        role: "client",
+        email,
+        fullName: $("suBusinessName").value.trim(),
+        businessName: $("suBusinessName").value.trim(),
+        address: $("suAddress").value.trim(),
+        documentAccess: "both",
+        documentsCreated: 0,
+        premium: false,
+        plan: "Free",
+        paymentStatus: "none",
+        createdBy: "self-signup",
+        createdAt: serverTimestamp()
+      });
+      setFormMsg($("signUpMsg"), "Account created! Taking you in…", "success");
+    }
+    setTimeout(closeSignUp, 900);
+  }catch(err){
+    setFormMsg($("signUpMsg"), err.message || "Could not create account.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Create account";
+  }
+});
 $("roleRepBtn").addEventListener("click", ()=>{ selectedRole="rep"; updateRoleUI(); });
 $("roleClientBtn").addEventListener("click", ()=>{ selectedRole="client"; updateRoleUI(); });
 $("roleAdminBtn").addEventListener("click", ()=>{ selectedRole="admin"; updateRoleUI(); });
@@ -1849,19 +1963,27 @@ onAuthStateChanged(auth, async (user)=>{
     } else if(data.role === "client"){
       try{
         const clientRecordId = data.clientRecordId;
-        const clientSnap = clientRecordId ? await getDoc(doc(db, "clients", clientRecordId)) : null;
-        if(!clientSnap || !clientSnap.exists()){
-          $("debugInfo").textContent = "Client profile has no linked submission record.";
-          showUserNotAvailable();
-          return;
-        }
-        const clientRecord = clientSnap.data();
-        if(clientRecord.approvalStatus === "approved"){
+        if(!clientRecordId){
+          // Self-signed-up client (no rep submission behind them) — instant
+          // access, gated only by the freemium document limit, not admin approval.
           showAppShell("client");
-          try{ initClientDashboard(clientRecordId, clientRecord); }
+          try{ initClientDashboard(null, null); }
           catch(dashErr){ console.error(dashErr); toast("Dashboard error: " + (dashErr.message || dashErr)); }
         } else {
-          showClientPending();
+          const clientSnap = await getDoc(doc(db, "clients", clientRecordId));
+          if(!clientSnap.exists()){
+            $("debugInfo").textContent = "Client profile has no linked submission record.";
+            showUserNotAvailable();
+            return;
+          }
+          const clientRecord = clientSnap.data();
+          if(clientRecord.approvalStatus === "approved"){
+            showAppShell("client");
+            try{ initClientDashboard(clientRecordId, clientRecord); }
+            catch(dashErr){ console.error(dashErr); toast("Dashboard error: " + (dashErr.message || dashErr)); }
+          } else {
+            showClientPending();
+          }
         }
       }catch(dashErr){
         console.error(dashErr);
@@ -3524,8 +3646,11 @@ function numberToWords(num){
 }
 
 function initClientDashboard(clientRecordId, clientRecord){
-  const businessName = clientRecord.businessName || clientRecord.clientName || "Your Business";
-  const address = clientRecord.address || "";
+  // Self-signed-up clients have no linked rep-submission record — fall back
+  // to their own profile doc for business name/address/document access.
+  const source = clientRecord || currentUserDoc || {};
+  const businessName = source.businessName || source.clientName || source.fullName || "Your Business";
+  const address = source.address || "";
   $("clientBizNameHead").textContent = businessName;
   $("clientBizAddressHead").textContent = address;
   $("invBizNameOut").textContent = businessName;
@@ -3533,7 +3658,7 @@ function initClientDashboard(clientRecordId, clientRecord){
   $("rcpBizNameOut").textContent = businessName;
 
   // Show only the document type(s) this client is entitled to
-  const access = clientRecord.documentAccess || "both";
+  const access = source.documentAccess || "both";
   const showInvoice = access === "invoice" || access === "both";
   const showReceipt = access === "receipt" || access === "both";
   $("clientDocSubnav").classList.toggle("hidden", !(showInvoice && showReceipt));
