@@ -471,6 +471,43 @@
   .premium-features .feat{ display:flex; align-items:center; gap:9px; font-size:13.5px; color:rgba(247,244,236,0.9); }
   .premium-features .feat::before{ content:"✓"; color:var(--brass-light); font-weight:800; }
 
+  .package-select{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:560px; margin:18px auto 0; position:relative; }
+  .pkg-option{
+    background:rgba(255,255,255,0.05); border:1.5px solid rgba(217,174,108,0.25); border-radius:12px; padding:16px 10px;
+    text-align:center; cursor:pointer; transition:all .15s ease;
+  }
+  .pkg-option input{ position:absolute; opacity:0; pointer-events:none; }
+  .pkg-option.active{ border-color:var(--brass-light); background:rgba(217,174,108,0.14); }
+  .pkg-name{ font-size:12.5px; font-weight:700; color:var(--paper-2); }
+  .pkg-price{ font-family:'Fraunces',serif; font-weight:700; font-size:18px; color:var(--brass-light); margin-top:6px; }
+  .pkg-price span{ font-size:10.5px; color:rgba(247,244,236,0.55); font-weight:400; }
+
+  /* ===== Credits & spin wheel ===== */
+  .credits-pill{ display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-weight:700; }
+  .spin-card{
+    background:linear-gradient(135deg,var(--ink),var(--ink-2)); border-radius:16px; padding:24px; text-align:center;
+    color:var(--paper-2); margin-bottom:20px; border:1px solid rgba(217,174,108,0.3);
+  }
+  .spin-wheel-wrap{ display:flex; justify-content:center; margin:16px 0; }
+  .spin-wheel{
+    width:170px; height:170px; border-radius:50%; position:relative;
+    background: conic-gradient(from 0deg, #B8863E 0deg 45deg, #0F1A2E 45deg 90deg, #B8863E 90deg 135deg, #0F1A2E 135deg 180deg,
+                #B8863E 180deg 225deg, #0F1A2E 225deg 270deg, #B8863E 270deg 315deg, #0F1A2E 315deg 360deg);
+    border:4px solid var(--brass-light); transition:transform 3.2s cubic-bezier(.15,.85,.25,1);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .spin-wheel-center{
+    width:52px; height:52px; border-radius:50%; background:var(--paper-2); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:12px; text-align:center;
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+  }
+  .spin-pointer{
+    position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+    width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-top:16px solid var(--brass-light); z-index:2;
+  }
+  .spin-wheel-outer{ position:relative; display:inline-block; }
+
+
   .bank-card{
     background:var(--paper-2); border:1px solid var(--line); border-radius:16px; padding:24px; margin-bottom:22px;
   }
@@ -491,6 +528,20 @@
 
   .premium-status-msg{ font-size:14px; line-height:1.6; }
   .premium-thumb{ width:52px; height:52px; object-fit:cover; border-radius:6px; cursor:pointer; border:1px solid var(--line); }
+
+  .logo-uploader{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+  .logo-uploader-preview{
+    width:56px; height:56px; border-radius:50%; border:2px dashed var(--line); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; background:var(--paper);
+    font-family:'Fraunces',serif; font-weight:700; color:rgba(15,26,46,0.4); font-size:18px;
+  }
+  .logo-uploader-preview img{ width:100%; height:100%; object-fit:cover; }
+  .logo-uploader-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .logo-uploader-actions button{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:8px; padding:8px 14px; font-size:12.5px; font-weight:600; color:var(--ink);
+  }
+  .logo-uploader-actions button.remove{ color:var(--reject); }
+  .logo-uploader-hint{ font-size:11.5px; color:rgba(15,26,46,0.5); margin-top:4px; }
 
   /* ===== Auth loading splash ===== */
   #authLoadingScreen{
@@ -532,8 +583,9 @@
   .inv-logo-mark{
     width:50px; height:50px; border-radius:50%; background:#fff; border:2.5px solid #1d6fd6;
     color:#1d6fd6; font-family:'Inter',sans-serif; font-weight:800; font-size:17px; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
   }
+  .inv-logo-mark img{ width:100%; height:100%; object-fit:cover; }
   .inv-biz-name{ font-family:'Inter',sans-serif; font-weight:800; font-size:23px; color:#1a1a1a; line-height:1.2; letter-spacing:.2px; }
   .inv-biz-sub{ font-size:12.5px; color:#666; margin-top:3px; max-width:34ch; }
   .inv-biz-contact{ font-size:11.5px; color:#777; margin-top:2px; }
@@ -591,9 +643,11 @@
   .doc-preview.receipt-doc{ width:400px; padding:30px 26px; font-family:'JetBrains Mono',monospace; }
   .pos-header{ text-align:center; margin-bottom:14px; }
   .pos-logo-mark{
-    width:0; height:0; margin:0 auto 8px;
-    border-left:15px solid transparent; border-right:15px solid transparent; border-bottom:26px solid #1a1a1a;
+    width:44px; height:44px; border-radius:50%; margin:0 auto 8px; background:#fff; border:2px solid #1a1a1a;
+    color:#1a1a1a; font-family:'Inter',sans-serif; font-weight:800; font-size:15px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
   }
+  .pos-logo-mark img{ width:100%; height:100%; object-fit:cover; }
   .pos-biz-name{ font-family:'Inter',sans-serif; font-weight:800; font-size:20px; color:#1a1a1a; letter-spacing:.3px; }
   .pos-biz-tag{ font-size:10px; letter-spacing:1.5px; color:#888; margin-top:2px; }
   .pos-biz-address{ font-size:10.5px; color:#666; margin-top:6px; line-height:1.5; }
@@ -965,12 +1019,28 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h3>Premium pricing</h3>
+        <span class="hint">Yearly prices — Premium renews every 365 days, never lifetime</span>
+      </div>
+      <form id="premiumPricingForm">
+        <div class="grid-2">
+          <div class="field"><label>Invoice only (₦/year)</label><input type="number" min="0" id="priceInvoiceInput" required /></div>
+          <div class="field"><label>Receipt only (₦/year)</label><input type="number" min="0" id="priceReceiptInput" required /></div>
+          <div class="field"><label>Both (₦/year)</label><input type="number" min="0" id="priceBothInput" required /></div>
+        </div>
+        <button type="submit" class="btn-primary" id="savePremiumPricingBtn" style="max-width:200px;">Save pricing</button>
+        <div class="form-msg" id="premiumPricingMsg"></div>
+      </form>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h3>Premium verification</h3>
-        <span class="hint">Client payment proof for the ₦30,000 Premium upgrade</span>
+        <span class="hint">Client payment proof for yearly Premium — Invoice, Receipt, or Both</span>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Amount</th><th>Screenshot</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Package</th><th>Amount</th><th>Screenshot</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="premiumTableBodyAdmin"></tbody>
         </table>
       </div>
@@ -1363,17 +1433,32 @@
     <!-- Premium upgrade page -->
     <div class="subpanel" data-panel="premiumUpgradeTab" id="premiumUpgradePanel">
       <div class="premium-hero">
-        <span class="premium-badge">Premium Plan</span>
-        <h2>Unlock everything.</h2>
-        <div class="price">₦30,000 <span>one-time payment</span></div>
+        <span class="premium-badge">Premium Plan · Yearly</span>
+        <h2>Unlock unlimited access.</h2>
+        <div class="package-select" id="packageSelect">
+          <label class="pkg-option" data-pkg="invoice">
+            <input type="radio" name="premPkg" value="invoice" />
+            <div class="pkg-name">Invoice only</div>
+            <div class="pkg-price">₦<span id="pkgPriceInvoice">15,000</span><span>/year</span></div>
+          </label>
+          <label class="pkg-option" data-pkg="receipt">
+            <input type="radio" name="premPkg" value="receipt" />
+            <div class="pkg-name">Receipt only</div>
+            <div class="pkg-price">₦<span id="pkgPriceReceipt">15,000</span><span>/year</span></div>
+          </label>
+          <label class="pkg-option active" data-pkg="both">
+            <input type="radio" name="premPkg" value="both" checked />
+            <div class="pkg-name">Both (best value)</div>
+            <div class="pkg-price">₦<span id="pkgPriceBoth">25,000</span><span>/year</span></div>
+          </label>
+        </div>
         <div class="premium-features">
-          <div class="feat">Unlimited invoice creation</div>
-          <div class="feat">Unlimited receipt creation</div>
+          <div class="feat">Unlimited creation for your chosen document type(s)</div>
           <div class="feat">Unlimited customers</div>
-          <div class="feat">Unlimited products</div>
           <div class="feat">Unlimited history</div>
           <div class="feat">Priority updates</div>
           <div class="feat">Premium badge on your account</div>
+          <div class="feat">Renews yearly — cancel anytime, no lock-in</div>
         </div>
       </div>
 
@@ -1399,7 +1484,8 @@
             <div class="field"><label>Full name</label><input type="text" id="premFullName" required /></div>
             <div class="field"><label>Email</label><input type="email" id="premEmail" required /></div>
             <div class="field"><label>Phone number</label><input type="tel" id="premPhone" required /></div>
-            <div class="field"><label>Amount paid (₦)</label><input type="number" id="premAmount" value="30000" required /></div>
+            <div class="field"><label>Package</label><input type="text" id="premPackageLabel" value="Both (Invoice + Receipt)" readonly /></div>
+            <div class="field"><label>Amount paid (₦)</label><input type="number" id="premAmount" value="25000" required /></div>
             <div class="field"><label>Bank used to pay</label><input type="text" id="premBankUsed" required /></div>
             <div class="field"><label>Payment date</label><input type="date" id="premPaymentDate" required /></div>
             <div class="field"><label>Transaction reference (optional)</label><input type="text" id="premTxnRef" /></div>
@@ -1415,7 +1501,7 @@
       <div class="panel" style="text-align:center; padding:44px 30px;">
         <h2 class="fraunces" style="font-size:26px; margin-bottom:10px;">Payment submitted successfully</h2>
         <p class="premium-status-msg" style="max-width:44ch; margin:0 auto; color:rgba(15,26,46,0.65);">
-          Your payment proof has been received. Our team will review your payment. Once confirmed, Premium will be activated automatically on your account — this usually takes a short time. Thank you for choosing Invoice X Pro Technology.
+          Your payment proof has been received. Our team will review your payment. Once confirmed, Premium will be activated automatically on your account for one year — this usually takes a short time. Thank you for choosing Invoice X Pro Technology.
         </p>
         <button type="button" class="btn-primary" id="premReturnBtn" style="max-width:220px; margin:24px auto 0;">Return to dashboard</button>
       </div>
@@ -1442,6 +1528,18 @@
         <div class="panel-head" style="margin-top:6px;">
           <h3 style="font-size:15px;">Business details (optional, shown on the invoice)</h3>
         </div>
+        <div class="logo-uploader">
+          <div class="logo-uploader-preview" id="logoPreviewBox">?</div>
+          <div>
+            <div class="logo-uploader-actions">
+              <button type="button" id="logoUploadBtn">Upload logo</button>
+              <button type="button" class="remove hidden" id="logoRemoveBtn">Remove</button>
+            </div>
+            <div class="logo-uploader-hint">JPG or PNG. If you don't add one, we'll use your business initials instead — used on both your invoices and receipts.</div>
+            <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg" class="hidden" />
+          </div>
+        </div>
+        <div class="form-msg" id="logoMsg"></div>
         <div class="grid-2">
           <div class="field"><label>Business phone</label><input type="text" id="invBizPhone" /></div>
           <div class="field"><label>Business email</label><input type="email" id="invBizEmail" /></div>
@@ -1460,7 +1558,7 @@
         <div class="doc-preview invoice-doc" id="invoicePreview">
           <div class="inv-topline">
             <div class="inv-logo-block">
-              <div class="inv-logo-mark">IX</div>
+              <div class="inv-logo-mark" id="invLogoMark">IX</div>
               <div>
                 <div class="inv-biz-name" id="invBizNameOut">Business</div>
                 <div class="inv-biz-sub" id="invBizAddressOut">Address</div>
@@ -1552,7 +1650,7 @@
             <div id="rcpStampDate" style="font-size:9px; margin-top:4px;"></div>
           </div>
           <div class="pos-header">
-            <div class="pos-logo-mark">IX</div>
+            <div class="pos-logo-mark" id="posLogoMark">IX</div>
             <div class="pos-biz-name" id="rcpBizNameOut">Business</div>
             <div class="pos-biz-tag">RECEIPT</div>
             <div class="pos-biz-address" id="rcpBizAddressOut"></div>
@@ -1928,9 +2026,11 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         businessName: $("suBusinessName").value.trim(),
         address: $("suAddress").value.trim(),
         documentAccess: "both",
-        documentsCreated: 0,
-        premium: false,
-        plan: "Free",
+        credits: STARTING_CREDITS,
+        creditsExpireAt: new Date(Date.now() + CREDIT_EXPIRY_DAYS*24*60*60*1000),
+        hasSpun: false,
+        premiumPlan: "none",
+        premiumExpiresAt: null,
         paymentStatus: "none",
         createdBy: "self-signup",
         createdAt: serverTimestamp()
@@ -2166,6 +2266,7 @@ function initAdminDashboard(){
   loadClientsForAdmin();
   loadMaterialsForAdmin();
   loadCommissionRates();
+  loadPremiumPricing();
   loadPremiumRequestsForAdmin();
   initRecognitionModuleAdmin();
 }
@@ -2448,6 +2549,12 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
       fullName: businessName,
       businessName,
       clientRecordId: newClientRef.id,
+      credits: STARTING_CREDITS,
+      creditsExpireAt: new Date(Date.now() + CREDIT_EXPIRY_DAYS*24*60*60*1000),
+      hasSpun: false,
+      premiumPlan: "none",
+      premiumExpiresAt: null,
+      paymentStatus: "none",
       createdBy: currentUser.uid,
       createdAt: serverTimestamp()
     });
@@ -3834,12 +3941,15 @@ function initClientDashboard(clientRecordId, clientRecord){
   const source = clientRecord || currentUserDoc || {};
   const businessName = source.businessName || source.clientName || source.fullName || "Your Business";
   const address = source.address || "";
+  window.__currentBusinessName = businessName; // used by renderBusinessLogo() for the initials fallback
   $("clientBizNameHead").textContent = businessName;
   $("clientBizAddressHead").textContent = address;
   $("invBizNameOut").textContent = businessName;
   $("invBizAddressOut").textContent = address;
   $("rcpBizNameOut").textContent = businessName;
   $("rcpBizAddressOut").textContent = address;
+  renderBusinessLogo();
+  loadPremiumPricing();
 
   // Show only the document type(s) this client is entitled to
   const access = source.documentAccess || "both";
@@ -3912,13 +4022,13 @@ function initInvoiceGenerator(){
       $("invDownloadPngBtn").classList.remove("hidden");
       return;
     }
-    if(!canCreateDocument()){
+    if(!canCreateDocument("invoice")){
       showPremiumUpgrade();
       return;
     }
     const btn = $("invGenerateBtn");
     btn.disabled = true; btn.textContent = "Generating…";
-    const ok = await consumeDocumentCredit();
+    const ok = await consumeDocumentCredit("invoice");
     btn.disabled = false; btn.textContent = "Generate invoice";
     if(!ok){
       showPremiumUpgrade();
@@ -4021,13 +4131,13 @@ function initReceiptGenerator(){
       updateReceiptPreview();
       return;
     }
-    if(!canCreateDocument()){
+    if(!canCreateDocument("receipt")){
       showPremiumUpgrade();
       return;
     }
     const btn = $("rcpGenerateBtn");
     btn.disabled = true; btn.textContent = "Generating…";
-    const ok = await consumeDocumentCredit();
+    const ok = await consumeDocumentCredit("receipt");
     btn.disabled = false; btn.textContent = "Generate receipt";
     if(!ok){
       showPremiumUpgrade();
@@ -4259,16 +4369,35 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
   }catch(err){ console.error(err); toast("Could not mark all as read."); }
 });
 
-// ================= FREEMIUM / PREMIUM SYSTEM =================
+// ================= FREEMIUM / PREMIUM SYSTEM (credit-based) =================
 // No Firebase Storage anywhere in this flow, per instruction: the payment
 // screenshot is compressed client-side and stored as inline data directly
 // in the Firestore paymentRequests document (so admin can view it in-app
 // too), and emailed to the business via EmailJS.
-const FREE_DOC_LIMIT = 5;
+const STARTING_CREDITS = 1000;      // every new client starts with this many
+const CREDIT_COST_PER_DOC = 50;     // deducted for each invoice/receipt generated
+const SPIN_BONUS_CREDITS = 100;     // guaranteed bonus from the one-time spin
+const CREDIT_EXPIRY_DAYS = 90;      // credits stop working after this many days, even if unused
+const PREMIUM_DURATION_DAYS = 365;  // Premium is a YEARLY subscription now, never lifetime
 let unsubClientUserDoc = null;
 let unsubPaymentRequest = null;
 let latestPaymentRequest = null;
 let currentProofDataUrl = null;
+let selectedPremiumPackage = "both";
+
+// Premium is per-document-type ("invoice" | "receipt" | "both") and expires
+// after PREMIUM_DURATION_DAYS from the date admin approved it — this is what
+// makes it yearly, not lifetime. Falls back to the shared credit balance for
+// whichever document type isn't (or is no longer) covered by Premium.
+function isPremiumActiveFor(docType){
+  const plan = currentUserDoc?.premiumPlan;
+  if(!plan || plan === "none") return false;
+  const expiry = currentUserDoc?.premiumExpiresAt;
+  if(!expiry) return false;
+  const expiryDate = expiry.toDate ? expiry.toDate() : new Date(expiry);
+  if(Date.now() > expiryDate.getTime()) return false;
+  return plan === "both" || plan === docType;
+}
 
 function initPremiumSystem(uid){
   if(unsubClientUserDoc) unsubClientUserDoc();
@@ -4276,6 +4405,7 @@ function initPremiumSystem(uid){
     if(!snap.exists()) return;
     currentUserDoc = snap.data(); // keep live — this is what unlocks Premium instantly on approval
     renderPlanStatusCard();
+    renderBusinessLogo();
   });
 
   if(unsubPaymentRequest) unsubPaymentRequest();
@@ -4290,20 +4420,53 @@ function initPremiumSystem(uid){
   $("premPaymentDate").value = d.toISOString().slice(0,10);
 }
 
+function creditsExpired(){
+  const expiry = currentUserDoc?.creditsExpireAt;
+  if(!expiry) return false; // no expiry set (e.g. legacy/admin-created accounts) — never expires
+  const expiryDate = expiry.toDate ? expiry.toDate() : new Date(expiry);
+  return Date.now() > expiryDate.getTime();
+}
+
+function fmtExpiry(ts){
+  if(!ts) return "";
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-NG', {year:'numeric', month:'short', day:'numeric'});
+}
+
 function renderPlanStatusCard(){
   const card = $("planStatusCard");
   if(!card || !currentUserDoc) return;
-  const used = Number(currentUserDoc.documentsCreated) || 0;
-  const isPremium = currentUserDoc.premium === true;
+  const credits = Number(currentUserDoc.credits) || 0;
+  const invoicePremium = isPremiumActiveFor("invoice");
+  const receiptPremium = isPremiumActiveFor("receipt");
+  const plan = currentUserDoc.premiumPlan;
+  const expiryText = fmtExpiry(currentUserDoc.premiumExpiresAt);
 
-  if(isPremium){
+  if(invoicePremium || receiptPremium){
+    const label = invoicePremium && receiptPremium ? "Invoice + Receipt" : (invoicePremium ? "Invoice only" : "Receipt only");
     card.innerHTML = `
       <div class="plan-card plan-premium">
         <div>
-          <div class="plan-title">⭐ Premium Active</div>
-          <div class="plan-sub">Unlimited invoices &amp; receipts. Thank you for upgrading to Invoice X Pro Technology Premium.</div>
+          <div class="plan-title">⭐ Premium Active — ${label}</div>
+          <div class="plan-sub">Unlimited creation for your plan. Renews/expires ${expiryText}.</div>
         </div>
+        ${(plan !== "both") ? `<button type="button" class="btn-sm approve" id="planUpgradeBtn">Add the other document type</button>` : ""}
       </div>`;
+    $("planUpgradeBtn")?.addEventListener("click", showPremiumUpgrade);
+    return;
+  }
+
+  if(plan && plan !== "none" && !invoicePremium && !receiptPremium){
+    // Had premium, it lapsed — yearly, not lifetime, so this really happens.
+    card.innerHTML = `
+      <div class="plan-card plan-rejected">
+        <div>
+          <div class="plan-title">Premium expired</div>
+          <div class="plan-sub">Your ${plan === "both" ? "Invoice + Receipt" : plan} Premium plan expired on ${expiryText}. Renew to keep unlimited access.</div>
+        </div>
+        <button type="button" class="btn-sm approve" id="planUpgradeBtn">Renew Premium</button>
+      </div>`;
+    $("planUpgradeBtn")?.addEventListener("click", showPremiumUpgrade);
     return;
   }
 
@@ -4331,45 +4494,113 @@ function renderPlanStatusCard(){
     return;
   }
 
-  const pct = Math.min(100, (used / FREE_DOC_LIMIT) * 100);
+  const expired = creditsExpired();
+  const pct = Math.min(100, (credits / STARTING_CREDITS) * 100);
+  const creditExpiryText = fmtExpiry(currentUserDoc?.creditsExpireAt);
+  const canSpin = currentUserDoc?.hasSpun !== true && !expired;
+
   card.innerHTML = `
-    <div class="plan-card plan-free">
+    <div class="plan-card ${expired ? 'plan-rejected' : 'plan-free'}">
       <div>
-        <div class="plan-title">Free Plan</div>
-        <div class="plan-sub">${used} of ${FREE_DOC_LIMIT} documents used</div>
-        <div class="plan-usage-track"><div class="plan-usage-fill" style="width:${pct}%;"></div></div>
+        <div class="plan-title">${expired ? "Credits expired" : "Free Plan"}</div>
+        <div class="plan-sub">
+          ${expired
+            ? `Your free credits expired on ${creditExpiryText}. Upgrade to keep creating documents.`
+            : `${credits.toLocaleString()} credits remaining · ${CREDIT_COST_PER_DOC} credits per document${creditExpiryText ? ` · expires ${creditExpiryText}` : ""}`}
+        </div>
+        ${!expired ? `<div class="plan-usage-track"><div class="plan-usage-fill" style="width:${pct}%;"></div></div>` : ""}
       </div>
-      <button type="button" class="btn-sm approve" id="planUpgradeBtn">Upgrade to Premium</button>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        ${canSpin ? `<button type="button" class="btn-sm confirm" id="planSpinBtn">🎰 Spin for +${SPIN_BONUS_CREDITS}</button>` : ""}
+        <button type="button" class="btn-sm approve" id="planUpgradeBtn">Upgrade to Premium</button>
+      </div>
     </div>`;
   $("planUpgradeBtn")?.addEventListener("click", showPremiumUpgrade);
+  $("planSpinBtn")?.addEventListener("click", openSpinWheel);
 }
 
-function canCreateDocument(){
-  if(currentUserDoc?.premium === true) return true;
-  return (Number(currentUserDoc?.documentsCreated) || 0) < FREE_DOC_LIMIT;
+function canCreateDocument(docType){
+  if(isPremiumActiveFor(docType)) return true;
+  if(creditsExpired()) return false;
+  return (Number(currentUserDoc?.credits) || 0) >= CREDIT_COST_PER_DOC;
 }
 
-// Atomically checks-and-increments so two rapid clicks (or two tabs) can
-// never push the count past the free limit.
-async function consumeDocumentCredit(){
-  if(currentUserDoc?.premium === true) return true;
+// Atomically checks-and-deducts so two rapid clicks (or two tabs) can never
+// spend below zero or bypass the expiry check.
+async function consumeDocumentCredit(docType){
+  if(isPremiumActiveFor(docType)) return true;
   const uid = currentUser.uid;
   try{
     const result = await runTransaction(db, async (tx)=>{
       const ref = doc(db, "users", uid);
       const snap = await tx.get(ref);
-      const used = Number(snap.data()?.documentsCreated) || 0;
-      if(used >= FREE_DOC_LIMIT) return false;
-      tx.update(ref, { documentsCreated: used + 1 });
-      return { ok: true, remaining: FREE_DOC_LIMIT - (used + 1) };
+      const data = snap.data() || {};
+      const expiry = data.creditsExpireAt;
+      if(expiry){
+        const expiryDate = expiry.toDate ? expiry.toDate() : new Date(expiry);
+        if(Date.now() > expiryDate.getTime()) return false;
+      }
+      const credits = Number(data.credits) || 0;
+      if(credits < CREDIT_COST_PER_DOC) return false;
+      const remaining = credits - CREDIT_COST_PER_DOC;
+      tx.update(ref, { credits: remaining });
+      return { ok: true, remaining };
     });
-    if(result && result.remaining === 0){
-      sendNotification(uid, "Free documents used up",
-        "You've used all 5 free documents. Upgrade to Premium for unlimited invoices and receipts.", "free-limit-reached");
+    if(result && result.remaining < CREDIT_COST_PER_DOC){
+      sendNotification(uid, "Low on credits",
+        `You have ${result.remaining} credits left — not enough for another document. Spin for a bonus or upgrade to Premium.`, "low-credits");
     }
     return result ? result.ok : false;
   }catch(err){ console.error(err); return false; }
 }
+
+// ---------- Spin wheel (one-time, guaranteed +100 credits) ----------
+async function openSpinWheel(){
+  if(currentUserDoc?.hasSpun === true){ toast("You've already used your spin."); return; }
+  $("spinOverlay").classList.remove("hidden");
+  $("spinWheel").style.transform = "rotate(0deg)";
+  $("spinResultMsg").innerHTML = "";
+  $("spinStartBtn").classList.remove("hidden");
+  $("spinStartBtn").disabled = false;
+}
+
+$("spinStartBtn")?.addEventListener("click", async ()=>{
+  const btn = $("spinStartBtn");
+  btn.disabled = true;
+  const wheel = $("spinWheel");
+  const spins = 6; // full rotations for effect, always lands upright — every segment reads the same bonus
+  wheel.style.transform = `rotate(${360*spins + 15}deg)`;
+
+  try{
+    const uid = currentUser.uid;
+    const result = await runTransaction(db, async (tx)=>{
+      const ref = doc(db, "users", uid);
+      const snap = await tx.get(ref);
+      const data = snap.data() || {};
+      if(data.hasSpun === true) return { already: true };
+      const newCredits = (Number(data.credits) || 0) + SPIN_BONUS_CREDITS;
+      tx.update(ref, { credits: newCredits, hasSpun: true });
+      return { already: false, newCredits };
+    });
+
+    setTimeout(()=>{
+      if(result.already){
+        $("spinResultMsg").innerHTML = `<div class="verify-result invalid">You've already used your spin.</div>`;
+      } else {
+        $("spinResultMsg").innerHTML = `<div class="verify-result valid"><h3 style="margin:0;">🎉 +${SPIN_BONUS_CREDITS} credits!</h3><p style="margin:8px 0 0;">They've been added to your balance.</p></div>`;
+        toast(`+${SPIN_BONUS_CREDITS} credits added!`);
+      }
+      $("spinStartBtn").classList.add("hidden");
+    }, 3200);
+  }catch(err){
+    console.error(err);
+    $("spinStartBtn").disabled = false;
+    $("spinResultMsg").innerHTML = `<div class="verify-result invalid">Could not spin right now — try again.</div>`;
+  }
+});
+
+$("closeSpinBtn")?.addEventListener("click", ()=> $("spinOverlay").classList.add("hidden"));
+$("spinOverlay")?.addEventListener("click", (e)=>{ if(e.target.id === "spinOverlay") $("spinOverlay").classList.add("hidden"); });
 
 function showPremiumUpgrade(){
   document.querySelectorAll('#clientDash .subpanel').forEach(p=> p.classList.remove('active'));
@@ -4379,6 +4610,7 @@ function showPremiumUpgrade(){
     $("premFullName").value = currentUserDoc.fullName || currentUserDoc.businessName || "";
     $("premEmail").value = currentUserDoc.email || "";
   }
+  updatePackagePriceDisplay();
 }
 
 function showPremiumSuccessScreen(){
@@ -4397,6 +4629,66 @@ $("copyBankAccBtn").addEventListener("click", ()=>{
   navigator.clipboard?.writeText("9041498427")
     .then(()=> toast("Account number copied."))
     .catch(()=> toast("Could not copy — copy it manually: 9041498427"));
+});
+
+// ---------- Premium pricing (admin-configurable, yearly) ----------
+let premiumPricing = { invoice: 15000, receipt: 15000, both: 25000 };
+
+async function loadPremiumPricing(){
+  try{
+    const snap = await getDoc(doc(db, "settings", "premiumPricing"));
+    if(snap.exists()) premiumPricing = { invoice: 15000, receipt: 15000, both: 25000, ...snap.data() };
+  }catch(err){ console.error(err); }
+  const iEl = $("priceInvoiceInput"); if(iEl) iEl.value = premiumPricing.invoice;
+  const rEl = $("priceReceiptInput"); if(rEl) rEl.value = premiumPricing.receipt;
+  const bEl = $("priceBothInput"); if(bEl) bEl.value = premiumPricing.both;
+  updatePackagePriceDisplay();
+}
+
+function updatePackagePriceDisplay(){
+  const iOut = $("pkgPriceInvoice"); if(iOut) iOut.textContent = premiumPricing.invoice.toLocaleString();
+  const rOut = $("pkgPriceReceipt"); if(rOut) rOut.textContent = premiumPricing.receipt.toLocaleString();
+  const bOut = $("pkgPriceBoth"); if(bOut) bOut.textContent = premiumPricing.both.toLocaleString();
+  syncSelectedPackageAmount();
+}
+
+function syncSelectedPackageAmount(){
+  const amt = premiumPricing[selectedPremiumPackage] || 0;
+  const amtEl = $("premAmount"); if(amtEl) amtEl.value = amt;
+  const labelMap = { invoice: "Invoice only", receipt: "Receipt only", both: "Both (Invoice + Receipt)" };
+  const labelEl = $("premPackageLabel"); if(labelEl) labelEl.value = labelMap[selectedPremiumPackage];
+}
+
+document.querySelectorAll('#packageSelect .pkg-option').forEach(opt=>{
+  opt.addEventListener("click", ()=>{
+    document.querySelectorAll('#packageSelect .pkg-option').forEach(o=> o.classList.remove("active"));
+    opt.classList.add("active");
+    opt.querySelector('input[type="radio"]').checked = true;
+    selectedPremiumPackage = opt.dataset.pkg;
+    syncSelectedPackageAmount();
+  });
+});
+
+$("premiumPricingForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = $("savePremiumPricingBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  setFormMsg($("premiumPricingMsg"), "", "");
+  try{
+    const rates = {
+      invoice: Number($("priceInvoiceInput").value) || 0,
+      receipt: Number($("priceReceiptInput").value) || 0,
+      both: Number($("priceBothInput").value) || 0
+    };
+    await setDoc(doc(db, "settings", "premiumPricing"), rates);
+    premiumPricing = rates;
+    setFormMsg($("premiumPricingMsg"), "Premium pricing saved.", "success");
+    toast("Premium pricing updated.");
+  }catch(err){
+    setFormMsg($("premiumPricingMsg"), err.message || "Could not save pricing.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Save pricing";
+  }
 });
 
 // ---------- Payment proof upload (compressed, no Firebase Storage) ----------
@@ -4462,6 +4754,66 @@ async function compressImageFile(file, targetBytes){
   return dataUrl;
 }
 
+// ---------- Business logo (custom upload, or auto-initials fallback) ----------
+function renderBusinessLogo(){
+  const logoData = currentUserDoc?.logoData || "";
+  const name = window.__currentBusinessName || currentUserDoc?.businessName || "Business";
+  const initialsText = initials(name);
+
+  const targets = [$("invLogoMark"), $("posLogoMark"), $("logoPreviewBox")];
+  targets.forEach(el=>{
+    if(!el) return;
+    if(logoData){
+      el.innerHTML = `<img src="${logoData}" alt="Business logo" />`;
+    } else {
+      el.textContent = initialsText;
+    }
+  });
+
+  $("logoRemoveBtn")?.classList.toggle("hidden", !logoData);
+}
+
+$("logoUploadBtn")?.addEventListener("click", ()=> $("logoFileInput").click());
+$("logoFileInput")?.addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  setFormMsg($("logoMsg"), "", "");
+
+  const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+  if(!allowedTypes.includes(file.type)){
+    setFormMsg($("logoMsg"), "Please upload a JPG or PNG image.", "error");
+    return;
+  }
+  if(file.size > 5 * 1024 * 1024){
+    setFormMsg($("logoMsg"), "Logo image must be under 5MB.", "error");
+    return;
+  }
+
+  try{
+    const compressed = await compressImageFile(file, 120 * 1024); // small — it's just a logo mark
+    await updateDoc(doc(db, "users", currentUser.uid), { logoData: compressed });
+    currentUserDoc.logoData = compressed;
+    renderBusinessLogo();
+    setFormMsg($("logoMsg"), "Logo saved — it'll be used on every invoice and receipt from now on.", "success");
+  }catch(err){
+    console.error(err);
+    setFormMsg($("logoMsg"), "Could not process that image — try a different file.", "error");
+  }finally{
+    $("logoFileInput").value = "";
+  }
+});
+
+$("logoRemoveBtn")?.addEventListener("click", async ()=>{
+  try{
+    await updateDoc(doc(db, "users", currentUser.uid), { logoData: "" });
+    currentUserDoc.logoData = "";
+    renderBusinessLogo();
+    setFormMsg($("logoMsg"), "Logo removed — back to your business initials.", "success");
+  }catch(err){
+    setFormMsg($("logoMsg"), "Could not remove logo.", "error");
+  }
+});
+
 function resetUploadUI(){
   currentProofDataUrl = null;
   $("uploadPreviewImg").classList.add("hidden");
@@ -4486,6 +4838,7 @@ $("premiumPaymentForm").addEventListener("submit", async (e)=>{
       customerName: $("premFullName").value.trim(),
       email: $("premEmail").value.trim(),
       phone: $("premPhone").value.trim(),
+      packageType: selectedPremiumPackage,
       amount: Number($("premAmount").value) || 0,
       bankName: "OPay",
       accountName: "Daniel C Princewill",
@@ -4500,7 +4853,7 @@ $("premiumPaymentForm").addEventListener("submit", async (e)=>{
     await addDoc(collection(db, "paymentRequests"), payload);
 
     sendNotification("ADMIN_BROADCAST", "New Premium payment submitted",
-      `${payload.customerName} submitted payment proof for ₦${payload.amount.toLocaleString()}.`, "premium-payment");
+      `${payload.customerName} submitted payment proof for ₦${payload.amount.toLocaleString()} (${selectedPremiumPackage}).`, "premium-payment");
 
     if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
       try{
@@ -4548,6 +4901,8 @@ function renderPremiumTableAdmin(items){
   tbody.innerHTML = "";
   $("premiumEmptyStateAdmin").classList.toggle("hidden", items.length > 0);
 
+  const pkgLabels = { invoice: "Invoice only", receipt: "Receipt only", both: "Both" };
+
   for(const r of items){
     const statusClass = r.paymentStatus === "Approved" ? "approved" : (r.paymentStatus === "Rejected" ? "rejected" : "pending");
     const tr = document.createElement("tr");
@@ -4555,6 +4910,7 @@ function renderPremiumTableAdmin(items){
       <td>${escapeHtml(r.customerName || "—")}</td>
       <td>${escapeHtml(r.email || "—")}</td>
       <td>${escapeHtml(r.phone || "—")}</td>
+      <td>${escapeHtml(pkgLabels[r.packageType] || "Both")}</td>
       <td class="mono">${ngn(r.amount)}</td>
       <td>${r.screenshotData ? `<img class="premium-thumb" src="${r.screenshotData}" data-action="view" />` : "—"}</td>
       <td>${escapeHtml(r.paymentDate || "—")}</td>
@@ -4588,16 +4944,18 @@ function renderPremiumTableAdmin(items){
 
       if(action === "approve"){
         try{
+          const pkg = record.packageType === "invoice" || record.packageType === "receipt" ? record.packageType : "both";
+          const expiresAt = new Date(Date.now() + PREMIUM_DURATION_DAYS * 24 * 60 * 60 * 1000);
           await updateDoc(doc(db, "paymentRequests", id), {
             paymentStatus: "Approved", reviewedAt: serverTimestamp(), reviewedBy: currentUser?.uid || "admin"
           });
           await updateDoc(doc(db, "users", record.uid), {
-            premium: true, plan: "Premium", paymentStatus: "Approved",
+            premiumPlan: pkg, premiumExpiresAt: expiresAt, paymentStatus: "Approved",
             approvedDate: serverTimestamp(), approvedBy: currentUser?.uid || "admin"
           });
-          toast(`${record.customerName} is now Premium.`);
+          toast(`${record.customerName} is now Premium (${pkg}) for one year.`);
           sendNotification(record.uid, "🎉 Premium activated!",
-            "Your Premium account has been activated. Enjoy unlimited invoice and receipt creation.", "premium-approved");
+            `Your ${pkg === "both" ? "Invoice + Receipt" : pkg} Premium plan is active for one year, until ${expiresAt.toLocaleDateString('en-NG')}.`, "premium-approved");
         }catch(err){ console.error(err); toast("Could not approve payment."); }
         return;
       }
@@ -4607,7 +4965,7 @@ function renderPremiumTableAdmin(items){
           await updateDoc(doc(db, "paymentRequests", id), {
             paymentStatus: "Rejected", reviewedAt: serverTimestamp(), reviewedBy: currentUser?.uid || "admin"
           });
-          await updateDoc(doc(db, "users", record.uid), { premium: false, paymentStatus: "Rejected" });
+          await updateDoc(doc(db, "users", record.uid), { paymentStatus: "Rejected" });
           toast(`${record.customerName}'s payment was rejected.`);
           sendNotification(record.uid, "Payment not verified",
             "Unfortunately, we could not verify your payment. Please check your details or contact support.", "premium-rejected");
