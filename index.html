@@ -19,7 +19,7 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Great+Vibes&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Great+Vibes&family=Dancing+Script:wght@600&family=Sacramento&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#0F1A2E;
@@ -543,6 +543,46 @@
   .logo-uploader-actions button.remove{ color:var(--reject); }
   .logo-uploader-hint{ font-size:11.5px; color:rgba(15,26,46,0.5); margin-top:4px; }
 
+  /* ===== Signature system ===== */
+  .sig-method-tabs{ display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+  .sig-method-tabs button{
+    background:var(--paper-2); border:1.5px solid var(--line); border-radius:999px; padding:9px 18px; font-size:13px; font-weight:600; color:var(--ink);
+  }
+  .sig-method-tabs button.active{ background:var(--ink); color:var(--paper-2); border-color:var(--ink); }
+  .sig-method-panel{ display:none; }
+  .sig-method-panel.active{ display:block; }
+
+  .sig-pad-wrap{ border:2px dashed var(--line); border-radius:12px; background:#fff; touch-action:none; }
+  .sig-canvas{ width:100%; height:220px; display:block; cursor:crosshair; border-radius:10px; }
+  .sig-pad-actions{ display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+
+  .sig-font-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin:14px 0; }
+  .sig-font-option{
+    background:#fff; border:1.5px solid var(--line); border-radius:10px; padding:16px 8px; font-size:22px; color:var(--ink);
+  }
+  .sig-font-option.active{ border-color:var(--brass); background:#FBF4E6; }
+  .sig-typed-preview-wrap{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:24px; text-align:center; margin-bottom:14px; }
+  .sig-typed-preview{ font-size:34px; color:#1a1a1a; }
+
+  .sig-current-label{ font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:rgba(15,26,46,0.5); font-weight:700; margin-bottom:8px; }
+  .sig-current-preview{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:20px; text-align:center; margin-bottom:12px; }
+  .sig-current-preview img{ max-height:80px; max-width:100%; }
+  .sig-current-actions{ display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
+
+  .sig-toggle-row{ display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(15,26,46,0.7); margin-top:12px; }
+  .sig-toggle-row input{ width:16px; height:16px; }
+
+  .inv-signature-img{ max-height:64px; max-width:180px; position:absolute; right:60px; bottom:44px; object-fit:contain; }
+  .pos-sign-area{ text-align:center; margin:14px 0 6px; }
+  .pos-signature-img{ max-height:50px; max-width:70%; margin:0 auto 4px; display:block; object-fit:contain; }
+  .pos-sign-line{ font-size:9.5px; color:#888; border-top:1px dashed #ccc; padding-top:4px; display:inline-block; min-width:140px; }
+
+  @media print{
+    body *{ visibility:hidden; }
+    .doc-preview, .doc-preview *{ visibility:visible; }
+    .doc-preview{ position:absolute; left:0; top:0; box-shadow:none; }
+  }
+
   /* ===== Auth loading splash ===== */
   #authLoadingScreen{
     position:fixed; inset:0; z-index:9999; background:linear-gradient(160deg,var(--ink),var(--ink-2));
@@ -689,50 +729,6 @@
     .inv-seal{ right:auto; left:0; }
     .doc-stamp-circle{ right:16px; top:auto; bottom:16px; }
   }
-  .signature-section {
-  margin-top: 20px;
-}
-
-.signature-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.signature-box {
-  width: 100%;
-  max-width: 500px;
-  height: 170px;
-  border: 1px solid #d8dee8;
-  border-radius: 12px;
-  background: #fff;
-  overflow: hidden;
-}
-
-#signatureCanvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  touch-action: none;
-  cursor: crosshair;
-}
-
-.signature-actions {
-  margin-top: 8px;
-}
-
-#clearSignature {
-  border: 0;
-  padding: 8px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.signature-section small {
-  display: block;
-  margin-top: 6px;
-  opacity: .65;
-}
 </style>
 </head>
 <body>
@@ -1554,6 +1550,7 @@
     <div class="subnav" id="clientDocSubnav">
       <button type="button" data-tab="clientInvoiceTab" class="active">Invoice</button>
       <button type="button" data-tab="clientReceiptTab">Receipt</button>
+      <button type="button" data-tab="clientSettingsTab">Settings</button>
     </div>
 
     <!-- Invoice -->
@@ -1652,7 +1649,7 @@
             </div>
             <div class="inv-sign-box">
               <div class="inv-seal">INVOICE<br/>X PRO<br/>★</div>
-              <div class="inv-sign-name">Authorised</div>
+              <img id="invSignatureImg" class="inv-signature-img hidden" />
               <div class="inv-sign-line">Authorised Signatory</div>
             </div>
           </div>
@@ -1660,24 +1657,14 @@
           <div class="inv-footer-note">Goods once sold will not be taken back · This is a computer-generated invoice.</div>
         </div>
       </div>
-      <div class="signature-section">
-  <label class="signature-label">Customer Signature</label>
-
-  <div class="signature-box">
-    <canvas id="signatureCanvas"></canvas>
-  </div>
-
-  <div class="signature-actions">
-    <button type="button" id="clearSignature">Clear</button>
-  </div>
-
-  <input type="hidden" id="signatureData">
-  <small>Draw your signature above using your finger or mouse.</small>
-</div>
+      <label class="sig-toggle-row hidden" id="invSigToggleRow">
+        <input type="checkbox" id="invShowSignature" checked /> Show signature on this invoice
+      </label>
       <div class="doc-actions">
         <button type="button" class="btn-primary" id="invGenerateBtn" style="max-width:200px;">Generate invoice</button>
         <button type="button" class="btn-sm approve hidden" id="invDownloadPdfBtn">Download PDF</button>
         <button type="button" class="btn-sm confirm hidden" id="invDownloadPngBtn">Download PNG</button>
+        <button type="button" class="btn-sm reject hidden" id="invPrintBtn">Print</button>
       </div>
       <div class="form-msg" id="invGenerateMsg"></div>
     </div>
@@ -1734,15 +1721,80 @@
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-words" id="rcpWordsOut"></div>
+          <div class="pos-sign-area">
+            <img id="rcpSignatureImg" class="pos-signature-img hidden" />
+            <div class="pos-sign-line">Authorised Signature</div>
+          </div>
           <div class="pos-thankyou">Thank you for your payment!</div>
           <div class="pos-subthanks">We appreciate your business</div>
           <div class="pos-barcode" id="rcpBarcode"></div>
           <div class="pos-barcode-text" id="rcpBarcodeText"></div>
         </div>
       </div>
+      <label class="sig-toggle-row hidden" id="rcpSigToggleRow">
+        <input type="checkbox" id="rcpShowSignature" checked /> Show signature on this receipt
+      </label>
       <div class="doc-actions">
         <button type="button" class="btn-sm approve hidden" id="rcpDownloadPdfBtn">Download PDF</button>
         <button type="button" class="btn-sm confirm hidden" id="rcpDownloadPngBtn">Download PNG</button>
+        <button type="button" class="btn-sm reject hidden" id="rcpPrintBtn">Print</button>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="subpanel" data-panel="clientSettingsTab" id="clientSettingsPanel">
+      <div class="panel">
+        <div class="panel-head"><h3>Business Information → Signature</h3></div>
+        <p class="hint" style="margin-bottom:16px;">Your signature will appear automatically on your invoices and receipts.</p>
+
+        <div id="currentSignatureBox" class="hidden">
+          <div class="sig-current-label">Your Current Signature</div>
+          <div class="sig-current-preview"><img id="currentSignaturePreviewImg" /></div>
+          <div class="sig-current-actions">
+            <button type="button" class="btn-sm confirm" id="sigChangeBtn">Change Signature</button>
+            <button type="button" class="btn-sm reject" id="sigRemoveBtn">Remove Signature</button>
+          </div>
+        </div>
+
+        <div id="signatureEditorBox">
+          <div class="sig-method-tabs" id="sigMethodTabs">
+            <button type="button" data-method="draw" class="active">✍️ Draw</button>
+            <button type="button" data-method="upload">📷 Upload</button>
+            <button type="button" data-method="typed">⌨️ Type</button>
+          </div>
+
+          <div class="sig-method-panel active" data-method-panel="draw">
+            <div class="sig-pad-wrap">
+              <canvas id="sigCanvas" class="sig-canvas"></canvas>
+            </div>
+            <div class="sig-pad-actions">
+              <button type="button" class="btn-sm reject" id="sigClearBtn">Clear</button>
+              <button type="button" class="btn-sm confirm" id="sigUndoBtn">Undo</button>
+              <button type="button" class="btn-primary" id="sigSaveDrawBtn" style="max-width:180px;">Save Signature</button>
+            </div>
+          </div>
+
+          <div class="sig-method-panel" data-method-panel="upload">
+            <div class="upload-drop" id="sigUploadDropZone">
+              <div id="sigUploadPromptText">Tap to choose your signature image (PNG, JPG, JPEG or WEBP)</div>
+              <img class="upload-preview hidden" id="sigUploadPreviewImg" />
+              <input type="file" id="sigUploadFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden" />
+            </div>
+            <button type="button" class="btn-primary" id="sigSaveUploadBtn" style="max-width:180px; margin-top:14px;" disabled>Save Signature</button>
+          </div>
+
+          <div class="sig-method-panel" data-method-panel="typed">
+            <div class="field"><label>Type your name</label><input type="text" id="sigTypedInput" placeholder="Daniel C Princewill" /></div>
+            <div class="sig-font-grid" id="sigFontGrid">
+              <button type="button" class="sig-font-option active" data-font="'Great Vibes', cursive" style="font-family:'Great Vibes',cursive;">Signature</button>
+              <button type="button" class="sig-font-option" data-font="'Dancing Script', cursive" style="font-family:'Dancing Script',cursive;">Signature</button>
+              <button type="button" class="sig-font-option" data-font="'Sacramento', cursive" style="font-family:'Sacramento',cursive;">Signature</button>
+            </div>
+            <div class="sig-typed-preview-wrap"><div class="sig-typed-preview" id="sigTypedPreview">Your signature</div></div>
+            <button type="button" class="btn-primary" id="sigSaveTypedBtn" style="max-width:180px;">Save Signature</button>
+          </div>
+        </div>
+        <div class="form-msg" id="sigMsg"></div>
       </div>
     </div>
   </div>
@@ -4009,11 +4061,12 @@ function initClientDashboard(clientRecordId, clientRecord){
   renderBusinessLogo();
   loadPremiumPricing();
 
-  // Show only the document type(s) this client is entitled to
+  // Show only the document type(s) this client is entitled to. The subnav
+  // itself always stays visible now (Settings lives there too), even when
+  // only one document type is shown.
   const access = source.documentAccess || "both";
   const showInvoice = access === "invoice" || access === "both";
   const showReceipt = access === "receipt" || access === "both";
-  $("clientDocSubnav").classList.toggle("hidden", !(showInvoice && showReceipt));
   const invoiceTabBtn = document.querySelector('#clientDocSubnav button[data-tab="clientInvoiceTab"]');
   const receiptTabBtn = document.querySelector('#clientDocSubnav button[data-tab="clientReceiptTab"]');
   if(invoiceTabBtn) invoiceTabBtn.classList.toggle("hidden", !showInvoice);
@@ -4027,6 +4080,9 @@ function initClientDashboard(clientRecordId, clientRecord){
   initInvoiceGenerator();
   initReceiptGenerator();
   initPremiumSystem(currentUser.uid);
+  initSignatureSettings();
+  $("invShowSignature")?.addEventListener("change", updateInvoicePreview);
+  $("rcpShowSignature")?.addEventListener("change", updateReceiptPreview);
 }
 
 // ---------- Invoice ----------
@@ -4045,6 +4101,7 @@ function resetInvoiceSession(){
   addInvoiceRow();
   invSessionConsumed = false;
   $("invDownloadPdfBtn").classList.add("hidden");
+  $("invPrintBtn").classList.add("hidden");
   $("invDownloadPngBtn").classList.add("hidden");
   $("invGenerateBtn").classList.remove("hidden");
   setFormMsg($("invGenerateMsg"), "", "");
@@ -4096,6 +4153,7 @@ function initInvoiceGenerator(){
     $("invGenerateBtn").classList.add("hidden");
     $("invDownloadPdfBtn").classList.remove("hidden");
     $("invDownloadPngBtn").classList.remove("hidden");
+    $("invPrintBtn").classList.remove("hidden");
     setFormMsg($("invGenerateMsg"), "Invoice generated — download below.", "success");
   };
 
@@ -4162,6 +4220,16 @@ function updateInvoicePreview(){
   $("invVatOut").textContent = vat.toLocaleString();
   $("invGrandOut").textContent = grand.toLocaleString();
   $("invWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(grand) + " Naira Only</b>";
+
+  const sig = currentUserDoc?.signature;
+  const wantSig = $("invShowSignature") ? $("invShowSignature").checked : true;
+  const invSigImg = $("invSignatureImg");
+  if(sig && sig.imageData && wantSig){
+    invSigImg.src = sig.imageData;
+    invSigImg.classList.remove("hidden");
+  } else if(invSigImg){
+    invSigImg.classList.add("hidden");
+  }
 }
 
 // ---------- Receipt ----------
@@ -4176,6 +4244,7 @@ function resetReceiptSession(){
   $("rcpNoOut").textContent = "";
   rcpSessionConsumed = false;
   $("rcpDownloadPdfBtn").classList.add("hidden");
+  $("rcpPrintBtn").classList.add("hidden");
   $("rcpDownloadPngBtn").classList.add("hidden");
   setFormMsg($("rcpGenerateMsg"), "", "");
   updateReceiptPreview();
@@ -4205,6 +4274,7 @@ function initReceiptGenerator(){
     updateReceiptPreview();
     $("rcpDownloadPdfBtn").classList.remove("hidden");
     $("rcpDownloadPngBtn").classList.remove("hidden");
+    $("rcpPrintBtn").classList.remove("hidden");
     setFormMsg($("rcpGenerateMsg"), "Receipt generated — download below.", "success");
   };
 
@@ -4244,6 +4314,16 @@ function updateReceiptPreview(){
   $("rcpPaidOut").textContent = paid.toLocaleString();
   $("rcpBalanceOut").textContent = balance.toLocaleString();
   $("rcpWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(paid) + " Naira Only</b>";
+
+  const rcpSig = currentUserDoc?.signature;
+  const rcpWantSig = $("rcpShowSignature") ? $("rcpShowSignature").checked : true;
+  const rcpSigImg = $("rcpSignatureImg");
+  if(rcpSig && rcpSig.imageData && rcpWantSig){
+    rcpSigImg.src = rcpSig.imageData;
+    rcpSigImg.classList.remove("hidden");
+  } else if(rcpSigImg){
+    rcpSigImg.classList.add("hidden");
+  }
 
   if(!$("rcpNoOut").textContent){
     $("rcpNoOut").textContent = "RCP-" + (Math.floor(Math.random()*900000)+100000);
@@ -4813,6 +4893,245 @@ async function compressImageFile(file, targetBytes){
 }
 
 // ---------- Business logo (custom upload, or auto-initials fallback) ----------
+// ================= SIGNATURE SYSTEM =================
+// Same architecture as the logo: no Firebase Storage — compressed PNG
+// (transparency preserved) stored directly on the client's own Firestore
+// profile doc, under users/{uid}.signature.
+let sigCtx = null;
+let sigDrawing = false;
+let sigStrokes = [];       // completed strokes, for undo
+let sigCurrentStroke = [];
+let sigHasContent = false;
+let sigSelectedMethod = "draw";
+let sigSelectedFont = "'Great Vibes', cursive";
+let sigUploadDataUrl = null;
+
+function initSignatureSettings(){
+  setupSignatureCanvas();
+  renderSavedSignatureUI();
+
+  document.querySelectorAll("#sigMethodTabs button").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll("#sigMethodTabs button").forEach(b=> b.classList.remove("active"));
+      btn.classList.add("active");
+      sigSelectedMethod = btn.dataset.method;
+      document.querySelectorAll(".sig-method-panel").forEach(p=> p.classList.remove("active"));
+      document.querySelector(`.sig-method-panel[data-method-panel="${sigSelectedMethod}"]`).classList.add("active");
+      if(sigSelectedMethod === "draw") setTimeout(setupSignatureCanvas, 30); // ensure correct size once visible
+    });
+  });
+
+  $("sigChangeBtn")?.addEventListener("click", ()=>{
+    $("currentSignatureBox").classList.add("hidden");
+    $("signatureEditorBox").classList.remove("hidden");
+  });
+
+  $("sigRemoveBtn")?.addEventListener("click", async ()=>{
+    try{
+      await updateDoc(doc(db, "users", currentUser.uid), { signature: null });
+      currentUserDoc.signature = null;
+      renderSavedSignatureUI();
+      updateInvoicePreview(); updateReceiptPreview();
+      setFormMsg($("sigMsg"), "Signature removed.", "success");
+    }catch(err){ setFormMsg($("sigMsg"), "Could not remove signature.", "error"); }
+  });
+}
+
+function renderSavedSignatureUI(){
+  const sig = currentUserDoc?.signature;
+  const hasSig = sig && sig.imageData;
+  $("currentSignatureBox")?.classList.toggle("hidden", !hasSig);
+  $("signatureEditorBox")?.classList.toggle("hidden", !!hasSig);
+  if(hasSig){
+    $("currentSignaturePreviewImg").src = sig.imageData;
+  }
+  // Sync per-document toggles' default visibility
+  ["invSigToggleRow","rcpSigToggleRow"].forEach(id=> $(id)?.classList.toggle("hidden", !hasSig));
+  if($("invShowSignature")) $("invShowSignature").checked = true;
+  if($("rcpShowSignature")) $("rcpShowSignature").checked = true;
+}
+
+// ---- Draw ----
+function setupSignatureCanvas(){
+  const canvas = $("sigCanvas");
+  if(!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const ratio = window.devicePixelRatio || 1;
+  canvas.width = Math.max(300, rect.width) * ratio;
+  canvas.height = 220 * ratio;
+  sigCtx = canvas.getContext("2d");
+  sigCtx.scale(ratio, ratio);
+  sigCtx.lineWidth = 2.4;
+  sigCtx.lineCap = "round";
+  sigCtx.lineJoin = "round";
+  sigCtx.strokeStyle = "#1a1a1a";
+  sigStrokes = [];
+  sigCurrentStroke = [];
+  sigHasContent = false;
+  redrawSignatureCanvas();
+
+  function getPos(e){
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  }
+  function start(e){
+    e.preventDefault();
+    sigDrawing = true;
+    sigCurrentStroke = [getPos(e)];
+  }
+  function move(e){
+    if(!sigDrawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+    sigCurrentStroke.push(p);
+    redrawSignatureCanvas();
+    drawStroke(sigCurrentStroke);
+  }
+  function end(){
+    if(!sigDrawing) return;
+    sigDrawing = false;
+    if(sigCurrentStroke.length > 1){
+      sigStrokes.push(sigCurrentStroke);
+      sigHasContent = true;
+    }
+    sigCurrentStroke = [];
+  }
+  canvas.onpointerdown = start;
+  canvas.onpointermove = move;
+  canvas.onpointerup = end;
+  canvas.onpointerleave = end;
+  canvas.onpointercancel = end;
+}
+
+function drawStroke(points){
+  if(!sigCtx || points.length < 2) return;
+  sigCtx.beginPath();
+  sigCtx.moveTo(points[0].x, points[0].y);
+  for(let i=1; i<points.length; i++) sigCtx.lineTo(points[i].x, points[i].y);
+  sigCtx.stroke();
+}
+function redrawSignatureCanvas(){
+  if(!sigCtx) return;
+  const canvas = $("sigCanvas");
+  const ratio = window.devicePixelRatio || 1;
+  sigCtx.clearRect(0, 0, canvas.width/ratio, canvas.height/ratio);
+  sigStrokes.forEach(drawStroke);
+}
+$("sigClearBtn")?.addEventListener("click", ()=>{
+  sigStrokes = []; sigCurrentStroke = []; sigHasContent = false;
+  redrawSignatureCanvas();
+});
+$("sigUndoBtn")?.addEventListener("click", ()=>{
+  sigStrokes.pop();
+  sigHasContent = sigStrokes.length > 0;
+  redrawSignatureCanvas();
+});
+$("sigSaveDrawBtn")?.addEventListener("click", async ()=>{
+  if(!sigHasContent){
+    setFormMsg($("sigMsg"), "Please draw your signature first.", "error");
+    return;
+  }
+  const canvas = $("sigCanvas");
+  await persistSignature("draw", canvas.toDataURL("image/png"), {});
+});
+
+// ---- Upload ----
+$("sigUploadDropZone")?.addEventListener("click", ()=> $("sigUploadFileInput").click());
+$("sigUploadFileInput")?.addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  setFormMsg($("sigMsg"), "", "");
+  const allowed = ["image/png","image/jpeg","image/jpg","image/webp"];
+  if(!allowed.includes(file.type)){
+    setFormMsg($("sigMsg"), "Please upload a PNG, JPG, JPEG or WEBP image.", "error");
+    return;
+  }
+  if(file.size > 5 * 1024 * 1024){
+    setFormMsg($("sigMsg"), "Signature image must be under 5MB.", "error");
+    return;
+  }
+  try{
+    sigUploadDataUrl = await compressImageFile(file, 180 * 1024);
+    $("sigUploadPreviewImg").src = sigUploadDataUrl;
+    $("sigUploadPreviewImg").classList.remove("hidden");
+    $("sigUploadPromptText").textContent = "Tap to replace";
+    $("sigUploadDropZone").classList.add("has-image");
+    $("sigSaveUploadBtn").disabled = false;
+  }catch(err){
+    setFormMsg($("sigMsg"), "Could not process that image — try a different file.", "error");
+  }
+});
+$("sigSaveUploadBtn")?.addEventListener("click", async ()=>{
+  if(!sigUploadDataUrl){
+    setFormMsg($("sigMsg"), "Please choose an image first.", "error");
+    return;
+  }
+  await persistSignature("upload", sigUploadDataUrl, {});
+});
+
+// ---- Typed ----
+function renderTypedPreview(){
+  const text = $("sigTypedInput").value.trim() || "Your signature";
+  const preview = $("sigTypedPreview");
+  preview.textContent = text;
+  preview.style.fontFamily = sigSelectedFont;
+}
+$("sigTypedInput")?.addEventListener("input", renderTypedPreview);
+document.querySelectorAll(".sig-font-option").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".sig-font-option").forEach(b=> b.classList.remove("active"));
+    btn.classList.add("active");
+    sigSelectedFont = btn.dataset.font;
+    renderTypedPreview();
+  });
+});
+$("sigSaveTypedBtn")?.addEventListener("click", async ()=>{
+  const text = $("sigTypedInput").value.trim();
+  if(!text){
+    setFormMsg($("sigMsg"), "Please type your name first.", "error");
+    return;
+  }
+  await ensureFontsReady();
+  const canvas = document.createElement("canvas");
+  canvas.width = 700; canvas.height = 220;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#1a1a1a";
+  ctx.font = `64px ${sigSelectedFont}`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, canvas.width/2, canvas.height/2);
+  await persistSignature("typed", canvas.toDataURL("image/png"), { text, fontFamily: sigSelectedFont });
+});
+
+async function persistSignature(type, imageData, extra){
+  const btnIds = { draw: "sigSaveDrawBtn", upload: "sigSaveUploadBtn", typed: "sigSaveTypedBtn" };
+  const btn = $(btnIds[type]);
+  if(btn){ btn.disabled = true; btn.textContent = "Saving…"; }
+  setFormMsg($("sigMsg"), "", "");
+  try{
+    const signaturePayload = { type, imageData, updatedAt: new Date(), ...extra };
+    await updateDoc(doc(db, "users", currentUser.uid), { signature: signaturePayload });
+    currentUserDoc.signature = signaturePayload;
+    renderSavedSignatureUI();
+    updateInvoicePreview(); updateReceiptPreview();
+    setFormMsg($("sigMsg"), "✓ Signature saved successfully. Your signature will now appear on your invoices and receipts.", "success");
+    // reset editors
+    sigUploadDataUrl = null;
+    $("sigUploadPreviewImg")?.classList.add("hidden");
+    if($("sigUploadFileInput")) $("sigUploadFileInput").value = "";
+  }catch(err){
+    console.error(err);
+    setFormMsg($("sigMsg"), "Could not save your signature. Please try again.", "error");
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = "Save Signature"; }
+  }
+}
+
+// ---- Print ----
+$("invPrintBtn")?.addEventListener("click", ()=> window.print());
+$("rcpPrintBtn")?.addEventListener("click", ()=> window.print());
+
 function renderBusinessLogo(){
   const logoData = currentUserDoc?.logoData || "";
   const name = window.__currentBusinessName || currentUserDoc?.businessName || "Business";
@@ -5041,81 +5360,6 @@ $("screenshotLightbox").addEventListener("click", (e)=>{
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
-const canvas = document.getElementById("signatureCanvas");
-const ctx = canvas.getContext("2d");
-
-let drawing = false;
-
-function resizeSignatureCanvas() {
-  const rect = canvas.getBoundingClientRect();
-
-  const oldData = canvas.toDataURL();
-
-  canvas.width = rect.width * window.devicePixelRatio;
-  canvas.height = rect.height * window.devicePixelRatio;
-
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-}
-
-resizeSignatureCanvas();
-
-window.addEventListener("resize", resizeSignatureCanvas);
-
-function getPosition(e) {
-  const rect = canvas.getBoundingClientRect();
-
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
-  };
-}
-
-canvas.addEventListener("pointerdown", e => {
-  drawing = true;
-  canvas.setPointerCapture(e.pointerId);
-
-  const p = getPosition(e);
-
-  ctx.beginPath();
-  ctx.moveTo(p.x, p.y);
-});
-
-canvas.addEventListener("pointermove", e => {
-  if (!drawing) return;
-
-  const p = getPosition(e);
-
-  ctx.lineTo(p.x, p.y);
-  ctx.stroke();
-});
-
-canvas.addEventListener("pointerup", () => {
-  drawing = false;
-  saveSignature();
-});
-
-canvas.addEventListener("pointercancel", () => {
-  drawing = false;
-});
-
-function saveSignature() {
-  const data = canvas.toDataURL("image/png");
-
-  const input = document.getElementById("signatureData");
-
-  if (input) {
-    input.value = data;
-  }
-}
-
-document.getElementById("clearSignature").addEventListener("click", () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  document.getElementById("signatureData").value = "";
-});
 </script>
 </body>
 </html>
