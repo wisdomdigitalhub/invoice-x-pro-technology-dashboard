@@ -889,6 +889,7 @@
         <div class="field"><label>Phone</label><input type="tel" id="suPhone" /></div>
         <div class="field"><label>Branch / company</label><input type="text" id="suBranch" /></div>
       </div>
+      <div class="form-msg info hidden" id="suReferralBanner" style="display:block;"></div>
       <div class="field"><label>Email</label><input type="email" id="suEmail" required autocomplete="username" /></div>
       <div class="field"><label>Password</label><input type="password" id="suPassword" required minlength="6" autocomplete="new-password" /></div>
       <button type="submit" class="btn-primary" id="signUpSubmitBtn">Create account</button>
@@ -931,8 +932,8 @@
 
 <!-- ============ STATUS-ONLY SCREENS ============ -->
 <div class="status-msg-page hidden" id="notAcceptedScreen">
-  <h2>Not accepted yet</h2>
-  <p>Your representative account has been created but is still awaiting approval from your admin. Check back soon.</p>
+  <h2>Account on hold</h2>
+  <p>Your representative account has been placed on hold by your admin. Contact your office for details.</p>
   <button class="nav-cta" style="margin-top:20px;" id="notAcceptedLogout">Sign out</button>
 </div>
 <div class="status-msg-page hidden" id="clientPendingScreen">
@@ -1333,6 +1334,31 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h3>Referral Earnings</h3>
+        <span class="hint">Share your link — clients get instant access, you earn on Premium</span>
+      </div>
+      <div class="form-msg info" style="display:block; margin-bottom:14px;">Referral earnings are paid only when your referred client completes a Premium payment. Free usage — signup, login, free invoices, free receipts — earns nothing.</div>
+      <div class="cred-box" style="margin-bottom:14px;">
+        <div><b>Your referral link:</b> <span class="mono" id="repReferralLinkOut">—</span></div>
+        <button type="button" class="btn-sm confirm" id="copyReferralLinkBtn" style="margin-top:8px;">Copy referral link</button>
+      </div>
+      <div class="cards-row">
+        <div class="stat-card"><div class="label">Referred clients</div><div class="value" id="repReferredClientCount">0</div></div>
+        <div class="stat-card"><div class="label">Premium customers</div><div class="value" id="repPremiumClientCount">0</div></div>
+        <div class="stat-card"><div class="label">Total commission</div><div class="value brass" id="repReferralCommission">₦0</div></div>
+        <div class="stat-card"><div class="label">Available wallet</div><div class="value" id="repReferralWallet">₦0</div></div>
+      </div>
+      <div class="table-wrap" style="margin-top:14px;">
+        <table>
+          <thead><tr><th>Client</th><th>Premium Package</th><th>Payment Amount</th><th>Commission</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="referralCommissionHistoryBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="referralCommissionEmptyState">No Premium commissions yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h3>Submit a new client</h3>
         <span class="hint">Goes to admin as pending until payment is confirmed</span>
       </div>
@@ -1472,6 +1498,8 @@
 
     <!-- Premium upgrade page -->
     <div class="subpanel" data-panel="premiumUpgradeTab" id="premiumUpgradePanel">
+      <div class="form-msg info hidden" id="clientReferredByBanner" style="display:block; margin-bottom:12px;"></div>
+      <div class="form-msg info" style="display:block; margin-bottom:12px;">Your representative earns a commission only when you complete a Premium payment. Free usage does not generate referral earnings.</div>
       <div class="premium-hero">
         <span class="premium-badge">Premium Plan · Yearly</span>
         <h2>Unlock unlimited access.</h2>
@@ -2010,6 +2038,7 @@ let unsubClients = null;
 let unsubReps = null;
 let unsubMaterials = null;
 let unsubNotifications = null;
+let unsubReferralCommissions = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -2074,6 +2103,26 @@ $("loginOverlay").addEventListener("click", (e)=>{ if(e.target.id === "loginOver
 
 // ---------- Sign Up (open self-registration) ----------
 let signUpRole = "client";
+// Referral capture: a link shaped ?ref=<representative accountCode> permanently
+// links a self-signed-up client to that representative. Looked up once on
+// load and held in memory only — never trusted for anything financial; the
+// actual permanent link is written to the client's own user document at
+// signup time and is never re-derived from this value afterward.
+let pendingReferralRep = null;
+(async function captureReferralParam(){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get("ref");
+    if(!refCode) return;
+    const q = query(collection(db, "users"), where("role","==","rep"), where("accountCode","==",refCode), limit(1));
+    const snap = await getDocs(q);
+    if(!snap.empty){
+      const d = snap.docs[0];
+      pendingReferralRep = { id: d.id, fullName: d.data().fullName || d.data().email || "your representative", accountCode: refCode };
+      openSignUp("client");
+    }
+  }catch(err){ console.error("Referral lookup failed:", err); }
+})();
 function openSignUp(role){
   signUpRole = role || "client";
   updateSignUpUI();
@@ -2089,10 +2138,17 @@ function updateSignUpUI(){
   $("suRepFields").classList.toggle("hidden", signUpRole !== "rep");
   if(signUpRole === "rep"){
     $("signUpTitle").textContent = "Become a representative";
-    $("signUpSub").textContent = "Your account is created instantly — admin approval unlocks full access.";
+    $("signUpSub").textContent = "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro.";
   } else {
     $("signUpTitle").textContent = "Create your business account";
     $("signUpSub").textContent = "Free plan includes 5 invoices/receipts to start — no card required.";
+  }
+  const banner = $("suReferralBanner");
+  if(signUpRole === "client" && pendingReferralRep){
+    banner.textContent = `Referred by ${pendingReferralRep.fullName} — you'll get instant access to your dashboard.`;
+    banner.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
   }
 }
 $("signUpNavBtn").addEventListener("click", ()=> openSignUp("client"));
@@ -2114,22 +2170,31 @@ $("signUpForm").addEventListener("submit", async (e)=>{
     const uid = cred.user.uid;
 
     if(signUpRole === "rep"){
+      // Representatives get full account access the instant they sign up —
+      // no admin approval gate. Admin can still see and, if needed, later
+      // place a representative "on hold" from the admin dashboard, but that
+      // is no longer a precondition for a brand-new self-signup to log in.
       await setDoc(doc(db, "users", uid), {
         role: "rep",
         fullName: $("suFullName").value.trim(),
         email,
         phone: $("suPhone").value.trim(),
         branch: $("suBranch").value.trim(),
-        status: "pending",
+        status: "accepted",
         accountCode: genCode("REP"),
         createdBy: "self-signup",
         createdAt: serverTimestamp()
       });
       sendNotification("ADMIN_BROADCAST", "New representative sign-up",
-        `${$("suFullName").value.trim() || email} signed up and is awaiting approval.`, "rep-signup");
-      setFormMsg($("signUpMsg"), "Account created — awaiting admin approval. We'll notify you once you're accepted.", "success");
+        `${$("suFullName").value.trim() || email} signed up and is already active.`, "rep-signup");
+      setFormMsg($("signUpMsg"), "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro.", "success");
     } else {
-      await setDoc(doc(db, "users", uid), {
+      // Clients get instant dashboard access on signup, whether or not they
+      // arrived through a representative's referral link. Account access is
+      // separate from Premium/commission eligibility (see rule below) — the
+      // referral fields here are written once, at signup, and are never
+      // overwritten afterward, so the relationship is permanent.
+      const clientDoc = {
         role: "client",
         email,
         fullName: $("suBusinessName").value.trim(),
@@ -2144,7 +2209,18 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         paymentStatus: "none",
         createdBy: "self-signup",
         createdAt: serverTimestamp()
-      });
+      };
+      if(pendingReferralRep){
+        clientDoc.referredByRepId = pendingReferralRep.id;
+        clientDoc.referredByRepName = pendingReferralRep.fullName;
+        clientDoc.referralCode = pendingReferralRep.accountCode;
+        clientDoc.referredAt = serverTimestamp();
+      }
+      await setDoc(doc(db, "users", uid), clientDoc);
+      if(pendingReferralRep){
+        sendNotification(pendingReferralRep.id, "New referral 🎉",
+          `${clientDoc.businessName || email} signed up through your referral link. You'll earn a commission when they go Premium.`, "referral-signup");
+      }
       setFormMsg($("signUpMsg"), "Account created! Taking you in…", "success");
     }
     setTimeout(closeSignUp, 900);
@@ -2234,6 +2310,7 @@ function wireLogout(id){
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
+    if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     $("notifPanel").classList.add("hidden");
     await signOut(auth);
   });
@@ -2300,6 +2377,7 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
+    if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     showLanding();
     return;
   }
@@ -2606,6 +2684,54 @@ function initRepDashboard(uid, data){
   $("repStatWallet").textContent = ngn(wallet);
   loadClientsForRep(uid);
   loadMaterialsForRep();
+  loadReferralEarningsForRep(uid, data);
+}
+
+// ---------- Referral Earnings (self-signup referral link → Premium commission) ----------
+function loadReferralEarningsForRep(uid, data){
+  const link = `${window.location.origin}${window.location.pathname}?ref=${encodeURIComponent(data.accountCode || "")}`;
+  $("repReferralLinkOut").textContent = link;
+  $("copyReferralLinkBtn").onclick = ()=>{
+    navigator.clipboard?.writeText(link).then(()=> toast("Referral link copied — share it with businesses you refer."))
+      .catch(()=> toast("Could not copy link."));
+  };
+  $("repReferralCommission").textContent = ngn(Number(data.commissions) || 0);
+  $("repReferralWallet").textContent = ngn(Number(data.wallet) || 0);
+
+  // Referred / Premium client counts — read once (not a live listener) to
+  // keep this lightweight; it refreshes every time the rep dashboard loads.
+  (async ()=>{
+    try{
+      const q = query(collection(db, "users"), where("role","==","client"), where("referredByRepId","==",uid));
+      const snap = await getDocs(q);
+      let premiumCount = 0;
+      snap.forEach(d=>{ if((d.data().premiumPlan||"none") !== "none") premiumCount++; });
+      $("repReferredClientCount").textContent = snap.size;
+      $("repPremiumClientCount").textContent = premiumCount;
+    }catch(err){ console.error(err); }
+  })();
+
+  if(unsubReferralCommissions) unsubReferralCommissions();
+  const cq = query(collection(db, "commissions"), where("repId","==",uid), orderBy("createdAt","desc"));
+  unsubReferralCommissions = onSnapshot(cq, (snap)=>{
+    const rows = [];
+    snap.forEach(d=> rows.push({ id: d.id, ...d.data() }));
+    const tbody = $("referralCommissionHistoryBody");
+    tbody.innerHTML = "";
+    $("referralCommissionEmptyState").classList.toggle("hidden", rows.length > 0);
+    const pkgLabels = { invoice: "Invoice only", receipt: "Receipt only", both: "Both" };
+    for(const r of rows){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(r.clientName||"—")}</td>
+        <td>${escapeHtml(pkgLabels[r.premiumPackage] || r.premiumPackage || "—")}</td>
+        <td class="mono">${ngn(r.paymentAmount||0)}</td>
+        <td class="mono">${ngn(r.commissionAmount||0)}</td>
+        <td>${fmtDate(r.createdAt)}</td>
+        <td><span class="status-chip approved">${escapeHtml(r.status||"paid")}</span></td>`;
+      tbody.appendChild(tr);
+    }
+  }, (err)=> console.error(err));
 }
 
 $("submitClientForm").addEventListener("submit", async (e)=>{
@@ -2894,6 +3020,83 @@ async function approveClientAndCreditCommission(clientId){
     return { alreadyApproved: false, repId: client.repId, repName: client.repName || "the representative", amount, clientName: client.clientName, clientUid: client.clientUid||null };
   });
   return result;
+}
+
+// ================= REFERRAL COMMISSION (self-signup ?ref= link) =================
+// Credits a representative's wallet the moment — and ONLY the moment — a
+// referred client's Premium payment is confirmed (admin-approved) here in
+// the app. This is intentionally separate from approveClientAndCreditCommission
+// above, which is the pre-existing, unrelated "rep manually submits an
+// already-paying client" commission system; both share the same duplicate-
+// safe transaction pattern and the same admin-configured commission rate,
+// but operate on different data.
+//
+// Duplicate-credit prevention: the commission document's ID is the Premium
+// paymentRequest's own ID, and everything happens inside one Firestore
+// transaction. Two simultaneous "Approve" clicks (or a retried click) both
+// try to read/create the same commissions/{paymentRequestId} document; only
+// one can win the write, so only one commission is ever created for a given
+// payment — even under a race. Repeat Premium purchases later create a new
+// paymentRequests document with a new ID, so they correctly generate a new,
+// separate commission rather than being blocked as a duplicate.
+//
+// Security note: because this app has no backend, this still runs in the
+// browser like the rest of the app's financial logic — see the honest note
+// on the Paystack payment flow above. The commission amount is computed here
+// from server-loaded data (commissionRates.percent, the rep's own stored
+// wallet/commissions, and the paymentRequest's own stored `amount`), never
+// from a value the client could pass in, and it only ever fires from the
+// admin's "Approve" action on a genuine Premium payment record — but a
+// determined admin-side attacker with browser dev tools could still in
+// theory call this function directly. Removing that residual risk requires
+// moving this crediting logic into a Firebase Cloud Function triggered off
+// the paymentRequests document, which is the same upgrade path already
+// noted for Paystack verification.
+async function creditReferralCommissionForPremium(paymentRequestId, clientUid, premiumAmount, packageType, clientDisplayName){
+  const commissionRef = doc(db, "commissions", paymentRequestId);
+  const clientUserRef = doc(db, "users", clientUid);
+  return await runTransaction(db, async (tx)=>{
+    const commissionSnap = await tx.get(commissionRef);
+    if(commissionSnap.exists()){
+      return { credited: false, reason: "already-credited" };
+    }
+    const clientSnap = await tx.get(clientUserRef);
+    const clientData = clientSnap.exists() ? clientSnap.data() : {};
+    // The client's own permanent referredByRepId — never the currently
+    // logged-in representative — decides who gets paid.
+    const repId = clientData.referredByRepId;
+    if(!repId){
+      return { credited: false, reason: "no-referral" };
+    }
+    const repRef = doc(db, "users", repId);
+    const repSnap = await tx.get(repRef);
+    if(!repSnap.exists()){
+      return { credited: false, reason: "rep-not-found" };
+    }
+    const repData = repSnap.data();
+    const rate = Number(commissionRates.percent) || 0;
+    const amount = Math.round((Number(premiumAmount) || 0) * rate / 100);
+    const newCommissions = (Number(repData.commissions) || 0) + amount;
+    const newWallet = (Number(repData.wallet) || 0) + amount;
+    // Store the actual credited amount and the rate used on the transaction
+    // itself, so a later change to the commission percentage never alters
+    // this historical record.
+    tx.set(commissionRef, {
+      repId,
+      repName: repData.fullName || repData.email || "the representative",
+      clientId: clientUid,
+      clientName: clientDisplayName || clientData.businessName || clientData.fullName || "—",
+      paymentRequestId,
+      premiumPackage: packageType || "both",
+      paymentAmount: Number(premiumAmount) || 0,
+      commissionAmount: amount,
+      commissionRate: rate,
+      status: "paid",
+      createdAt: serverTimestamp()
+    });
+    tx.update(repRef, { commissions: newCommissions, wallet: newWallet });
+    return { credited: true, repId, repName: repData.fullName || repData.email || "the representative", amount };
+  });
 }
 let unsubAwards = null, unsubPrizes = null, unsubAmbassadors = null;
 let unsubRankings = null, unsubCertsAdmin = null, unsubCertsRep = null;
@@ -4060,6 +4263,17 @@ function initClientDashboard(clientRecordId, clientRecord){
   $("rcpBizAddressOut").textContent = address;
   renderBusinessLogo();
   loadPremiumPricing();
+
+  const referredByBanner = $("clientReferredByBanner");
+  if(referredByBanner){
+    const referrerName = source.referredByRepName || source.repName;
+    if(referrerName){
+      referredByBanner.textContent = `Referred by: ${referrerName}`;
+      referredByBanner.classList.remove("hidden");
+    } else {
+      referredByBanner.classList.add("hidden");
+    }
+  }
 
   // Show only the document type(s) this client is entitled to. The subnav
   // itself always stays visible now (Settings lives there too), even when
@@ -5333,6 +5547,20 @@ function renderPremiumTableAdmin(items){
           toast(`${record.customerName} is now Premium (${pkg}) for one year.`);
           sendNotification(record.uid, "🎉 Premium activated!",
             `Your ${pkg === "both" ? "Invoice + Receipt" : pkg} Premium plan is active for one year, until ${expiresAt.toLocaleDateString('en-NG')}.`, "premium-approved");
+
+          // This confirmed Premium payment is the ONLY event that can ever
+          // generate referral commission (never signup, login, or free use).
+          // creditReferralCommissionForPremium() is itself idempotent — see
+          // its own comment — so it's safe even if "Approve" is clicked more
+          // than once or fires twice in a row.
+          try{
+            const creditResult = await creditReferralCommissionForPremium(id, record.uid, record.amount, pkg, record.customerName);
+            if(creditResult.credited){
+              toast(`₦${creditResult.amount.toLocaleString()} referral commission credited to ${creditResult.repName}.`);
+              sendNotification(creditResult.repId, "💰 Referral commission earned",
+                `${record.customerName} completed a Premium payment — ₦${creditResult.amount.toLocaleString()} has been credited to your wallet.`, "referral-commission");
+            }
+          }catch(commErr){ console.error("Referral commission crediting failed:", commErr); }
         }catch(err){ console.error(err); toast("Could not approve payment."); }
         return;
       }
