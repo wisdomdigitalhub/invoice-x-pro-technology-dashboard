@@ -1090,8 +1090,28 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h3>Announcements</h3>
+        <span class="hint">Posted instantly to every representative's notification bell</span>
+      </div>
+      <form id="postAnnouncementForm">
+        <div class="field"><label>Title</label><input type="text" id="announceTitle" placeholder="e.g. New Premium pricing" required /></div>
+        <div class="field"><label>Message</label><textarea id="announceMessage" rows="3" required></textarea></div>
+        <button type="submit" class="btn-primary" id="postAnnouncementBtn" style="max-width:200px;">Post announcement</button>
+        <div class="form-msg" id="postAnnouncementMsg"></div>
+      </form>
+      <div class="table-wrap" style="margin-top:18px;">
+        <table>
+          <thead><tr><th>Title</th><th>Message</th><th>Posted</th><th>Actions</th></tr></thead>
+          <tbody id="announcementTableBodyAdmin"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="announcementEmptyStateAdmin">No announcements posted yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h3>Marketing materials</h3>
-        <span class="hint">Any file type — reps see these instantly</span>
+        <span class="hint">Any file, up to 700KB — stored directly in the database, no cloud storage needed</span>
       </div>
       <form id="uploadMaterialForm">
         <div class="upload-row">
@@ -1399,6 +1419,20 @@
         </table>
       </div>
       <div class="empty-state hidden" id="clientEmptyStateRep">You haven't submitted any clients yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Announcements</h3>
+        <span class="hint">From your office</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Title</th><th>Message</th><th>Posted</th></tr></thead>
+          <tbody id="announcementTableBodyRep"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="announcementEmptyStateRep">No announcements yet.</div>
     </div>
 
     <div class="panel">
@@ -1881,9 +1915,11 @@ import {
   deleteDoc, collection, query, where, serverTimestamp, onSnapshot, orderBy,
   runTransaction, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {
-  getStorage, ref, uploadBytes, getDownloadURL, deleteObject
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+// Note: no Firebase Storage SDK is imported. Marketing materials and every
+// other file/image in this app (logos, payment screenshots) are stored as
+// compressed base64 data directly inside Firestore documents instead — this
+// keeps the whole app running on the free Firestore tier with no Storage
+// bucket, billing plan upgrade, or Storage security rules required.
 
 const firebaseConfig = {
   apiKey: "AIzaSyB_wmCZ7i8ls7AIaqklmXYdpWgbSOMdfvw",
@@ -1996,7 +2032,6 @@ if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
     });
   }
 })();
-const storage = getStorage(app);
 
 // ---------- Helpers ----------
 const $ = (id) => document.getElementById(id);
@@ -2037,6 +2072,7 @@ let currentUserDoc = null;
 let unsubClients = null;
 let unsubReps = null;
 let unsubMaterials = null;
+let unsubAnnouncements = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
 
@@ -2306,6 +2342,7 @@ function wireLogout(id){
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
+    if(unsubAnnouncements){ unsubAnnouncements(); unsubAnnouncements = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
@@ -2373,6 +2410,7 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
+    if(unsubAnnouncements){ unsubAnnouncements(); unsubAnnouncements = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
@@ -2453,6 +2491,7 @@ function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
   loadMaterialsForAdmin();
+  loadAnnouncementsForAdmin();
   loadCommissionRates();
   loadPremiumPricing();
   loadPremiumRequestsForAdmin();
@@ -2684,6 +2723,7 @@ function initRepDashboard(uid, data){
   $("repStatWallet").textContent = ngn(wallet);
   loadClientsForRep(uid);
   loadMaterialsForRep();
+  loadAnnouncementsForRep();
   loadReferralEarningsForRep(uid, data);
 }
 
@@ -2875,15 +2915,16 @@ function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
   $(emptyId).classList.toggle("hidden", materials.length > 0);
   for(const m of materials){
     const ext = (m.fileName || "file").split(".").pop().slice(0,4).toUpperCase();
+    const sizeKb = m.fileSize ? Math.round(m.fileSize/1024) : null;
     const card = document.createElement("div");
     card.className = "material-card";
     card.innerHTML = `
       <div class="material-icon">${escapeHtml(ext)}</div>
       <div class="material-title">${escapeHtml(m.title || "Untitled")}</div>
-      <div class="material-meta">${fmtDate(m.createdAt)}</div>
+      <div class="material-meta">${fmtDate(m.createdAt)}${sizeKb ? ` · ${sizeKb}KB` : ""}</div>
       <div class="material-actions">
-        <a href="${m.url}" target="_blank" rel="noopener" class="material-download">Download</a>
-        ${isAdmin ? `<button type="button" class="material-delete" data-id="${m.id}" data-path="${escapeHtml(m.storagePath || "")}">Delete</button>` : ""}
+        <a href="${m.fileData}" download="${escapeHtml(m.fileName || "material")}" class="material-download">Download</a>
+        ${isAdmin ? `<button type="button" class="material-delete" data-id="${m.id}">Delete</button>` : ""}
       </div>`;
     grid.appendChild(card);
   }
@@ -2891,9 +2932,6 @@ function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
     grid.querySelectorAll("button.material-delete").forEach(btn=>{
       btn.addEventListener("click", async ()=>{
         try{
-          if(btn.dataset.path){
-            await deleteObject(ref(storage, btn.dataset.path));
-          }
           await deleteDoc(doc(db, "materials", btn.dataset.id));
           toast("Material deleted.");
         }catch(err){ toast("Could not delete material."); }
@@ -2902,24 +2940,47 @@ function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
   }
 }
 
+// Materials are stored entirely inside the Firestore document — no Firebase
+// Storage bucket involved. Firestore caps a document at 1MB, so images are
+// auto-compressed (reusing the same compressImageFile() used for payment
+// screenshots) and any other file type is capped at MAX_MATERIAL_BYTES raw,
+// leaving comfortable headroom for base64's ~37% size overhead plus the
+// document's other fields.
+const MAX_MATERIAL_BYTES = 700 * 1024;
+
+function readFileAsDataURL(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 $("uploadMaterialForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const file = $("materialFile").files[0];
   const title = $("materialTitle").value.trim();
   if(!file) return;
   const btn = $("uploadMaterialBtn");
-  btn.disabled = true; btn.textContent = "Uploading…";
+  btn.disabled = true; btn.textContent = "Processing…";
   setFormMsg($("uploadMaterialMsg"), "", "");
   $("uploadProgressBar").classList.add("active");
-  $("uploadProgressFill").style.width = "30%";
+  $("uploadProgressFill").style.width = "25%";
   try{
-    const path = `materials/${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
-    $("uploadProgressFill").style.width = "80%";
-    const url = await getDownloadURL(storageRef);
+    let fileData;
+    if(file.type.startsWith("image/")){
+      fileData = await compressImageFile(file, MAX_MATERIAL_BYTES);
+    } else {
+      if(file.size > MAX_MATERIAL_BYTES){
+        throw new Error(`That file is ${Math.round(file.size/1024)}KB — please use a file under ${Math.round(MAX_MATERIAL_BYTES/1024)}KB (images are auto-compressed, other file types aren't).`);
+      }
+      fileData = await readFileAsDataURL(file);
+    }
+    $("uploadProgressFill").style.width = "75%";
     await addDoc(collection(db, "materials"), {
-      title, fileName: file.name, url, storagePath: path,
+      title, fileName: file.name, fileType: file.type || "application/octet-stream",
+      fileSize: file.size, fileData,
       uploadedBy: currentUser?.uid || "admin",
       createdAt: serverTimestamp()
     });
@@ -2934,6 +2995,89 @@ $("uploadMaterialForm").addEventListener("submit", async (e)=>{
       $("uploadProgressBar").classList.remove("active");
       $("uploadProgressFill").style.width = "0%";
     }, 600);
+  }
+});
+
+// ================= ANNOUNCEMENTS =================
+// Simple admin-to-rep broadcast board: admin posts a title + message, it's
+// stored in Firestore and shown in every rep's Announcements panel, and a
+// real notification is pushed to the bell for every rep via the existing
+// broadcast-target pattern (REP_BROADCAST), mirroring how ADMIN_BROADCAST
+// already works for admin-facing notifications.
+function loadAnnouncementsForAdmin(){
+  if(unsubAnnouncements) unsubAnnouncements();
+  const q = query(collection(db, "announcements"), orderBy("createdAt","desc"), limit(50));
+  unsubAnnouncements = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=> items.push({ id:d.id, ...d.data() }));
+    renderAnnouncementsAdmin(items);
+  }, (err)=> console.error(err));
+}
+
+function renderAnnouncementsAdmin(items){
+  const tbody = $("announcementTableBodyAdmin");
+  tbody.innerHTML = "";
+  $("announcementEmptyStateAdmin").classList.toggle("hidden", items.length > 0);
+  for(const a of items){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(a.title||"—")}</td>
+      <td style="max-width:320px; white-space:pre-wrap;">${escapeHtml(a.message||"—")}</td>
+      <td>${fmtDate(a.createdAt)}</td>
+      <td><button type="button" class="btn-sm reject" data-id="${a.id}">Delete</button></td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      try{
+        await deleteDoc(doc(db, "announcements", btn.dataset.id));
+        toast("Announcement deleted.");
+      }catch(err){ toast("Could not delete announcement."); }
+    });
+  });
+}
+
+function loadAnnouncementsForRep(){
+  if(unsubAnnouncements) unsubAnnouncements();
+  const q = query(collection(db, "announcements"), orderBy("createdAt","desc"), limit(50));
+  unsubAnnouncements = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=> items.push({ id:d.id, ...d.data() }));
+    const tbody = $("announcementTableBodyRep");
+    if(!tbody) return;
+    tbody.innerHTML = "";
+    $("announcementEmptyStateRep").classList.toggle("hidden", items.length > 0);
+    for(const a of items){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(a.title||"—")}</td>
+        <td style="max-width:320px; white-space:pre-wrap;">${escapeHtml(a.message||"—")}</td>
+        <td>${fmtDate(a.createdAt)}</td>`;
+      tbody.appendChild(tr);
+    }
+  }, (err)=> console.error(err));
+}
+
+$("postAnnouncementForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const title = $("announceTitle").value.trim();
+  const message = $("announceMessage").value.trim();
+  const btn = $("postAnnouncementBtn");
+  btn.disabled = true; btn.textContent = "Posting…";
+  setFormMsg($("postAnnouncementMsg"), "", "");
+  try{
+    await addDoc(collection(db, "announcements"), {
+      title, message,
+      createdBy: currentUser?.uid || "admin",
+      createdAt: serverTimestamp()
+    });
+    sendNotification("REP_BROADCAST", title, message, "announcement");
+    setFormMsg($("postAnnouncementMsg"), "Posted — every representative has been notified.", "success");
+    $("postAnnouncementForm").reset();
+  }catch(err){
+    setFormMsg($("postAnnouncementMsg"), err.message || "Could not post announcement.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Post announcement";
   }
 });
 
@@ -4642,7 +4786,7 @@ function initNotifications(uid, role){
   notifFirstLoad = true;
 
   if(unsubNotifications) unsubNotifications();
-  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : [uid];
+  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : (role === "rep" ? [uid, "REP_BROADCAST"] : [uid]);
   const q = query(collection(db, "notifications"), where("userId", "in", targets), orderBy("createdAt", "desc"), limit(40));
   unsubNotifications = onSnapshot(q, (snap)=>{
     const items = [];
@@ -4713,7 +4857,7 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
   // Re-query current items from the last render via list DOM is unreliable for IDs,
   // so mark-all re-reads the live query once and updates every unread doc.
   try{
-    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : [currentUser.uid];
+    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : (currentUserDoc?.role === "rep" ? [currentUser.uid, "REP_BROADCAST"] : [currentUser.uid]);
     const snap = await getDocs(query(collection(db, "notifications"), where("userId", "in", targets), where("read", "==", false)));
     const updates = [];
     snap.forEach(d => updates.push(updateDoc(doc(db, "notifications", d.id), { read: true })));
