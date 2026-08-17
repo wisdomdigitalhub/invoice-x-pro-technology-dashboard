@@ -502,6 +502,31 @@
   .pkg-price{ font-family:'Fraunces',serif; font-weight:700; font-size:18px; color:var(--brass-light); margin-top:6px; }
   .pkg-price span{ font-size:10.5px; color:rgba(247,244,236,0.55); font-weight:400; }
 
+  /* ===== Billing period toggle (Monthly / Yearly) ===== */
+  .billing-toggle{
+    display:inline-flex; gap:4px; background:rgba(255,255,255,0.06); border:1.5px solid rgba(217,174,108,0.25);
+    border-radius:999px; padding:4px; margin:18px auto 0; position:relative;
+  }
+  .billing-toggle-btn{
+    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:700; color:rgba(247,244,236,0.65);
+    background:transparent; border:none; border-radius:999px; padding:9px 20px; cursor:pointer;
+    display:flex; align-items:center; gap:8px; transition:all .15s ease;
+  }
+  .billing-toggle-btn.active{ background:var(--brass); color:#1c1206; }
+  .billing-save-tag{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:700; letter-spacing:.04em;
+    background:rgba(28,18,6,0.18); color:inherit; padding:2px 7px; border-radius:999px;
+  }
+  .billing-toggle-btn:not(.active) .billing-save-tag{ background:rgba(217,174,108,0.2); color:var(--brass-light); }
+
+  /* ===== Admin: Premium pricing (Monthly/Yearly groups) ===== */
+  .pricing-period-group{ margin-bottom:18px; }
+  .pricing-period-group:last-of-type{ margin-bottom:14px; }
+  .pricing-period-title{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--brass); margin:0 0 10px;
+  }
+
   /* ===== Credits & spin wheel ===== */
   .credits-pill{ display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-weight:700; }
   .spin-card{
@@ -1088,13 +1113,24 @@
     <div class="panel">
       <div class="panel-head">
         <h3>Premium pricing</h3>
-        <span class="hint">Yearly prices — Premium renews every 365 days, never lifetime</span>
+        <span class="hint">Monthly renews every 30 days · Yearly renews every 365 days — never lifetime</span>
       </div>
       <form id="premiumPricingForm">
-        <div class="grid-2">
-          <div class="field"><label>Invoice only (₦/year)</label><input type="number" min="0" id="priceInvoiceInput" required /></div>
-          <div class="field"><label>Receipt only (₦/year)</label><input type="number" min="0" id="priceReceiptInput" required /></div>
-          <div class="field"><label>Both (₦/year)</label><input type="number" min="0" id="priceBothInput" required /></div>
+        <div class="pricing-period-group">
+          <h4 class="pricing-period-title">Monthly</h4>
+          <div class="grid-2">
+            <div class="field"><label>Invoice only (₦/month)</label><input type="number" min="0" id="priceMonthlyInvoiceInput" required /></div>
+            <div class="field"><label>Receipt only (₦/month)</label><input type="number" min="0" id="priceMonthlyReceiptInput" required /></div>
+            <div class="field"><label>Both (₦/month)</label><input type="number" min="0" id="priceMonthlyBothInput" required /></div>
+          </div>
+        </div>
+        <div class="pricing-period-group">
+          <h4 class="pricing-period-title">Yearly</h4>
+          <div class="grid-2">
+            <div class="field"><label>Invoice only (₦/year)</label><input type="number" min="0" id="priceYearlyInvoiceInput" required /></div>
+            <div class="field"><label>Receipt only (₦/year)</label><input type="number" min="0" id="priceYearlyReceiptInput" required /></div>
+            <div class="field"><label>Both (₦/year)</label><input type="number" min="0" id="priceYearlyBothInput" required /></div>
+          </div>
         </div>
         <button type="submit" class="btn-primary" id="savePremiumPricingBtn" style="max-width:200px;">Save pricing</button>
         <div class="form-msg" id="premiumPricingMsg"></div>
@@ -1104,11 +1140,11 @@
     <div class="panel">
       <div class="panel-head">
         <h3>Premium verification</h3>
-        <span class="hint">Client payment proof for yearly Premium — Invoice, Receipt, or Both</span>
+        <span class="hint">Client payment proof for Monthly or Yearly Premium — Invoice, Receipt, or Both</span>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Package</th><th>Amount</th><th>Screenshot</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Customer</th><th>Email</th><th>Phone</th><th>Package</th><th>Billing Period</th><th>Amount</th><th>Screenshot</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="premiumTableBodyAdmin"></tbody>
         </table>
       </div>
@@ -1562,23 +1598,29 @@
       <div class="form-msg info hidden" id="clientReferredByBanner" style="display:block; margin-bottom:12px;"></div>
       <div class="form-msg info" style="display:block; margin-bottom:12px;">Your representative earns a commission only when you complete a Premium payment. Free usage does not generate referral earnings.</div>
       <div class="premium-hero">
-        <span class="premium-badge">Premium Plan · Yearly</span>
+        <span class="premium-badge" id="premiumBadgeLabel">Premium Plan</span>
         <h2>Unlock unlimited access.</h2>
+
+        <div class="billing-toggle" id="billingToggle" role="tablist" aria-label="Billing period">
+          <button type="button" class="billing-toggle-btn active" data-period="monthly" role="tab" aria-selected="true">Monthly</button>
+          <button type="button" class="billing-toggle-btn" data-period="yearly" role="tab" aria-selected="false">Yearly<span class="billing-save-tag">Save more</span></button>
+        </div>
+
         <div class="package-select" id="packageSelect">
           <label class="pkg-option" data-pkg="invoice">
             <input type="radio" name="premPkg" value="invoice" />
             <div class="pkg-name">Invoice only</div>
-            <div class="pkg-price">₦<span id="pkgPriceInvoice">15,000</span><span>/year</span></div>
+            <div class="pkg-price">₦<span id="pkgPriceInvoice">1,300</span><span id="pkgPeriodInvoice">/month</span></div>
           </label>
           <label class="pkg-option" data-pkg="receipt">
             <input type="radio" name="premPkg" value="receipt" />
             <div class="pkg-name">Receipt only</div>
-            <div class="pkg-price">₦<span id="pkgPriceReceipt">15,000</span><span>/year</span></div>
+            <div class="pkg-price">₦<span id="pkgPriceReceipt">1,300</span><span id="pkgPeriodReceipt">/month</span></div>
           </label>
           <label class="pkg-option active" data-pkg="both">
             <input type="radio" name="premPkg" value="both" checked />
             <div class="pkg-name">Both (best value)</div>
-            <div class="pkg-price">₦<span id="pkgPriceBoth">25,000</span><span>/year</span></div>
+            <div class="pkg-price">₦<span id="pkgPriceBoth">2,600</span><span id="pkgPeriodBoth">/month</span></div>
           </label>
         </div>
         <div class="premium-features">
@@ -1587,7 +1629,7 @@
           <div class="feat">Unlimited history</div>
           <div class="feat">Priority updates</div>
           <div class="feat">Premium badge on your account</div>
-          <div class="feat">Renews yearly — cancel anytime, no lock-in</div>
+          <div class="feat">Renews on your chosen billing cycle — cancel anytime, no lock-in</div>
         </div>
       </div>
 
@@ -1614,7 +1656,8 @@
             <div class="field"><label>Email</label><input type="email" id="premEmail" required /></div>
             <div class="field"><label>Phone number</label><input type="tel" id="premPhone" required /></div>
             <div class="field"><label>Package</label><input type="text" id="premPackageLabel" value="Both (Invoice + Receipt)" readonly /></div>
-            <div class="field"><label>Amount paid (₦)</label><input type="number" id="premAmount" value="25000" required /></div>
+            <div class="field"><label>Billing period</label><input type="text" id="premBillingLabel" value="Monthly" readonly /></div>
+            <div class="field"><label>Amount to pay (₦)</label><input type="number" id="premAmount" value="2600" readonly /></div>
             <div class="field"><label>Bank used to pay</label><input type="text" id="premBankUsed" required /></div>
             <div class="field"><label>Payment date</label><input type="date" id="premPaymentDate" required /></div>
             <div class="field"><label>Transaction reference (optional)</label><input type="text" id="premTxnRef" /></div>
@@ -1629,8 +1672,8 @@
     <div class="subpanel" data-panel="premiumSuccessTab" id="premiumSuccessPanel">
       <div class="panel" style="text-align:center; padding:44px 30px;">
         <h2 class="fraunces" style="font-size:26px; margin-bottom:10px;">Payment submitted successfully</h2>
-        <p class="premium-status-msg" style="max-width:44ch; margin:0 auto; color:rgba(15,26,46,0.65);">
-          Your payment proof has been received. Our team will review your payment. Once confirmed, Premium will be activated automatically on your account for one year — this usually takes a short time. Thank you for choosing Invoice X Pro Technology.
+        <p class="premium-status-msg" id="premiumSuccessMsg" style="max-width:44ch; margin:0 auto; color:rgba(15,26,46,0.65);">
+          Your payment proof has been received. Our team will review your payment. Once confirmed, Premium will be activated automatically on your account. This usually takes a short time. Thank you for choosing Invoice X Pro Technology.
         </p>
         <button type="button" class="btn-primary" id="premReturnBtn" style="max-width:220px; margin:24px auto 0;">Return to dashboard</button>
       </div>
@@ -5115,16 +5158,29 @@ const STARTING_CREDITS = 1000;      // every new client starts with this many
 const CREDIT_COST_PER_DOC = 50;     // deducted for each invoice/receipt generated
 const SPIN_BONUS_CREDITS = 100;     // guaranteed bonus from the one-time spin
 const CREDIT_EXPIRY_DAYS = 90;      // credits stop working after this many days, even if unused
-const PREMIUM_DURATION_DAYS = 365;  // Premium is a YEARLY subscription now, never lifetime
+// Premium duration depends on which billing period was approved — a monthly
+// plan must NEVER get the yearly duration or vice versa. Both are read from
+// here everywhere a duration is needed, so there is exactly one place that
+// defines "how long is a month/year of Premium" in this app.
+const PREMIUM_DURATION_DAYS = { monthly: 30, yearly: 365 };
+// Any paymentRequest written before this feature existed has no
+// billingPeriod field at all — the whole app was yearly-only back then, so
+// treating a missing value as "yearly" (rather than crashing or silently
+// defaulting to monthly) is the only backward-compatible reading of it.
+function normalizeBillingPeriod(period){
+  return period === "monthly" ? "monthly" : "yearly";
+}
 let unsubClientUserDoc = null;
 let unsubPaymentRequest = null;
 let latestPaymentRequest = null;
 let currentProofDataUrl = null;
 let selectedPremiumPackage = "both";
+let selectedBillingPeriod = "monthly";
 
 // Premium is per-document-type ("invoice" | "receipt" | "both") and expires
 // after PREMIUM_DURATION_DAYS from the date admin approved it — this is what
-// makes it yearly, not lifetime. Falls back to the shared credit balance for
+// makes it a subscription, not lifetime — monthly or yearly, whichever was
+// approved. Falls back to the shared credit balance for
 // whichever document type isn't (or is no longer) covered by Premium.
 function isPremiumActiveFor(docType){
   const plan = currentUserDoc?.premiumPlan;
@@ -5194,7 +5250,7 @@ function renderPlanStatusCard(){
   }
 
   if(plan && plan !== "none" && !invoicePremium && !receiptPremium){
-    // Had premium, it lapsed — yearly, not lifetime, so this really happens.
+    // Had premium, it lapsed — monthly or yearly, never lifetime, so this really happens.
     card.innerHTML = `
       <div class="plan-card plan-rejected">
         <div>
@@ -5368,33 +5424,101 @@ $("copyBankAccBtn").addEventListener("click", ()=>{
     .catch(()=> toast("Could not copy — copy it manually: 9041498427"));
 });
 
-// ---------- Premium pricing (admin-configurable, yearly) ----------
-let premiumPricing = { invoice: 15000, receipt: 15000, both: 25000 };
+// ---------- Premium pricing (admin-configurable, monthly + yearly) ----------
+// Single source of truth for every price shown or charged anywhere in the
+// app — the client package cards, the amount saved on a paymentRequest, and
+// the admin pricing form all read from (or write to) this one object, so
+// there is never a second, drifting copy of a price living in the UI.
+const PREMIUM_PRICING_DEFAULTS = {
+  monthly: { invoice: 1300, receipt: 1300, both: 2600 },
+  yearly:  { invoice: 15000, receipt: 15000, both: 30000 }
+};
+let premiumPricing = JSON.parse(JSON.stringify(PREMIUM_PRICING_DEFAULTS));
+const PKG_LABELS = { invoice: "Invoice only", receipt: "Receipt only", both: "Both (Invoice + Receipt)" };
+const PERIOD_LABELS = { monthly: "Monthly", yearly: "Yearly" };
+
+// The one function anything in the app should call to find out what a
+// package+period actually costs, or to validate a combination before it's
+// allowed to go any further (a new payment request, an admin approval,
+// etc). Throws rather than returning a fallback number, so a bad
+// package/period can never silently turn into a ₦0 or wrong-priced request —
+// see instruction #7 (never trust/guess a price; reject invalid input).
+function getPremiumAmount(period, pkg){
+  const p = normalizeBillingPeriod(period);
+  if(pkg !== "invoice" && pkg !== "receipt" && pkg !== "both"){
+    throw new Error("Invalid package type.");
+  }
+  const amount = Number(premiumPricing?.[p]?.[pkg]);
+  if(!Number.isFinite(amount) || amount <= 0){
+    throw new Error("Invalid Premium price configuration — contact support.");
+  }
+  return amount;
+}
 
 async function loadPremiumPricing(){
   try{
     const snap = await getDoc(doc(db, "settings", "premiumPricing"));
-    if(snap.exists()) premiumPricing = { invoice: 15000, receipt: 15000, both: 25000, ...snap.data() };
+    if(snap.exists()){
+      const data = snap.data() || {};
+      if(data.monthly || data.yearly){
+        // Current shape: { monthly:{invoice,receipt,both}, yearly:{...} }
+        premiumPricing = {
+          monthly: { ...PREMIUM_PRICING_DEFAULTS.monthly, ...(data.monthly || {}) },
+          yearly:  { ...PREMIUM_PRICING_DEFAULTS.yearly,  ...(data.yearly  || {}) }
+        };
+      } else if(data.invoice || data.receipt || data.both){
+        // Legacy shape from before Monthly/Yearly existed: a flat
+        // {invoice,receipt,both} object that was always yearly pricing.
+        // Read it as the yearly tier and keep the new monthly defaults,
+        // rather than losing whatever the admin had already configured.
+        premiumPricing = {
+          monthly: { ...PREMIUM_PRICING_DEFAULTS.monthly },
+          yearly:  { invoice: data.invoice, receipt: data.receipt, both: data.both }
+        };
+      }
+    }
   }catch(err){ console.error(err); }
-  const iEl = $("priceInvoiceInput"); if(iEl) iEl.value = premiumPricing.invoice;
-  const rEl = $("priceReceiptInput"); if(rEl) rEl.value = premiumPricing.receipt;
-  const bEl = $("priceBothInput"); if(bEl) bEl.value = premiumPricing.both;
+  const setVal = (id, val)=>{ const el = $(id); if(el) el.value = val; };
+  setVal("priceMonthlyInvoiceInput", premiumPricing.monthly.invoice);
+  setVal("priceMonthlyReceiptInput", premiumPricing.monthly.receipt);
+  setVal("priceMonthlyBothInput", premiumPricing.monthly.both);
+  setVal("priceYearlyInvoiceInput", premiumPricing.yearly.invoice);
+  setVal("priceYearlyReceiptInput", premiumPricing.yearly.receipt);
+  setVal("priceYearlyBothInput", premiumPricing.yearly.both);
   updatePackagePriceDisplay();
 }
 
 function updatePackagePriceDisplay(){
-  const iOut = $("pkgPriceInvoice"); if(iOut) iOut.textContent = premiumPricing.invoice.toLocaleString();
-  const rOut = $("pkgPriceReceipt"); if(rOut) rOut.textContent = premiumPricing.receipt.toLocaleString();
-  const bOut = $("pkgPriceBoth"); if(bOut) bOut.textContent = premiumPricing.both.toLocaleString();
+  const periodSuffix = selectedBillingPeriod === "monthly" ? "/month" : "/year";
+  const rates = premiumPricing[selectedBillingPeriod];
+  const iOut = $("pkgPriceInvoice"); if(iOut) iOut.textContent = rates.invoice.toLocaleString();
+  const rOut = $("pkgPriceReceipt"); if(rOut) rOut.textContent = rates.receipt.toLocaleString();
+  const bOut = $("pkgPriceBoth"); if(bOut) bOut.textContent = rates.both.toLocaleString();
+  const iPer = $("pkgPeriodInvoice"); if(iPer) iPer.textContent = periodSuffix;
+  const rPer = $("pkgPeriodReceipt"); if(rPer) rPer.textContent = periodSuffix;
+  const bPer = $("pkgPeriodBoth"); if(bPer) bPer.textContent = periodSuffix;
+  const badge = $("premiumBadgeLabel"); if(badge) badge.textContent = `Premium Plan · ${PERIOD_LABELS[selectedBillingPeriod]}`;
   syncSelectedPackageAmount();
 }
 
 function syncSelectedPackageAmount(){
-  const amt = premiumPricing[selectedPremiumPackage] || 0;
+  let amt = 0;
+  try{ amt = getPremiumAmount(selectedBillingPeriod, selectedPremiumPackage); }catch(err){ amt = 0; }
   const amtEl = $("premAmount"); if(amtEl) amtEl.value = amt;
-  const labelMap = { invoice: "Invoice only", receipt: "Receipt only", both: "Both (Invoice + Receipt)" };
-  const labelEl = $("premPackageLabel"); if(labelEl) labelEl.value = labelMap[selectedPremiumPackage];
+  const labelEl = $("premPackageLabel"); if(labelEl) labelEl.value = PKG_LABELS[selectedPremiumPackage];
+  const billingEl = $("premBillingLabel"); if(billingEl) billingEl.value = PERIOD_LABELS[selectedBillingPeriod];
 }
+
+document.querySelectorAll('#billingToggle .billing-toggle-btn').forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll('#billingToggle .billing-toggle-btn').forEach(b=>{
+      b.classList.remove("active"); b.setAttribute("aria-selected","false");
+    });
+    btn.classList.add("active"); btn.setAttribute("aria-selected","true");
+    selectedBillingPeriod = btn.dataset.period === "yearly" ? "yearly" : "monthly";
+    updatePackagePriceDisplay();
+  });
+});
 
 document.querySelectorAll('#packageSelect .pkg-option').forEach(opt=>{
   opt.addEventListener("click", ()=>{
@@ -5412,13 +5536,14 @@ $("premiumPricingForm")?.addEventListener("submit", async (e)=>{
   btn.disabled = true; btn.textContent = "Saving…";
   setFormMsg($("premiumPricingMsg"), "", "");
   try{
+    const num = (id)=> Number($(id).value) || 0;
     const rates = {
-      invoice: Number($("priceInvoiceInput").value) || 0,
-      receipt: Number($("priceReceiptInput").value) || 0,
-      both: Number($("priceBothInput").value) || 0
+      monthly: { invoice: num("priceMonthlyInvoiceInput"), receipt: num("priceMonthlyReceiptInput"), both: num("priceMonthlyBothInput") },
+      yearly:  { invoice: num("priceYearlyInvoiceInput"),  receipt: num("priceYearlyReceiptInput"),  both: num("priceYearlyBothInput") }
     };
     await setDoc(doc(db, "settings", "premiumPricing"), rates);
     premiumPricing = rates;
+    updatePackagePriceDisplay();
     setFormMsg($("premiumPricingMsg"), "Premium pricing saved.", "success");
     toast("Premium pricing updated.");
   }catch(err){
@@ -5981,13 +6106,24 @@ $("premiumPaymentForm").addEventListener("submit", async (e)=>{
   btn.disabled = true; btn.textContent = "Submitting…";
   setFormMsg($("premSubmitMsg"), "", "");
   try{
+    // Never trust a price (or package/period) coming from the DOM — always
+    // recompute it here from the pricing config, the same source of truth
+    // the price cards themselves render from. getPremiumAmount() throws on
+    // an invalid package, invalid period, or a non-positive configured
+    // price, so a mismatched or tampered submission can never reach
+    // Firestore with a price that doesn't match what was actually selected.
+    const billingPeriod = normalizeBillingPeriod(selectedBillingPeriod);
+    const packageType = selectedPremiumPackage;
+    const amount = getPremiumAmount(billingPeriod, packageType);
+
     const payload = {
       uid: currentUser.uid,
       customerName: $("premFullName").value.trim(),
       email: $("premEmail").value.trim(),
       phone: $("premPhone").value.trim(),
-      packageType: selectedPremiumPackage,
-      amount: Number($("premAmount").value) || 0,
+      packageType,
+      billingPeriod,
+      amount,
       bankName: "OPay",
       accountName: "Daniel C Princewill",
       accountNumber: "9041498427",
@@ -6001,7 +6137,7 @@ $("premiumPaymentForm").addEventListener("submit", async (e)=>{
     await addDoc(collection(db, "paymentRequests"), payload);
 
     sendNotification("ADMIN_BROADCAST", "New Premium payment submitted",
-      `${payload.customerName} submitted payment proof for ₦${payload.amount.toLocaleString()} (${selectedPremiumPackage}).`, "premium-payment");
+      `${payload.customerName} submitted payment proof for ₦${payload.amount.toLocaleString()} (${PKG_LABELS[packageType]}, ${PERIOD_LABELS[billingPeriod]}).`, "premium-payment");
 
     if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
       try{
@@ -6049,16 +6185,18 @@ function renderPremiumTableAdmin(items){
   tbody.innerHTML = "";
   $("premiumEmptyStateAdmin").classList.toggle("hidden", items.length > 0);
 
-  const pkgLabels = { invoice: "Invoice only", receipt: "Receipt only", both: "Both" };
-
   for(const r of items){
+    // Backward compatibility: any record from before Monthly/Yearly existed
+    // has no billingPeriod field — the whole app was yearly-only then.
+    const billingPeriod = normalizeBillingPeriod(r.billingPeriod);
     const statusClass = r.paymentStatus === "Approved" ? "approved" : (r.paymentStatus === "Rejected" ? "rejected" : "pending");
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(r.customerName || "—")}</td>
       <td>${escapeHtml(r.email || "—")}</td>
       <td>${escapeHtml(r.phone || "—")}</td>
-      <td>${escapeHtml(pkgLabels[r.packageType] || "Both")}</td>
+      <td>${escapeHtml(PKG_LABELS[r.packageType] || "Both (Invoice + Receipt)")}</td>
+      <td>${escapeHtml(PERIOD_LABELS[billingPeriod])}</td>
       <td class="mono">${ngn(r.amount)}</td>
       <td>${r.screenshotData ? `<img class="premium-thumb" src="${r.screenshotData}" data-action="view" />` : "—"}</td>
       <td>${escapeHtml(r.paymentDate || "—")}</td>
@@ -6093,17 +6231,28 @@ function renderPremiumTableAdmin(items){
       if(action === "approve"){
         try{
           const pkg = record.packageType === "invoice" || record.packageType === "receipt" ? record.packageType : "both";
-          const expiresAt = new Date(Date.now() + PREMIUM_DURATION_DAYS * 24 * 60 * 60 * 1000);
+          // Read the billing period straight from the payment request record
+          // (falling back to "yearly" only for old, pre-existing records with
+          // no billingPeriod at all — see normalizeBillingPeriod). A monthly
+          // approval must NEVER get the yearly duration, and vice versa.
+          const billingPeriod = normalizeBillingPeriod(record.billingPeriod);
+          const durationDays = PREMIUM_DURATION_DAYS[billingPeriod];
+          // Renewal: a fresh/expired subscription always starts its new
+          // period from today (the approval date) — this newly approved
+          // package and billing period are what count, regardless of
+          // whatever plan/period the account had before.
+          const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
           await updateDoc(doc(db, "paymentRequests", id), {
             paymentStatus: "Approved", reviewedAt: serverTimestamp(), reviewedBy: currentUser?.uid || "admin"
           });
           await updateDoc(doc(db, "users", record.uid), {
-            premiumPlan: pkg, premiumExpiresAt: expiresAt, paymentStatus: "Approved",
+            premiumPlan: pkg, premiumBillingPeriod: billingPeriod, premiumExpiresAt: expiresAt, paymentStatus: "Approved",
             approvedDate: serverTimestamp(), approvedBy: currentUser?.uid || "admin"
           });
-          toast(`${record.customerName} is now Premium (${pkg}) for one year.`);
+          const expiryDateStr = expiresAt.toLocaleDateString('en-NG');
+          toast(`${record.customerName} is now Premium (${PKG_LABELS[pkg]}) — ${durationDays} days, until ${expiryDateStr}.`);
           sendNotification(record.uid, "🎉 Premium activated!",
-            `Your ${pkg === "both" ? "Invoice + Receipt" : pkg} Premium plan is active for one year, until ${expiresAt.toLocaleDateString('en-NG')}.`, "premium-approved");
+            `Your ${pkg === "both" ? "Invoice + Receipt" : pkg} Premium plan (${PERIOD_LABELS[billingPeriod]}) is active for ${durationDays} days, until ${expiryDateStr}.`, "premium-approved");
 
           // This confirmed Premium payment is the ONLY event that can ever
           // generate referral commission (never signup, login, or free use).
