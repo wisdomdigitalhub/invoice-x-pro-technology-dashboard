@@ -395,6 +395,14 @@
     background:#fff; color:var(--ink); text-decoration:none; display:inline-flex; align-items:center;
   }
   .share-row button:hover, .share-row a:hover{background:var(--paper);}
+  .share-btn{ display:inline-flex; align-items:center; gap:7px; color:#fff !important; border:none !important; }
+  .share-ico{ font-size:15px; line-height:1; }
+  .share-whatsapp{ background:#25D366 !important; }
+  .share-whatsapp:hover{ background:#1ebe5a !important; }
+  .share-gmail{ background:#EA4335 !important; }
+  .share-gmail:hover{ background:#d33c2e !important; }
+  .share-facebook{ background:#1877F2 !important; }
+  .share-facebook:hover{ background:#1466d3 !important; }
 
   .hof-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px;}
   .hof-card{
@@ -572,7 +580,7 @@
   .sig-toggle-row{ display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(15,26,46,0.7); margin-top:12px; }
   .sig-toggle-row input{ width:16px; height:16px; }
 
-  .inv-signature-img{ max-height:64px; max-width:180px; position:absolute; right:60px; bottom:44px; object-fit:contain; }
+  .inv-signature-img{ max-height:64px; max-width:180px; object-fit:contain; margin-bottom:2px; }
   .pos-sign-area{ text-align:center; margin:14px 0 6px; }
   .pos-signature-img{ max-height:50px; max-width:70%; margin:0 auto 4px; display:block; object-fit:contain; }
   .pos-sign-line{ font-size:9.5px; color:#888; border-top:1px dashed #ccc; padding-top:4px; display:inline-block; min-width:140px; }
@@ -667,15 +675,9 @@
   .inv-bank-box{ font-size:12px; color:#333; }
   .inv-bank-box .inv-box-label{ margin-bottom:6px; }
   .inv-bank-box div{ padding:2px 0; }
-  .inv-sign-box{ text-align:right; position:relative; min-height:90px; }
-  .inv-seal{
-    position:absolute; right:78px; bottom:22px; width:92px; height:92px; border-radius:50%;
-    border:2px solid #4a3f9e; color:#4a3f9e; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    transform:rotate(-14deg); opacity:0.75; font-size:9px; font-weight:800; letter-spacing:0.5px; text-align:center; line-height:1.3;
-  }
-  .inv-seal::before{ content:""; position:absolute; inset:6px; border:1px solid #4a3f9e; border-radius:50%; }
+  .inv-sign-box{ text-align:right; position:relative; min-height:90px; display:flex; flex-direction:column; align-items:flex-end; justify-content:flex-end; }
   .inv-sign-name{ font-family:'Great Vibes',cursive; font-size:28px; color:#2a3a8f; }
-  .inv-sign-line{ border-top:1px solid #999; margin-top:4px; padding-top:6px; font-size:11px; color:#555; }
+  .inv-sign-line{ border-top:1px solid #999; margin-top:4px; padding-top:6px; font-size:11px; color:#555; width:180px; text-align:center; }
 
   .inv-footer-note{ text-align:center; font-size:10.5px; color:#666; margin-top:26px; padding-top:14px; border-top:1px solid #ccc; }
 
@@ -725,8 +727,7 @@
     .inv-doc-label{ text-align:left; }
     .inv-info-grid{ grid-template-columns:1fr; }
     .inv-bottom-grid{ grid-template-columns:1fr; }
-    .inv-sign-box{ text-align:left; }
-    .inv-seal{ right:auto; left:0; }
+    .inv-sign-box{ text-align:left; align-items:flex-start; }
     .doc-stamp-circle{ right:16px; top:auto; bottom:16px; }
   }
 </style>
@@ -1023,7 +1024,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Name</th><th>Code</th><th>Branch</th><th>Status</th><th>Action</th></tr></thead>
+          <thead><tr><th>Name</th><th>Code</th><th>Branch</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody id="repTableBody"></tbody>
         </table>
       </div>
@@ -1056,6 +1057,20 @@
         </table>
       </div>
       <div class="empty-state hidden" id="clientEmptyStateAdmin">No client submissions yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Self-signup clients</h3>
+        <span class="hint">Businesses who signed up directly (with or without a referral link)</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Business</th><th>Email</th><th>Referred by</th><th>Premium</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="selfSignupClientTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="selfSignupClientEmptyState">No self-signup clients yet.</div>
     </div>
 
     <div class="panel">
@@ -1710,7 +1725,6 @@
               <div id="invBankOut"></div>
             </div>
             <div class="inv-sign-box">
-              <div class="inv-seal">INVOICE<br/>X PRO<br/>★</div>
               <img id="invSignatureImg" class="inv-signature-img hidden" />
               <div class="inv-sign-line">Authorised Signatory</div>
             </div>
@@ -1727,6 +1741,11 @@
         <button type="button" class="btn-sm approve hidden" id="invDownloadPdfBtn">Download PDF</button>
         <button type="button" class="btn-sm confirm hidden" id="invDownloadPngBtn">Download PNG</button>
         <button type="button" class="btn-sm reject hidden" id="invPrintBtn">Print</button>
+      </div>
+      <div class="doc-actions share-row hidden" id="invShareRow">
+        <button type="button" class="share-btn share-whatsapp" id="invShareWhatsappBtn"><span class="share-ico">🟢</span> WhatsApp</button>
+        <button type="button" class="share-btn share-gmail" id="invShareGmailBtn"><span class="share-ico">✉️</span> Gmail</button>
+        <button type="button" class="share-btn share-facebook" id="invShareFacebookBtn"><span class="share-ico">🔵</span> Facebook</button>
       </div>
       <div class="form-msg" id="invGenerateMsg"></div>
     </div>
@@ -1801,6 +1820,11 @@
         <button type="button" class="btn-sm confirm hidden" id="rcpDownloadPngBtn">Download PNG</button>
         <button type="button" class="btn-sm reject hidden" id="rcpPrintBtn">Print</button>
       </div>
+      <div class="doc-actions share-row hidden" id="rcpShareRow">
+        <button type="button" class="share-btn share-whatsapp" id="rcpShareWhatsappBtn"><span class="share-ico">🟢</span> WhatsApp</button>
+        <button type="button" class="share-btn share-gmail" id="rcpShareGmailBtn"><span class="share-ico">✉️</span> Gmail</button>
+        <button type="button" class="share-btn share-facebook" id="rcpShareFacebookBtn"><span class="share-ico">🔵</span> Facebook</button>
+      </div>
     </div>
 
     <!-- Settings -->
@@ -1839,6 +1863,7 @@
           <div class="sig-method-panel" data-method-panel="upload">
             <div class="upload-drop" id="sigUploadDropZone">
               <div id="sigUploadPromptText">Tap to choose your signature image (PNG, JPG, JPEG or WEBP)</div>
+              <div class="hint" style="margin-top:6px;">Best result: sign in dark ink on plain white paper — the white background is removed automatically.</div>
               <img class="upload-preview hidden" id="sigUploadPreviewImg" />
               <input type="file" id="sigUploadFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden" />
             </div>
@@ -2075,6 +2100,7 @@ let unsubMaterials = null;
 let unsubAnnouncements = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
+let unsubSelfSignupClients = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -2348,6 +2374,7 @@ function wireLogout(id){
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
+    if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
     $("notifPanel").classList.add("hidden");
     await signOut(auth);
   });
@@ -2416,6 +2443,7 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
+    if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
     showLanding();
     return;
   }
@@ -2490,6 +2518,7 @@ onAuthStateChanged(auth, async (user)=>{
 function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
+  loadSelfSignupClientsForAdmin();
   loadMaterialsForAdmin();
   loadAnnouncementsForAdmin();
   loadCommissionRates();
@@ -2523,17 +2552,28 @@ function renderRepTable(reps){
       <td class="mono">${escapeHtml(r.accountCode||"—")}</td>
       <td>${escapeHtml(r.branch||"—")}</td>
       <td><span class="status-chip ${r.status==="accepted"?"approved":"pending"}">${r.status||"pending"}</span></td>
-      <td>
+      <td style="white-space:nowrap;">
         ${r.status === "accepted"
           ? `<button class="btn-sm reject" data-uid="${r.id}" data-action="hold">Hold</button>`
           : `<button class="btn-sm confirm" data-uid="${r.id}" data-action="accept">Accept</button>`}
+        <button class="btn-sm reject" data-uid="${r.id}" data-action="delete">Delete</button>
       </td>`;
     tbody.appendChild(tr);
   }
   tbody.querySelectorAll("button[data-action]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const uid = btn.dataset.uid;
-      const newStatus = btn.dataset.action === "accept" ? "accepted" : "pending";
+      const action = btn.dataset.action;
+      if(action === "delete"){
+        const rep = window.__repsById?.[uid];
+        if(!confirm(`Delete ${rep?.fullName || "this representative"}? This removes their login access immediately. Their referral link stops working, but clients they already referred and their past commission history stay on record. Note: this only removes their Invoice X Pro profile — their original sign-in email/password (Firebase Auth account) can't be deleted from this app and would need to be removed from the Firebase console if you want it fully gone.`)) return;
+        try{
+          await deleteDoc(doc(db, "users", uid));
+          toast("Representative deleted.");
+        }catch(err){ toast("Could not delete representative."); }
+        return;
+      }
+      const newStatus = action === "accept" ? "accepted" : "pending";
       try{
         await updateDoc(doc(db,"users",uid), { status: newStatus, updatedAt: serverTimestamp() });
         toast(newStatus === "accepted" ? "Representative accepted." : "Representative put on hold.");
@@ -2654,6 +2694,7 @@ function renderClientTableAdmin(clients){
         <button class="btn-sm confirm" data-id="${c.id}" data-action="confirm-payment" ${paymentConfirmed?"disabled":""}>Confirm payment</button>
         <button class="btn-sm approve" data-id="${c.id}" data-action="approve" ${(!paymentConfirmed || approved)?"disabled":""}>Approve</button>
         <button class="btn-sm reject" data-id="${c.id}" data-action="reject">Reject</button>
+        <button class="btn-sm reject" data-id="${c.id}" data-action="delete">Delete</button>
       </td>`;
     tbody.appendChild(tr);
   }
@@ -2672,6 +2713,18 @@ function renderClientTableAdmin(clients){
       const id = btn.dataset.id;
       const action = btn.dataset.action;
       const ref = doc(db, "clients", id);
+      if(action === "delete"){
+        const client = clients.find(c=>c.id===id);
+        if(!confirm(`Delete ${client?.clientName || "this client"}? This removes their submission record permanently. If their account was already approved, it also removes their login access. This can't be undone.`)) return;
+        try{
+          await deleteDoc(ref);
+          if(client?.clientUid){
+            try{ await deleteDoc(doc(db, "users", client.clientUid)); }catch(e){ /* profile may not exist — fine */ }
+          }
+          toast("Client record deleted.");
+        }catch(err){ toast("Could not delete client."); }
+        return;
+      }
       try{
         if(action === "confirm-payment"){
           const snap = await getDoc(ref);
@@ -2708,6 +2761,52 @@ function renderClientTableAdmin(clients){
             `${data.clientName} was not approved. Check the admin note for details.`, "rejected");
         }
       }catch(err){ toast("Action failed."); }
+    });
+  });
+}
+
+// Self-signup clients live directly in `users` (role: "client") with no
+// linked `clients` record — this covers both plain self-signups and
+// referral-link signups, which the table above never showed since it only
+// reads the legacy rep-submitted `clients` collection.
+async function loadSelfSignupClientsForAdmin(){
+  if(unsubSelfSignupClients) unsubSelfSignupClients();
+  const q = query(collection(db, "users"), where("role","==","client"));
+  unsubSelfSignupClients = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=>{
+      const data = d.data();
+      if(!data.clientRecordId) items.push({ id: d.id, ...data }); // exclude legacy rep-submitted clients, already shown above
+    });
+    renderSelfSignupClientsAdmin(items);
+  }, (err)=> console.error(err));
+}
+
+function renderSelfSignupClientsAdmin(items){
+  const tbody = $("selfSignupClientTableBody");
+  tbody.innerHTML = "";
+  $("selfSignupClientEmptyState").classList.toggle("hidden", items.length > 0);
+  items.sort((a,b)=> (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+  for(const c of items){
+    const tr = document.createElement("tr");
+    const premium = (c.premiumPlan && c.premiumPlan !== "none") ? c.premiumPlan : "Free";
+    tr.innerHTML = `
+      <td>${escapeHtml(c.businessName || c.fullName || "—")}</td>
+      <td>${escapeHtml(c.email || "—")}</td>
+      <td>${escapeHtml(c.referredByRepName || "—")}</td>
+      <td><span class="status-chip ${premium==="Free"?"pending":"approved"}">${escapeHtml(premium)}</span></td>
+      <td>${fmtDate(c.createdAt)}</td>
+      <td><button class="btn-sm reject" data-id="${c.id}">Delete</button></td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-id]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const client = items.find(c=>c.id===btn.dataset.id);
+      if(!confirm(`Delete ${client?.businessName || client?.email || "this client"}? This removes their login access immediately and can't be undone. Note: this only removes their Invoice X Pro profile — the underlying sign-in email/password (Firebase Auth account) can't be deleted from this app and would need to be removed from the Firebase console if you want it fully gone.`)) return;
+      try{
+        await deleteDoc(doc(db, "users", btn.dataset.id));
+        toast("Client deleted.");
+      }catch(err){ toast("Could not delete client."); }
     });
   });
 }
@@ -4461,6 +4560,7 @@ function resetInvoiceSession(){
   $("invDownloadPdfBtn").classList.add("hidden");
   $("invPrintBtn").classList.add("hidden");
   $("invDownloadPngBtn").classList.add("hidden");
+  $("invShareRow").classList.add("hidden");
   $("invGenerateBtn").classList.remove("hidden");
   setFormMsg($("invGenerateMsg"), "", "");
   updateInvoicePreview();
@@ -4493,6 +4593,7 @@ function initInvoiceGenerator(){
     if(invSessionConsumed){
       $("invDownloadPdfBtn").classList.remove("hidden");
       $("invDownloadPngBtn").classList.remove("hidden");
+      $("invShareRow").classList.remove("hidden");
       return;
     }
     if(!canCreateDocument("invoice")){
@@ -4512,11 +4613,13 @@ function initInvoiceGenerator(){
     $("invDownloadPdfBtn").classList.remove("hidden");
     $("invDownloadPngBtn").classList.remove("hidden");
     $("invPrintBtn").classList.remove("hidden");
+    $("invShareRow").classList.remove("hidden");
     setFormMsg($("invGenerateMsg"), "Invoice generated — download below.", "success");
   };
 
   $("invDownloadPdfBtn").onclick = ()=> downloadDoc("invoicePreview", `Proforma-${invNo}`, "pdf", "portrait-a4");
   $("invDownloadPngBtn").onclick = ()=> downloadDoc("invoicePreview", `Proforma-${invNo}`, "png");
+  wireShareRow("invShare", "invoicePreview", ()=> `Proforma-${invNo}`, ()=> `Invoice ${invNo}`);
 }
 
 function updateInvoicePreview(){
@@ -4604,6 +4707,7 @@ function resetReceiptSession(){
   $("rcpDownloadPdfBtn").classList.add("hidden");
   $("rcpPrintBtn").classList.add("hidden");
   $("rcpDownloadPngBtn").classList.add("hidden");
+  $("rcpShareRow").classList.add("hidden");
   setFormMsg($("rcpGenerateMsg"), "", "");
   updateReceiptPreview();
 }
@@ -4633,6 +4737,7 @@ function initReceiptGenerator(){
     $("rcpDownloadPdfBtn").classList.remove("hidden");
     $("rcpDownloadPngBtn").classList.remove("hidden");
     $("rcpPrintBtn").classList.remove("hidden");
+    $("rcpShareRow").classList.remove("hidden");
     setFormMsg($("rcpGenerateMsg"), "Receipt generated — download below.", "success");
   };
 
@@ -4646,6 +4751,9 @@ function initReceiptGenerator(){
     const receiptNo = $("rcpNoOut").textContent || "receipt";
     downloadDoc("receiptPreview", `Receipt-${receiptNo}`, "png");
   };
+  wireShareRow("rcpShare", "receiptPreview",
+    ()=> `Receipt-${$("rcpNoOut").textContent || "receipt"}`,
+    ()=> `Receipt ${$("rcpNoOut").textContent || ""}`);
 }
 
 function updateReceiptPreview(){
@@ -4734,6 +4842,80 @@ async function downloadDoc(elementId, filename, format, pdfLayout){
   const y = (pageHeight - finalHeight)/2;
   pdf.addImage(imgData, "PNG", x, y, finalWidth, finalHeight);
   pdf.save(`${filename}.pdf`);
+}
+
+// ================= SHARE (Invoice / Receipt) =================
+// Renders the same document image used for "Download PNG", then shares it
+// to WhatsApp, Gmail, or Facebook:
+//  - Where the browser supports the Web Share API with file attachments
+//    (most Android and iOS mobile browsers), tapping any of the three
+//    buttons opens the phone's native share sheet with the actual PNG
+//    already attached — the person picks the app and the file goes
+//    straight in. The web platform doesn't allow a page to force-launch one
+//    specific app with a file (only the OS/person can choose that), so all
+//    three buttons open the same native sheet on a capable phone — tapping
+//    "WhatsApp" is simply a shortcut to "share this file, and I'm about to
+//    tap WhatsApp in the sheet that opens."
+//  - On desktop, or any browser without file-sharing support, there is no
+//    equivalent — no website can hand a file directly to WhatsApp Web,
+//    Gmail, or Facebook from outside their own page. So there the image
+//    downloads automatically and the matching site opens in a new tab,
+//    pre-filled with a message, ready for the file to be attached by hand.
+async function renderDocToFile(elementId, filename){
+  if(!window.html2canvas) throw new Error("Document renderer still loading — try again in a moment.");
+  const el = $(elementId);
+  const canvas = await window.html2canvas(el, { scale: 3, backgroundColor: "#ffffff", useCORS: true, logging: false });
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png", 1.0));
+  if(!blob) throw new Error("Could not generate the document image.");
+  return new File([blob], `${filename}.png`, { type: "image/png" });
+}
+
+function downloadFileObject(file){
+  const url = URL.createObjectURL(file);
+  const a = document.createElement("a");
+  a.href = url; a.download = file.name; a.click();
+  setTimeout(()=> URL.revokeObjectURL(url), 4000);
+}
+
+async function shareDoc(elementId, filename, title, channel){
+  let file;
+  try{
+    file = await renderDocToFile(elementId, filename);
+  }catch(err){
+    toast(err.message || "Could not prepare the document for sharing.");
+    return;
+  }
+  const shareText = `${title} — Invoice X Pro Technology`;
+  if(navigator.canShare && navigator.canShare({ files: [file] })){
+    try{
+      await navigator.share({ files: [file], title, text: shareText });
+      return;
+    }catch(err){
+      if(err?.name === "AbortError") return; // person cancelled the native share sheet
+      // otherwise fall through to the web-link fallback below
+    }
+  }
+  downloadFileObject(file);
+  const urls = {
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + " — I've downloaded the file, attaching it here now.")}`,
+    gmail: `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(title)}&body=${encodeURIComponent(shareText + " — the file has just downloaded on your device, please attach it to this email before sending.")}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + window.location.pathname)}`
+  };
+  toast("Image downloaded — attach it in the window that just opened.");
+  window.open(urls[channel], "_blank", "noopener");
+}
+
+function wireShareRow(rowId, elementId, getFilename, getTitle){
+  const map = {
+    [`${rowId}WhatsappBtn`]: "whatsapp",
+    [`${rowId}GmailBtn`]: "gmail",
+    [`${rowId}FacebookBtn`]: "facebook"
+  };
+  Object.entries(map).forEach(([btnId, channel])=>{
+    const btn = $(btnId);
+    if(!btn) return;
+    btn.onclick = ()=> shareDoc(elementId, getFilename(), getTitle(), channel);
+  });
 }
 
 // ================= NOTIFICATIONS =================
@@ -5219,6 +5401,64 @@ $("proofFileInput").addEventListener("change", async (e)=>{
 // Resizes/re-compresses in a loop until the result fits comfortably under a
 // target size, so it's safe to store directly in a Firestore document
 // (1MB doc limit) and safe to inline into an email.
+// Signature-specific compressor: unlike compressImageFile() (used for photo
+// content like payment screenshots, where JPEG's lossy compression is the
+// right tradeoff), a signature needs to end up as a transparent PNG so it
+// blends onto the invoice/receipt instead of sitting inside a white or
+// black box. Two things make that actually work well for a normal user who
+// just photographs their signature on plain paper:
+//   1. Format: always export PNG (never JPEG) so any transparency survives,
+//      and resolution — not quality — is what's reduced to hit a target size.
+//   2. Background removal: most uploads will NOT already be transparent
+//      (a phone photo of ink on paper never is), so this automatically keys
+//      out anything close to white/light-gray and fades it to transparent,
+//      while keeping darker ink strokes solid — a lightweight luminance
+//      threshold, applied via canvas pixel data. It's automatic; there's no
+//      extra step for the person to figure out.
+function removeLightBackground(canvas){
+  const ctx = canvas.getContext("2d");
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const d = imgData.data;
+  const blackThreshold = 185; // pixels darker than this stay fully opaque (ink)
+  const white = 255;
+  for(let i=0; i<d.length; i+=4){
+    const luminance = (d[i] + d[i+1] + d[i+2]) / 3;
+    const fade = 1 - Math.min(1, Math.max(0, (luminance - blackThreshold) / (white - blackThreshold)));
+    d[i+3] = Math.round(d[i+3] * fade);
+  }
+  ctx.putImageData(imgData, 0, 0);
+}
+async function compressSignatureImage(file, targetBytes){
+  const img = await new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const im = new Image();
+      im.onload = ()=> resolve(im);
+      im.onerror = reject;
+      im.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+  let maxW = 900;
+  let dataUrl = "";
+  for(let attempt=0; attempt<7; attempt++){
+    const scale = Math.min(1, maxW / img.width);
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    // Do NOT fill a background color first — leave the canvas transparent
+    // so any transparent pixels in the source PNG stay transparent here.
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    removeLightBackground(canvas);
+    dataUrl = canvas.toDataURL("image/png");
+    if(dataUrl.length <= targetBytes * 1.37 || maxW <= 250) break;
+    maxW = Math.round(maxW * 0.75);
+  }
+  return dataUrl;
+}
+
 async function compressImageFile(file, targetBytes){
   const img = await new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -5409,7 +5649,7 @@ $("sigUploadFileInput")?.addEventListener("change", async (e)=>{
     return;
   }
   try{
-    sigUploadDataUrl = await compressImageFile(file, 180 * 1024);
+    sigUploadDataUrl = await compressSignatureImage(file, 260 * 1024);
     $("sigUploadPreviewImg").src = sigUploadDataUrl;
     $("sigUploadPreviewImg").classList.remove("hidden");
     $("sigUploadPromptText").textContent = "Tap to replace";
