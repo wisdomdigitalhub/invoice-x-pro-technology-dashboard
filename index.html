@@ -2186,10 +2186,13 @@ function initBusinessChangeRequests(){
 async function loadBusinessChangeRequests(){
   const list=$("adminBusinessChangeRequestsList"); if(!list)return;
   try{
-    const snap=await getDocs(query(collection(db,"businessChangeRequests"),where("status","==","pending"),orderBy("createdAt","desc")));
+    const snap=await getDocs(query(collection(db,"businessChangeRequests"),where("status","==","pending")));
     if(snap.empty){list.innerHTML='<div class="sub">No pending requests.</div>';return;}
     list.innerHTML="";
-    snap.forEach(d=>{const r=d.data(), el=document.createElement("div");el.className="card";el.style.margin="12px 0";el.innerHTML=`<b>${escapeHtml(r.clientName||"Client")}</b><div class="sub">${escapeHtml(r.clientEmail||"")}</div><p><b>Change:</b> ${escapeHtml(r.changeType||"")}<br><b>New information:</b> ${escapeHtml(r.newValue||"")}<br><b>Reason:</b> ${escapeHtml(r.reason||"None")}</p><button class="btn-primary" data-apply-request="${d.id}">Apply Change</button> <button class="btn-secondary" data-reject-request="${d.id}">Reject</button>`;list.appendChild(el);});
+    const requests=[];
+    snap.forEach(d=>requests.push({id:d.id,...d.data()}));
+    requests.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    requests.forEach(r=>{const d={id:r.id}; const el=document.createElement("div");el.className="card";el.style.margin="12px 0";el.innerHTML=`<b>${escapeHtml(r.clientName||"Client")}</b><div class="sub">${escapeHtml(r.clientEmail||"")}</div><p><b>Change:</b> ${escapeHtml(r.changeType||"")}<br><b>New information:</b> ${escapeHtml(r.newValue||"")}<br><b>Reason:</b> ${escapeHtml(r.reason||"None")}</p><button class="btn-primary" data-apply-request="${r.id}">Apply Change</button> <button class="btn-secondary" data-reject-request="${r.id}">Reject</button>`;list.appendChild(el);});
     list.querySelectorAll("[data-apply-request]").forEach(b=>b.onclick=()=>applyBusinessChangeRequest(b.dataset.applyRequest));
     list.querySelectorAll("[data-reject-request]").forEach(b=>b.onclick=()=>rejectBusinessChangeRequest(b.dataset.rejectRequest));
   }catch(e){console.error(e);list.innerHTML='<div class="form-msg">Unable to load requests.</div>';}
@@ -2725,6 +2728,7 @@ function initAdminDashboard(){
   loadPremiumPricing();
   loadPremiumRequestsForAdmin();
   initRecognitionModuleAdmin();
+  loadBusinessChangeRequests();
 }
 
 async function loadReps(){
