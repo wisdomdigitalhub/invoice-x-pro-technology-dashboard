@@ -527,30 +527,16 @@
     color:var(--brass); margin:0 0 10px;
   }
 
-  /* ===== Credits & spin wheel ===== */
+  /* ===== Credits ===== */
   .credits-pill{ display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-weight:700; }
-  .spin-card{
-    background:linear-gradient(135deg,var(--ink),var(--ink-2)); border-radius:16px; padding:24px; text-align:center;
-    color:var(--paper-2); margin-bottom:20px; border:1px solid rgba(217,174,108,0.3);
+
+  /* ===== WhatsApp group banner ===== */
+  .whatsapp-banner{
+    background:linear-gradient(135deg,#1ebe5a,#25D366); border-radius:16px; padding:18px 22px; margin-bottom:20px;
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; color:#fff;
   }
-  .spin-wheel-wrap{ display:flex; justify-content:center; margin:16px 0; }
-  .spin-wheel{
-    width:170px; height:170px; border-radius:50%; position:relative;
-    background: conic-gradient(from 0deg, #B8863E 0deg 45deg, #0F1A2E 45deg 90deg, #B8863E 90deg 135deg, #0F1A2E 135deg 180deg,
-                #B8863E 180deg 225deg, #0F1A2E 225deg 270deg, #B8863E 270deg 315deg, #0F1A2E 315deg 360deg);
-    border:4px solid var(--brass-light); transition:transform 3.2s cubic-bezier(.15,.85,.25,1);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .spin-wheel-center{
-    width:52px; height:52px; border-radius:50%; background:var(--paper-2); color:var(--ink);
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-weight:700; font-size:12px; text-align:center;
-    box-shadow:0 4px 10px rgba(0,0,0,0.3);
-  }
-  .spin-pointer{
-    position:absolute; top:-14px; left:50%; transform:translateX(-50%);
-    width:0; height:0; border-left:9px solid transparent; border-right:9px solid transparent; border-top:16px solid var(--brass-light); z-index:2;
-  }
-  .spin-wheel-outer{ position:relative; display:inline-block; }
+  .whatsapp-banner .wa-text{ font-weight:600; font-size:15px; }
+  .whatsapp-banner .wa-sub{ font-weight:400; font-size:13px; opacity:.9; margin-top:2px; }
 
 
   .bank-card{
@@ -1394,6 +1380,14 @@
     <div class="dash-head">
       <h2>Welcome back, <span id="repWelcomeName">—</span></h2>
       <p>Submit new clients and track their approval status.</p>
+    </div>
+
+    <div class="whatsapp-banner">
+      <div>
+        <div class="wa-text">📱 Join the Representatives WhatsApp Group</div>
+        <div class="wa-sub">Get updates, tips, and support directly from the team.</div>
+      </div>
+      <a class="share-btn share-whatsapp" style="padding:10px 16px; border-radius:10px; font-weight:600;" href="https://chat.whatsapp.com/EA14qtVbhT13384bZ4aUAh" target="_blank" rel="noopener">Join Group</a>
     </div>
 
     <div class="cards-row">
@@ -2316,7 +2310,7 @@ $("signUpForm").addEventListener("submit", async (e)=>{
       });
       sendNotification("ADMIN_BROADCAST", "New representative sign-up",
         `${$("suFullName").value.trim() || email} signed up and is already active.`, "rep-signup");
-      setFormMsg($("signUpMsg"), "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro.", "success");
+      setFormMsg($("signUpMsg"), "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro. Don't forget to join the Representatives WhatsApp group from your dashboard.", "success");
     } else {
       // Clients get instant dashboard access on signup, whether or not they
       // arrived through a representative's referral link. Account access is
@@ -2332,7 +2326,6 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         documentAccess: "both",
         credits: STARTING_CREDITS,
         creditsExpireAt: new Date(Date.now() + CREDIT_EXPIRY_DAYS*24*60*60*1000),
-        hasSpun: false,
         premiumPlan: "none",
         premiumExpiresAt: null,
         paymentStatus: "none",
@@ -2993,7 +2986,6 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
       clientRecordId: newClientRef.id,
       credits: STARTING_CREDITS,
       creditsExpireAt: new Date(Date.now() + CREDIT_EXPIRY_DAYS*24*60*60*1000),
-      hasSpun: false,
       premiumPlan: "none",
       premiumExpiresAt: null,
       paymentStatus: "none",
@@ -5156,7 +5148,6 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
 // too), and emailed to the business via EmailJS.
 const STARTING_CREDITS = 1000;      // every new client starts with this many
 const CREDIT_COST_PER_DOC = 50;     // deducted for each invoice/receipt generated
-const SPIN_BONUS_CREDITS = 100;     // guaranteed bonus from the one-time spin
 const CREDIT_EXPIRY_DAYS = 90;      // credits stop working after this many days, even if unused
 // Premium duration depends on which billing period was approved — a monthly
 // plan must NEVER get the yearly duration or vice versa. Both are read from
@@ -5290,7 +5281,6 @@ function renderPlanStatusCard(){
   const expired = creditsExpired();
   const pct = Math.min(100, (credits / STARTING_CREDITS) * 100);
   const creditExpiryText = fmtExpiry(currentUserDoc?.creditsExpireAt);
-  const canSpin = currentUserDoc?.hasSpun !== true && !expired;
 
   card.innerHTML = `
     <div class="plan-card ${expired ? 'plan-rejected' : 'plan-free'}">
@@ -5304,12 +5294,10 @@ function renderPlanStatusCard(){
         ${!expired ? `<div class="plan-usage-track"><div class="plan-usage-fill" style="width:${pct}%;"></div></div>` : ""}
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        ${canSpin ? `<button type="button" class="btn-sm confirm" id="planSpinBtn">🎰 Spin for +${SPIN_BONUS_CREDITS}</button>` : ""}
         <button type="button" class="btn-sm approve" id="planUpgradeBtn">Upgrade to Premium</button>
       </div>
     </div>`;
   $("planUpgradeBtn")?.addEventListener("click", showPremiumUpgrade);
-  $("planSpinBtn")?.addEventListener("click", openSpinWheel);
 }
 
 function canCreateDocument(docType){
@@ -5341,59 +5329,11 @@ async function consumeDocumentCredit(docType){
     });
     if(result && result.remaining < CREDIT_COST_PER_DOC){
       sendNotification(uid, "Low on credits",
-        `You have ${result.remaining} credits left — not enough for another document. Spin for a bonus or upgrade to Premium.`, "low-credits");
+        `You have ${result.remaining} credits left — not enough for another document. Upgrade to Premium to keep going.`, "low-credits");
     }
     return result ? result.ok : false;
   }catch(err){ console.error(err); return false; }
 }
-
-// ---------- Spin wheel (one-time, guaranteed +100 credits) ----------
-async function openSpinWheel(){
-  if(currentUserDoc?.hasSpun === true){ toast("You've already used your spin."); return; }
-  $("spinOverlay").classList.remove("hidden");
-  $("spinWheel").style.transform = "rotate(0deg)";
-  $("spinResultMsg").innerHTML = "";
-  $("spinStartBtn").classList.remove("hidden");
-  $("spinStartBtn").disabled = false;
-}
-
-$("spinStartBtn")?.addEventListener("click", async ()=>{
-  const btn = $("spinStartBtn");
-  btn.disabled = true;
-  const wheel = $("spinWheel");
-  const spins = 6; // full rotations for effect, always lands upright — every segment reads the same bonus
-  wheel.style.transform = `rotate(${360*spins + 15}deg)`;
-
-  try{
-    const uid = currentUser.uid;
-    const result = await runTransaction(db, async (tx)=>{
-      const ref = doc(db, "users", uid);
-      const snap = await tx.get(ref);
-      const data = snap.data() || {};
-      if(data.hasSpun === true) return { already: true };
-      const newCredits = (Number(data.credits) || 0) + SPIN_BONUS_CREDITS;
-      tx.update(ref, { credits: newCredits, hasSpun: true });
-      return { already: false, newCredits };
-    });
-
-    setTimeout(()=>{
-      if(result.already){
-        $("spinResultMsg").innerHTML = `<div class="verify-result invalid">You've already used your spin.</div>`;
-      } else {
-        $("spinResultMsg").innerHTML = `<div class="verify-result valid"><h3 style="margin:0;">🎉 +${SPIN_BONUS_CREDITS} credits!</h3><p style="margin:8px 0 0;">They've been added to your balance.</p></div>`;
-        toast(`+${SPIN_BONUS_CREDITS} credits added!`);
-      }
-      $("spinStartBtn").classList.add("hidden");
-    }, 3200);
-  }catch(err){
-    console.error(err);
-    $("spinStartBtn").disabled = false;
-    $("spinResultMsg").innerHTML = `<div class="verify-result invalid">Could not spin right now — try again.</div>`;
-  }
-});
-
-$("closeSpinBtn")?.addEventListener("click", ()=> $("spinOverlay").classList.add("hidden"));
-$("spinOverlay")?.addEventListener("click", (e)=>{ if(e.target.id === "spinOverlay") $("spinOverlay").classList.add("hidden"); });
 
 function showPremiumUpgrade(){
   document.querySelectorAll('#clientDash .subpanel').forEach(p=> p.classList.remove('active'));
