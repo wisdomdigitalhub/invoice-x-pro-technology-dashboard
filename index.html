@@ -1002,7 +1002,8 @@
   </div>
 
   <!-- ===== ADMIN DASHBOARD ===== -->
-  <div class="dash hidden" id="adminDash">
+  <div class="dash hidden" id="adminDash"><div class="panel" id="adminBusinessChangeRequests" style="margin-top:18px;"><div class="panel-head"><h3>Business Information Change Requests</h3><button type="button" class="btn-secondary" id="refreshBusinessChangeRequestsBtn">Refresh</button></div><div id="adminBusinessChangeRequestsList"><div class="sub">No requests loaded.</div></div></div>
+
     <div class="dash-head">
       <h2>Admin overview</h2>
       <p>Manage representatives and review client submissions.</p>
@@ -1587,6 +1588,25 @@
     </div>
 
     <div id="planStatusCard"></div>
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-head"><h3>Need to change your business information?</h3><span class="hint">Changes require admin approval</span></div>
+      <p class="sub">To prevent duplicate businesses, you cannot edit your business profile directly. Tell the administrator exactly what you want changed and the admin will review and update it.</p>
+      <button type="button" class="btn-secondary" id="openBusinessChangeRequestBtn">Request Business Information Change</button>
+    </div>
+
+    <div class="modal hidden" id="businessChangeRequestModal" role="dialog" aria-modal="true">
+      <div class="modal-card" style="max-width:620px;">
+        <div class="modal-header"><div><h3 style="margin:0;">Request Business Information Change</h3><p class="sub" style="margin:5px 0 0;">Send the requested change to the administrator.</p></div><button type="button" class="modal-close" id="closeBusinessChangeRequestBtn">×</button></div>
+        <form id="businessChangeRequestForm">
+          <div class="field"><label>What do you want to change?</label><select id="changeRequestType" required><option value="">Select one</option><option>Business name</option><option>Business address</option><option>Business email</option><option>Business phone number</option><option>Business logo</option><option>Bank/payment information</option><option>Tax/VAT information</option><option>Other business information</option></select></div>
+          <div class="field"><label>What should the new information be?</label><textarea id="changeRequestNewValue" rows="4" required placeholder="Enter the correct new information"></textarea></div>
+          <div class="field"><label>Reason (optional)</label><textarea id="changeRequestReason" rows="3" placeholder="Why does this need to be changed?"></textarea></div>
+          <div id="businessChangeRequestMsg" class="form-msg"></div>
+          <button type="submit" class="btn-primary" id="submitBusinessChangeRequestBtn">Send Request to Admin</button>
+        </form>
+      </div>
+    </div>
+
 
     <!-- Premium upgrade page -->
     <div class="subpanel" data-panel="premiumUpgradeTab" id="premiumUpgradePanel">
@@ -2143,6 +2163,44 @@ function setFormMsg(el, text, type){
   el.textContent = text;
   el.className = "form-msg " + (type || "");
 }
+
+// ---------- Client business information change requests ----------
+async function submitBusinessChangeRequest(){
+  const type=$("changeRequestType")?.value||"", value=$("changeRequestNewValue")?.value.trim()||"", reason=$("changeRequestReason")?.value.trim()||"", msg=$("businessChangeRequestMsg"), btn=$("submitBusinessChangeRequestBtn");
+  if(!type||!value){ msg.textContent="Please select what you want changed and enter the new information."; return; }
+  if(!currentUser){ msg.textContent="Please sign in first."; return; }
+  try{
+    btn.disabled=true; btn.textContent="Sending…";
+    await addDoc(collection(db,"businessChangeRequests"),{clientUid:currentUser.uid,clientEmail:currentUser.email||"",clientName:currentUserDoc?.fullName||currentUserDoc?.businessName||currentUser.email||"Client",changeType:type,newValue:value,reason,status:"pending",createdAt:serverTimestamp()});
+    msg.textContent="Request sent to admin. Your business information will only change after admin review.";
+    $("businessChangeRequestForm").reset();
+    setTimeout(()=>$("businessChangeRequestModal").classList.add("hidden"),1600);
+  }catch(e){console.error(e);msg.textContent="Could not send the request. Please try again.";}
+  finally{btn.disabled=false;btn.textContent="Send Request to Admin";}
+}
+function initBusinessChangeRequests(){
+  $("openBusinessChangeRequestBtn")?.addEventListener("click",()=>$("businessChangeRequestModal")?.classList.remove("hidden"));
+  $("closeBusinessChangeRequestBtn")?.addEventListener("click",()=>$("businessChangeRequestModal")?.classList.add("hidden"));
+  $("businessChangeRequestForm")?.addEventListener("submit",e=>{e.preventDefault();submitBusinessChangeRequest();});
+}
+async function loadBusinessChangeRequests(){
+  const list=$("adminBusinessChangeRequestsList"); if(!list)return;
+  try{
+    const snap=await getDocs(query(collection(db,"businessChangeRequests"),where("status","==","pending"),orderBy("createdAt","desc")));
+    if(snap.empty){list.innerHTML='<div class="sub">No pending requests.</div>';return;}
+    list.innerHTML="";
+    snap.forEach(d=>{const r=d.data(), el=document.createElement("div");el.className="card";el.style.margin="12px 0";el.innerHTML=`<b>${escapeHtml(r.clientName||"Client")}</b><div class="sub">${escapeHtml(r.clientEmail||"")}</div><p><b>Change:</b> ${escapeHtml(r.changeType||"")}<br><b>New information:</b> ${escapeHtml(r.newValue||"")}<br><b>Reason:</b> ${escapeHtml(r.reason||"None")}</p><button class="btn-primary" data-apply-request="${d.id}">Apply Change</button> <button class="btn-secondary" data-reject-request="${d.id}">Reject</button>`;list.appendChild(el);});
+    list.querySelectorAll("[data-apply-request]").forEach(b=>b.onclick=()=>applyBusinessChangeRequest(b.dataset.applyRequest));
+    list.querySelectorAll("[data-reject-request]").forEach(b=>b.onclick=()=>rejectBusinessChangeRequest(b.dataset.rejectRequest));
+  }catch(e){console.error(e);list.innerHTML='<div class="form-msg">Unable to load requests.</div>';}
+}
+function requestField(type){return {"Business name":"businessName","Business address":"address","Business email":"email","Business phone number":"phone","Business logo":"logoUrl","Bank/payment information":"bankPaymentInformation","Tax/VAT information":"taxVatInformation"}[type]||null;}
+async function applyBusinessChangeRequest(id){
+  try{const rr=doc(db,"businessChangeRequests",id), rs=await getDoc(rr); if(!rs.exists())return toast("Request not found."); const r=rs.data(), field=requestField(r.changeType); if(!field){await updateDoc(rr,{status:"needs-manual-review",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""});toast("Marked for manual review.");return loadBusinessChangeRequests();} await updateDoc(doc(db,"clients",r.clientUid),{[field]:r.newValue}); await updateDoc(rr,{status:"approved",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""}); toast("Business information updated."); await loadBusinessChangeRequests();}catch(e){console.error(e);toast("Unable to apply change.");}
+}
+async function rejectBusinessChangeRequest(id){try{await updateDoc(doc(db,"businessChangeRequests",id),{status:"rejected",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""});toast("Request rejected.");await loadBusinessChangeRequests();}catch(e){console.error(e);toast("Unable to reject request.");}}
+$("refreshBusinessChangeRequestsBtn")?.addEventListener("click",loadBusinessChangeRequests);
+
 // ---------- Global currency support ----------
 const DEFAULT_CURRENCY = "NGN";
 
@@ -6343,6 +6401,8 @@ $("screenshotLightbox").addEventListener("click", (e)=>{
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
+
+initBusinessChangeRequests();
 </script>
 </body>
 </html>
