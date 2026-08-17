@@ -403,6 +403,18 @@
   .share-gmail:hover{ background:#d33c2e !important; }
   .share-facebook{ background:#1877F2 !important; }
   .share-facebook:hover{ background:#1466d3 !important; }
+  .share-email{ background:#6b7280 !important; }
+  .share-email:hover{ background:#565d6b !important; }
+  .share-telegram{ background:#229ED9 !important; }
+  .share-telegram:hover{ background:#1b86ba !important; }
+  .share-sms{ background:#34C759 !important; }
+  .share-sms:hover{ background:#2aa648 !important; }
+  .share-x{ background:#000000 !important; }
+  .share-x:hover{ background:#262626 !important; }
+  .share-more{ background:var(--brass) !important; }
+  .share-more:hover{ background:var(--brass-light) !important; }
+  .share-copy{ background:transparent !important; color:var(--ink) !important; border:1px solid var(--line) !important; }
+  .share-copy:hover{ background:var(--paper) !important; }
 
   .hof-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px;}
   .hof-card{
@@ -1745,7 +1757,13 @@
       <div class="doc-actions share-row hidden" id="invShareRow">
         <button type="button" class="share-btn share-whatsapp" id="invShareWhatsappBtn"><span class="share-ico">🟢</span> WhatsApp</button>
         <button type="button" class="share-btn share-gmail" id="invShareGmailBtn"><span class="share-ico">✉️</span> Gmail</button>
+        <button type="button" class="share-btn share-email" id="invShareEmailBtn"><span class="share-ico">📧</span> Email</button>
         <button type="button" class="share-btn share-facebook" id="invShareFacebookBtn"><span class="share-ico">🔵</span> Facebook</button>
+        <button type="button" class="share-btn share-telegram" id="invShareTelegramBtn"><span class="share-ico">✈️</span> Telegram</button>
+        <button type="button" class="share-btn share-sms" id="invShareSmsBtn"><span class="share-ico">💬</span> SMS</button>
+        <button type="button" class="share-btn share-x" id="invShareXBtn"><span class="share-ico">✕</span> X</button>
+        <button type="button" class="share-btn share-more" id="invShareMoreBtn"><span class="share-ico">↗️</span> More</button>
+        <button type="button" class="share-btn share-copy" id="invShareCopyBtn"><span class="share-ico">🔗</span> Copy link</button>
       </div>
       <div class="form-msg" id="invGenerateMsg"></div>
     </div>
@@ -1823,7 +1841,13 @@
       <div class="doc-actions share-row hidden" id="rcpShareRow">
         <button type="button" class="share-btn share-whatsapp" id="rcpShareWhatsappBtn"><span class="share-ico">🟢</span> WhatsApp</button>
         <button type="button" class="share-btn share-gmail" id="rcpShareGmailBtn"><span class="share-ico">✉️</span> Gmail</button>
+        <button type="button" class="share-btn share-email" id="rcpShareEmailBtn"><span class="share-ico">📧</span> Email</button>
         <button type="button" class="share-btn share-facebook" id="rcpShareFacebookBtn"><span class="share-ico">🔵</span> Facebook</button>
+        <button type="button" class="share-btn share-telegram" id="rcpShareTelegramBtn"><span class="share-ico">✈️</span> Telegram</button>
+        <button type="button" class="share-btn share-sms" id="rcpShareSmsBtn"><span class="share-ico">💬</span> SMS</button>
+        <button type="button" class="share-btn share-x" id="rcpShareXBtn"><span class="share-ico">✕</span> X</button>
+        <button type="button" class="share-btn share-more" id="rcpShareMoreBtn"><span class="share-ico">↗️</span> More</button>
+        <button type="button" class="share-btn share-copy" id="rcpShareCopyBtn"><span class="share-ico">🔗</span> Copy link</button>
       </div>
     </div>
 
@@ -4877,7 +4901,23 @@ function downloadFileObject(file){
   setTimeout(()=> URL.revokeObjectURL(url), 4000);
 }
 
+// channel === "native" always forces the OS share sheet (used by the
+// "More" button, so people can reach any app installed on their phone —
+// Instagram, Messenger, Notes, AirDrop, etc — not just the six shortcuts
+// with their own button). channel === "copy" doesn't touch the file at
+// all; it just copies the app link to the clipboard for pasting anywhere.
 async function shareDoc(elementId, filename, title, channel){
+  if(channel === "copy"){
+    const link = window.location.origin + window.location.pathname;
+    try{
+      await navigator.clipboard.writeText(link);
+      toast("Link copied — the document image itself still needs Download PNG/PDF to attach as a file.");
+    }catch(err){
+      toast("Could not copy the link — copy it from your address bar instead.");
+    }
+    return;
+  }
+
   let file;
   try{
     file = await renderDocToFile(elementId, filename);
@@ -4886,30 +4926,49 @@ async function shareDoc(elementId, filename, title, channel){
     return;
   }
   const shareText = `${title} — Invoice X Pro Technology`;
-  if(navigator.canShare && navigator.canShare({ files: [file] })){
-    try{
-      await navigator.share({ files: [file], title, text: shareText });
-      return;
-    }catch(err){
-      if(err?.name === "AbortError") return; // person cancelled the native share sheet
-      // otherwise fall through to the web-link fallback below
+
+  if(channel === "native" || (navigator.canShare && navigator.canShare({ files: [file] }))){
+    if(navigator.canShare && navigator.canShare({ files: [file] })){
+      try{
+        await navigator.share({ files: [file], title, text: shareText });
+        return;
+      }catch(err){
+        if(err?.name === "AbortError") return; // person cancelled the native share sheet
+        // otherwise fall through to the web-link fallback below
+      }
+    } else if(channel === "native"){
+      toast("Your browser doesn't support the native share sheet — downloading the image instead.");
     }
   }
+
   downloadFileObject(file);
+  const pageUrl = window.location.origin + window.location.pathname;
+  const attachNote = shareText + " — I've downloaded the file, attaching it here now.";
   const urls = {
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(shareText + " — I've downloaded the file, attaching it here now.")}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(attachNote)}`,
     gmail: `https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(title)}&body=${encodeURIComponent(shareText + " — the file has just downloaded on your device, please attach it to this email before sending.")}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + window.location.pathname)}`
+    email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(shareText + " — the file has just downloaded on your device, please attach it to this email before sending.")}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`,
+    telegram: `https://t.me/share/url?url=${encodeURIComponent(pageUrl)}&text=${encodeURIComponent(attachNote)}`,
+    sms: `sms:?body=${encodeURIComponent(attachNote)}`,
+    x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(attachNote)}`
   };
+  if(!urls[channel]) return; // "native" with no fallback URL — already handled/toasted above
   toast("Image downloaded — attach it in the window that just opened.");
-  window.open(urls[channel], "_blank", "noopener");
+  window.open(urls[channel], channel === "email" || channel === "sms" ? "_self" : "_blank", "noopener");
 }
 
 function wireShareRow(rowId, elementId, getFilename, getTitle){
   const map = {
     [`${rowId}WhatsappBtn`]: "whatsapp",
     [`${rowId}GmailBtn`]: "gmail",
-    [`${rowId}FacebookBtn`]: "facebook"
+    [`${rowId}EmailBtn`]: "email",
+    [`${rowId}FacebookBtn`]: "facebook",
+    [`${rowId}TelegramBtn`]: "telegram",
+    [`${rowId}SmsBtn`]: "sms",
+    [`${rowId}XBtn`]: "x",
+    [`${rowId}MoreBtn`]: "native",
+    [`${rowId}CopyBtn`]: "copy"
   };
   Object.entries(map).forEach(([btnId, channel])=>{
     const btn = $(btnId);
@@ -5428,6 +5487,30 @@ function removeLightBackground(canvas){
   }
   ctx.putImageData(imgData, 0, 0);
 }
+// Shared downscale loop, used by both the "upload a photo of your signature"
+// path (where the source is a File) and the "draw it" path (where the
+// source is already a canvas data URL and just needs to be brought under
+// the Firestore-safe target size — see compressSignatureDataUrl below).
+async function compressSignatureFromImage(img, targetBytes, opts){
+  const stripBackground = opts?.stripBackground !== false; // default true
+  let maxW = opts?.maxW || 900;
+  let dataUrl = "";
+  for(let attempt=0; attempt<7; attempt++){
+    const scale = Math.min(1, maxW / img.width);
+    const w = Math.max(1, Math.round(img.width * scale));
+    const h = Math.max(1, Math.round(img.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    // Do NOT fill a background color first — leave the canvas transparent
+    // so any transparent pixels in the source PNG stay transparent here.
+    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+    if(stripBackground) removeLightBackground(canvas);
+    dataUrl = canvas.toDataURL("image/png");
+    if(dataUrl.length <= targetBytes * 1.37 || maxW <= 250) break;
+    maxW = Math.round(maxW * 0.75);
+  }
+  return dataUrl;
+}
 async function compressSignatureImage(file, targetBytes){
   const img = await new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -5440,23 +5523,31 @@ async function compressSignatureImage(file, targetBytes){
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-  let maxW = 900;
-  let dataUrl = "";
-  for(let attempt=0; attempt<7; attempt++){
-    const scale = Math.min(1, maxW / img.width);
-    const w = Math.max(1, Math.round(img.width * scale));
-    const h = Math.max(1, Math.round(img.height * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = w; canvas.height = h;
-    // Do NOT fill a background color first — leave the canvas transparent
-    // so any transparent pixels in the source PNG stay transparent here.
-    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-    removeLightBackground(canvas);
-    dataUrl = canvas.toDataURL("image/png");
-    if(dataUrl.length <= targetBytes * 1.37 || maxW <= 250) break;
-    maxW = Math.round(maxW * 0.75);
-  }
-  return dataUrl;
+  return compressSignatureFromImage(img, targetBytes);
+}
+// The hand-drawn signature was previously saved with a raw, uncompressed
+// canvas.toDataURL() call — on a high-DPI phone (devicePixelRatio 3) that
+// canvas is rendered at 3x resolution, so the resulting PNG could be far
+// larger than the upload/typed paths ever produce, and had no consistent
+// size ceiling. That was one direct cause of "failed to save" on real
+// phones: it pushed the users/{uid} Firestore document (which also holds
+// logoData, plus every other profile field) over Firestore's 1 MiB
+// per-document limit, especially once a logo was already saved on the same
+// doc. Routing it through the same compressor as the other two methods
+// fixes that, and also means all three save methods produce a consistently
+// sized, transparent PNG.
+async function compressSignatureDataUrl(dataUrl, targetBytes){
+  const img = await new Promise((resolve, reject)=>{
+    const im = new Image();
+    im.onload = ()=> resolve(im);
+    im.onerror = reject;
+    im.src = dataUrl;
+  });
+  // The draw canvas is already transparent with clean dark strokes, so
+  // skip the background-removal pass (it's redundant work, and re-running
+  // a luminance threshold on already-transparent pixels is just wasted
+  // time on slower phones).
+  return compressSignatureFromImage(img, targetBytes, { stripBackground: false });
 }
 
 async function compressImageFile(file, targetBytes){
@@ -5524,6 +5615,8 @@ function initSignatureSettings(){
     $("signatureEditorBox").classList.remove("hidden");
   });
 
+  // Same as logo removal: this only sets signature to null on the user's
+  // own profile document via updateDoc — never a real Firebase delete.
   $("sigRemoveBtn")?.addEventListener("click", async ()=>{
     try{
       await updateDoc(doc(db, "users", currentUser.uid), { signature: null });
@@ -5531,7 +5624,10 @@ function initSignatureSettings(){
       renderSavedSignatureUI();
       updateInvoicePreview(); updateReceiptPreview();
       setFormMsg($("sigMsg"), "Signature removed.", "success");
-    }catch(err){ setFormMsg($("sigMsg"), "Could not remove signature.", "error"); }
+    }catch(err){
+      console.error(err);
+      setFormMsg($("sigMsg"), describeSaveError(err, "signature"), "error");
+    }
   });
 }
 
@@ -5629,8 +5725,17 @@ $("sigSaveDrawBtn")?.addEventListener("click", async ()=>{
     setFormMsg($("sigMsg"), "Please draw your signature first.", "error");
     return;
   }
-  const canvas = $("sigCanvas");
-  await persistSignature("draw", canvas.toDataURL("image/png"), {});
+  const btn = $("sigSaveDrawBtn");
+  if(btn){ btn.disabled = true; btn.textContent = "Saving…"; }
+  try{
+    const canvas = $("sigCanvas");
+    const compressed = await compressSignatureDataUrl(canvas.toDataURL("image/png"), 260 * 1024);
+    await persistSignature("draw", compressed, {});
+  }catch(err){
+    console.error(err);
+    setFormMsg($("sigMsg"), "Could not process your drawn signature — try again.", "error");
+    if(btn){ btn.disabled = false; btn.textContent = "Save Signature"; }
+  }
 });
 
 // ---- Upload ----
@@ -5702,6 +5807,29 @@ $("sigSaveTypedBtn")?.addEventListener("click", async ()=>{
   await persistSignature("typed", canvas.toDataURL("image/png"), { text, fontFamily: sigSelectedFont });
 });
 
+// Firestore rejects any document over ~1 MiB total. This app stores logoData
+// and signature.imageData as base64 strings directly on the same
+// users/{uid} profile document (by design — no Firebase Storage), so it's
+// possible for a logo save to succeed and then leave no headroom for the
+// signature (or vice versa). Checking the combined size *before* writing
+// means the person gets one clear, specific message instead of a bare
+// Firebase "resource-exhausted" error after the fact.
+const FIRESTORE_DOC_BYTE_LIMIT = 1_048_487;
+function estimateUserDocBytes(patch){
+  const merged = { ...(currentUserDoc || {}), ...patch };
+  return new Blob([JSON.stringify(merged)]).size;
+}
+// Turns a raw Firebase/Firestore error into something the person can
+// actually act on, instead of the generic "please try again" that was
+// masking the real cause before.
+function describeSaveError(err, fieldLabel){
+  const code = err?.code || "";
+  if(code === "permission-denied") return `Save blocked by permission settings — sign out and back in, and if it keeps happening this account may need its access re-checked.`;
+  if(code === "resource-exhausted" || code === "invalid-argument") return `That ${fieldLabel} is too large for your profile to store. Try a smaller/simpler image.`;
+  if(code === "unavailable" || code === "deadline-exceeded") return `Connection dropped while saving — check your internet and try again.`;
+  return err?.message ? `Could not save your ${fieldLabel}: ${err.message}` : `Could not save your ${fieldLabel}. Please try again.`;
+}
+
 async function persistSignature(type, imageData, extra){
   const btnIds = { draw: "sigSaveDrawBtn", upload: "sigSaveUploadBtn", typed: "sigSaveTypedBtn" };
   const btn = $(btnIds[type]);
@@ -5709,6 +5837,10 @@ async function persistSignature(type, imageData, extra){
   setFormMsg($("sigMsg"), "", "");
   try{
     const signaturePayload = { type, imageData, updatedAt: new Date(), ...extra };
+    if(estimateUserDocBytes({ signature: signaturePayload }) >= FIRESTORE_DOC_BYTE_LIMIT){
+      setFormMsg($("sigMsg"), "This signature is too large to save alongside your current profile/logo. Try the drawn or typed style, or a simpler image.", "error");
+      return;
+    }
     await updateDoc(doc(db, "users", currentUser.uid), { signature: signaturePayload });
     currentUserDoc.signature = signaturePayload;
     renderSavedSignatureUI();
@@ -5720,7 +5852,7 @@ async function persistSignature(type, imageData, extra){
     if($("sigUploadFileInput")) $("sigUploadFileInput").value = "";
   }catch(err){
     console.error(err);
-    setFormMsg($("sigMsg"), "Could not save your signature. Please try again.", "error");
+    setFormMsg($("sigMsg"), describeSaveError(err, "signature"), "error");
   }finally{
     if(btn){ btn.disabled = false; btn.textContent = "Save Signature"; }
   }
@@ -5764,20 +5896,37 @@ $("logoFileInput")?.addEventListener("change", async (e)=>{
     return;
   }
 
+  let compressed;
   try{
-    const compressed = await compressImageFile(file, 120 * 1024); // small — it's just a logo mark
+    compressed = await compressImageFile(file, 120 * 1024); // small — it's just a logo mark
+  }catch(err){
+    console.error(err);
+    setFormMsg($("logoMsg"), "Could not process that image — try a different file.", "error");
+    $("logoFileInput").value = "";
+    return;
+  }
+
+  try{
+    if(estimateUserDocBytes({ logoData: compressed }) >= FIRESTORE_DOC_BYTE_LIMIT){
+      setFormMsg($("logoMsg"), "This logo is too large to save alongside your current profile/signature. Try a smaller or simpler image.", "error");
+      return;
+    }
     await updateDoc(doc(db, "users", currentUser.uid), { logoData: compressed });
     currentUserDoc.logoData = compressed;
     renderBusinessLogo();
     setFormMsg($("logoMsg"), "Logo saved — it'll be used on every invoice and receipt from now on.", "success");
   }catch(err){
     console.error(err);
-    setFormMsg($("logoMsg"), "Could not process that image — try a different file.", "error");
+    setFormMsg($("logoMsg"), describeSaveError(err, "logo"), "error");
   }finally{
     $("logoFileInput").value = "";
   }
 });
 
+// Note: this only clears the logoData field on the user's own profile
+// document via updateDoc — it never calls deleteDoc/deleteField or removes
+// anything else from Firebase, so there's no way for a logo removal here to
+// touch the user's account, auth record, or any other data.
 $("logoRemoveBtn")?.addEventListener("click", async ()=>{
   try{
     await updateDoc(doc(db, "users", currentUser.uid), { logoData: "" });
@@ -5785,7 +5934,8 @@ $("logoRemoveBtn")?.addEventListener("click", async ()=>{
     renderBusinessLogo();
     setFormMsg($("logoMsg"), "Logo removed — back to your business initials.", "success");
   }catch(err){
-    setFormMsg($("logoMsg"), "Could not remove logo.", "error");
+    console.error(err);
+    setFormMsg($("logoMsg"), describeSaveError(err, "logo"), "error");
   }
 });
 
