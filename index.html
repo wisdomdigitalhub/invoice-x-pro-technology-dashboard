@@ -1144,9 +1144,10 @@
         <span class="hint">Posted instantly to every representative's notification bell</span>
       </div>
       <form id="postAnnouncementForm">
+        <div class="field"><label>Send to</label><select id="announceTarget" required><option value="rep">All Representatives</option><option value="client">All Clients</option><option value="both">Representatives &amp; Clients</option></select></div>
         <div class="field"><label>Title</label><input type="text" id="announceTitle" placeholder="e.g. New Premium pricing" required /></div>
         <div class="field"><label>Message</label><textarea id="announceMessage" rows="3" required></textarea></div>
-        <button type="submit" class="btn-primary" id="postAnnouncementBtn" style="max-width:200px;">Post announcement</button>
+        <button type="submit" class="btn-primary" id="postAnnouncementBtn" style="max-width:220px;">Send announcement</button>
         <div class="form-msg" id="postAnnouncementMsg"></div>
       </form>
       <div class="table-wrap" style="margin-top:18px;">
@@ -1161,12 +1162,12 @@
     <div class="panel">
       <div class="panel-head">
         <h3>Marketing materials</h3>
-        <span class="hint">Any file, up to 700KB — stored directly in the database, no cloud storage needed</span>
+        <span class="hint">Upload images or videos for representatives and clients — up to 700KB each</span>
       </div>
       <form id="uploadMaterialForm">
         <div class="upload-row">
           <div class="field"><label>Title</label><input type="text" id="materialTitle" placeholder="e.g. Q3 Flyer" required /></div>
-          <div class="field"><label>File</label><input type="file" id="materialFile" required /></div>
+          <div class="field"><label>Image or video</label><input type="file" id="materialFile" accept="image/*,video/*" required /></div>
           <button type="submit" class="btn-primary" id="uploadMaterialBtn" style="max-width:160px; margin-top:0;">Upload</button>
         </div>
         <div class="progress-bar" id="uploadProgressBar"><div class="progress-bar-fill" id="uploadProgressFill"></div></div>
@@ -1692,6 +1693,18 @@
         </p>
         <button type="button" class="btn-primary" id="premReturnBtn" style="max-width:220px; margin:24px auto 0;">Return to dashboard</button>
       </div>
+    </div>
+
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-head"><h3>Messages from Invoice X Pro</h3><span class="hint">Updates from your office</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Message</th><th>Received</th></tr></thead><tbody id="clientAnnouncementTableBody"></tbody></table></div>
+      <div class="empty-state hidden" id="clientAnnouncementEmptyState">No messages yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h3>Marketing materials</h3><span class="hint">Images and videos provided by Invoice X Pro</span></div>
+      <div class="materials-grid" id="materialsGridClient"></div>
+      <div class="empty-state hidden" id="materialsEmptyStateClient">No marketing materials have been posted yet.</div>
     </div>
 
     <div class="subnav" id="clientDocSubnav">
@@ -2305,6 +2318,7 @@ let unsubClients = null;
 let unsubReps = null;
 let unsubMaterials = null;
 let unsubAnnouncements = null;
+let unsubClientBroadcast = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
 let unsubSelfSignupClients = null;
@@ -2575,6 +2589,7 @@ function wireLogout(id){
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
     if(unsubAnnouncements){ unsubAnnouncements(); unsubAnnouncements = null; }
+    if(unsubClientBroadcast){ unsubClientBroadcast(); unsubClientBroadcast = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
@@ -3216,6 +3231,16 @@ async function loadMaterialsForRep(){
   }, (err)=> console.error(err));
 }
 
+async function loadMaterialsForClient(){
+  if(unsubMaterials) unsubMaterials();
+  const q = query(collection(db, "materials"), orderBy("createdAt","desc"));
+  unsubMaterials = onSnapshot(q, (snap)=>{
+    const materials = [];
+    snap.forEach(d=> materials.push({ id:d.id, ...d.data() }));
+    renderMaterialsGrid(materials, "materialsGridClient", "materialsEmptyStateClient", false);
+  }, (err)=> console.error(err));
+}
+
 function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
   const grid = $(gridId);
   if(!grid) return;
@@ -3224,10 +3249,17 @@ function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
   for(const m of materials){
     const ext = (m.fileName || "file").split(".").pop().slice(0,4).toUpperCase();
     const sizeKb = m.fileSize ? Math.round(m.fileSize/1024) : null;
+    const type = m.fileType || "";
+    let preview = `<div class="material-icon">${escapeHtml(ext)}</div>`;
+    if(type.startsWith("image/")){
+      preview = `<img src="${m.fileData}" alt="${escapeHtml(m.title || "Marketing image")}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;border:1px solid var(--line);" />`;
+    } else if(type.startsWith("video/")){
+      preview = `<video src="${m.fileData}" controls preload="metadata" style="width:100%;height:150px;object-fit:cover;border-radius:10px;background:#071426;"></video>`;
+    }
     const card = document.createElement("div");
     card.className = "material-card";
     card.innerHTML = `
-      <div class="material-icon">${escapeHtml(ext)}</div>
+      ${preview}
       <div class="material-title">${escapeHtml(m.title || "Untitled")}</div>
       <div class="material-meta">${fmtDate(m.createdAt)}${sizeKb ? ` · ${sizeKb}KB` : ""}</div>
       <div class="material-actions">
@@ -3270,6 +3302,10 @@ $("uploadMaterialForm").addEventListener("submit", async (e)=>{
   const file = $("materialFile").files[0];
   const title = $("materialTitle").value.trim();
   if(!file) return;
+  if(!file.type.startsWith("image/") && !file.type.startsWith("video/")){
+    setFormMsg($("uploadMaterialMsg"), "Please choose an image or video.", "error");
+    return;
+  }
   const btn = $("uploadMaterialBtn");
   btn.disabled = true; btn.textContent = "Processing…";
   setFormMsg($("uploadMaterialMsg"), "", "");
@@ -3366,6 +3402,25 @@ function loadAnnouncementsForRep(){
   }, (err)=> console.error(err));
 }
 
+async function loadClientBroadcastMessages(){
+  if(!currentUser || currentUserDoc?.role !== "client") return;
+  if(unsubClientBroadcast) unsubClientBroadcast();
+  const q = query(collection(db, "notifications"), where("userId", "in", [currentUser.uid, "CLIENT_BROADCAST"]), orderBy("createdAt","desc"), limit(50));
+  unsubClientBroadcast = onSnapshot(q, (snap)=>{
+    const tbody = $("clientAnnouncementTableBody");
+    if(!tbody) return;
+    const items = [];
+    snap.forEach(d=> items.push({ id:d.id, ...d.data() }));
+    tbody.innerHTML = "";
+    $("clientAnnouncementEmptyState").classList.toggle("hidden", items.length > 0);
+    for(const n of items){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><b>${escapeHtml(n.title || "Message")}</b><div style="white-space:pre-wrap;margin-top:4px;">${escapeHtml(n.body || "")}</div></td><td>${fmtDate(n.createdAt)}</td>`;
+      tbody.appendChild(tr);
+    }
+  }, (err)=> console.error(err));
+}
+
 $("postAnnouncementForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const title = $("announceTitle").value.trim();
@@ -3374,13 +3429,20 @@ $("postAnnouncementForm").addEventListener("submit", async (e)=>{
   btn.disabled = true; btn.textContent = "Posting…";
   setFormMsg($("postAnnouncementMsg"), "", "");
   try{
-    await addDoc(collection(db, "announcements"), {
-      title, message,
-      createdBy: currentUser?.uid || "admin",
-      createdAt: serverTimestamp()
-    });
-    sendNotification("REP_BROADCAST", title, message, "announcement");
-    setFormMsg($("postAnnouncementMsg"), "Posted — every representative has been notified.", "success");
+    const target = $("announceTarget").value;
+    if(target === "rep" || target === "both"){
+      await addDoc(collection(db, "announcements"), {
+        title, message,
+        createdBy: currentUser?.uid || "admin",
+        createdAt: serverTimestamp()
+      });
+      await sendNotification("REP_BROADCAST", title, message, "announcement");
+    }
+    if(target === "client" || target === "both"){
+      await sendNotification("CLIENT_BROADCAST", title, message, "announcement");
+    }
+    const label = target === "rep" ? "every representative" : (target === "client" ? "every client" : "every representative and client");
+    setFormMsg($("postAnnouncementMsg"), `Sent — ${label} has been notified.`, "success");
     $("postAnnouncementForm").reset();
   }catch(err){
     setFormMsg($("postAnnouncementMsg"), err.message || "Could not post announcement.", "error");
@@ -4710,6 +4772,8 @@ function numberToWords(num){
 }
 
 function initClientDashboard(clientRecordId, clientRecord){
+  loadMaterialsForClient();
+  loadClientBroadcastMessages();
   // Self-signed-up clients have no linked rep-submission record — fall back
   // to their own profile doc for business name/address/document access.
   const source = clientRecord || currentUserDoc || {};
@@ -5236,7 +5300,7 @@ function initNotifications(uid, role){
   notifFirstLoad = true;
 
   if(unsubNotifications) unsubNotifications();
-  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : (role === "rep" ? [uid, "REP_BROADCAST"] : [uid]);
+  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : (role === "rep" ? [uid, "REP_BROADCAST"] : [uid, "CLIENT_BROADCAST"]);
   const q = query(collection(db, "notifications"), where("userId", "in", targets), orderBy("createdAt", "desc"), limit(40));
   unsubNotifications = onSnapshot(q, (snap)=>{
     const items = [];
@@ -5307,7 +5371,7 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
   // Re-query current items from the last render via list DOM is unreliable for IDs,
   // so mark-all re-reads the live query once and updates every unread doc.
   try{
-    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : (currentUserDoc?.role === "rep" ? [currentUser.uid, "REP_BROADCAST"] : [currentUser.uid]);
+    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : (currentUserDoc?.role === "rep" ? [currentUser.uid, "REP_BROADCAST"] : [currentUser.uid, "CLIENT_BROADCAST"]);
     const snap = await getDocs(query(collection(db, "notifications"), where("userId", "in", targets), where("read", "==", false)));
     const updates = [];
     snap.forEach(d => updates.push(updateDoc(doc(db, "notifications", d.id), { read: true })));
