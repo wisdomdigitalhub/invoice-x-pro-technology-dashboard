@@ -1127,6 +1127,20 @@
 
     <div class="panel">
       <div class="panel-head">
+        <h3>Business Details Change Requests</h3>
+        <span class="hint">Only business name, address and login email</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Change</th><th>Current</th><th>Requested</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="changeRequestTableBodyAdmin"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="changeRequestEmptyStateAdmin">No business detail change requests yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
         <h3>Premium pricing</h3>
         <span class="hint">Monthly renews every 30 days · Yearly renews every 365 days — never lifetime</span>
       </div>
@@ -2047,6 +2061,36 @@
         </div>
         <div class="form-msg" id="sigMsg"></div>
       </div>
+
+      <div class="panel" style="margin-top:18px;">
+        <div class="panel-head">
+          <h3>Request Business Details Change</h3>
+          <span class="hint">Changes are reviewed by admin before they are applied.</span>
+        </div>
+        <form id="clientChangeRequestForm">
+          <div class="grid-2">
+            <div class="field">
+              <label>What do you want to change?</label>
+              <select id="changeRequestField" required>
+                <option value="businessName">Business name</option>
+                <option value="address">Business address</option>
+                <option value="loginEmail">Login email</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Current information</label>
+              <input type="text" id="changeRequestCurrent" readonly />
+            </div>
+          </div>
+          <div class="field">
+            <label>New information</label>
+            <input type="text" id="changeRequestNew" required />
+          </div>
+          <button type="submit" class="btn-primary" id="submitChangeRequestBtn" style="max-width:250px;">Send Change Request</button>
+          <div class="form-msg" id="changeRequestMsg"></div>
+        </form>
+        <div id="clientChangeRequestStatus" style="margin-top:14px;"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -2096,7 +2140,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, signInWithEmailAndPassword, sendPasswordResetEmail,
-  onAuthStateChanged, signOut, createUserWithEmailAndPassword,
+  onAuthStateChanged, signOut, createUserWithEmailAndPassword, updateEmail,
   setPersistence, inMemoryPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
@@ -2265,6 +2309,7 @@ let unsubAnnouncements = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
 let unsubSelfSignupClients = null;
+let unsubChangeRequests = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -2538,6 +2583,7 @@ function wireLogout(id){
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
+    if(unsubChangeRequests){ unsubChangeRequests(); unsubChangeRequests = null; }
     $("notifPanel").classList.add("hidden");
     await signOut(auth);
   });
@@ -2607,6 +2653,7 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
+    if(unsubChangeRequests){ unsubChangeRequests(); unsubChangeRequests = null; }
     showLanding();
     return;
   }
@@ -2620,6 +2667,7 @@ onAuthStateChanged(auth, async (user)=>{
     }
     const data = userSnap.data();
     currentUserDoc = data;
+    if(data.role === "client") setTimeout(tryApplyApprovedLoginEmail, 300);
 
     $("whoName").textContent = data.fullName || user.email;
     $("whoRole").textContent = data.role === "admin" ? "Administrator" : (data.role === "client" ? "Client" : "Representative");
@@ -2682,6 +2730,7 @@ function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
   loadSelfSignupClientsForAdmin();
+  loadBusinessChangeRequestsForAdmin();
   loadMaterialsForAdmin();
   loadAnnouncementsForAdmin();
   loadCommissionRates();
@@ -2972,6 +3021,172 @@ function renderSelfSignupClientsAdmin(items){
       }catch(err){ toast("Could not delete client."); }
     });
   });
+}
+
+// ================= BUSINESS DETAIL CHANGE REQUESTS =================
+const CHANGE_REQUEST_LABELS = { businessName: "Business name", address: "Business address", loginEmail: "Login email" };
+
+function changeRequestCurrentValue(field){
+  if(field === "businessName") return currentUserDoc?.businessName || currentUserDoc?.fullName || "";
+  if(field === "address") return currentUserDoc?.address || "";
+  if(field === "loginEmail") return currentUser?.email || currentUserDoc?.email || "";
+  return "";
+}
+
+function initBusinessChangeRequestUI(){
+  const form = $("clientChangeRequestForm");
+  if(!form || !currentUser || currentUserDoc?.role !== "client") return;
+  const field = $("changeRequestField");
+  const current = $("changeRequestCurrent");
+  const fresh = ()=>{ current.value = changeRequestCurrentValue(field.value); };
+  fresh();
+  field.onchange = fresh;
+
+  form.onsubmit = async (e)=>{
+    e.preventDefault();
+    const btn = $("submitChangeRequestBtn");
+    const selected = field.value;
+    const newValue = $("changeRequestNew").value.trim();
+    if(!newValue){ setFormMsg($("changeRequestMsg"), "Enter the new information.", "error"); return; }
+    if(selected === "loginEmail" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newValue)){
+      setFormMsg($("changeRequestMsg"), "Enter a valid login email address.", "error"); return;
+    }
+    if(newValue === changeRequestCurrentValue(selected)){
+      setFormMsg($("changeRequestMsg"), "The new information is the same as the current information.", "error"); return;
+    }
+    btn.disabled = true; btn.textContent = "Sending…";
+    try{
+      const existingQ = query(collection(db,"changeRequests"), where("uid","==",currentUser.uid), where("status","==","pending"));
+      const existing = await getDocs(existingQ);
+      let duplicate = false;
+      existing.forEach(d=>{ if(d.data().field === selected) duplicate = true; });
+      if(duplicate){ throw new Error(`You already have a pending ${CHANGE_REQUEST_LABELS[selected].toLowerCase()} change request.`); }
+      await addDoc(collection(db,"changeRequests"), {
+        uid: currentUser.uid,
+        clientName: currentUserDoc.businessName || currentUserDoc.fullName || currentUser.email,
+        field: selected,
+        fieldLabel: CHANGE_REQUEST_LABELS[selected],
+        currentValue: changeRequestCurrentValue(selected),
+        requestedValue: newValue,
+        status: "pending",
+        createdAt: serverTimestamp(),
+        reviewedAt: null,
+        reviewedBy: null
+      });
+      $("changeRequestNew").value = "";
+      setFormMsg($("changeRequestMsg"), "✓ Change request sent to admin for review.", "success");
+      loadClientChangeRequestStatus(currentUser.uid);
+      sendNotification("ADMIN_BROADCAST", "Business detail change request", `${currentUserDoc.businessName || currentUser.email} requested a ${CHANGE_REQUEST_LABELS[selected].toLowerCase()} change.`, "business-change-request");
+    }catch(err){
+      console.error(err);
+      setFormMsg($("changeRequestMsg"), err?.message || "Could not send the change request.", "error");
+    }finally{ btn.disabled = false; btn.textContent = "Send Change Request"; }
+  };
+  loadClientChangeRequestStatus(currentUser.uid);
+}
+
+async function loadClientChangeRequestStatus(uid){
+  const box = $("clientChangeRequestStatus");
+  if(!box) return;
+  try{
+    const q = query(collection(db,"changeRequests"), where("uid","==",uid));
+    const snap = await getDocs(q);
+    const rows=[]; snap.forEach(d=>rows.push({id:d.id,...d.data()}));
+    rows.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    box.innerHTML = rows.slice(0,5).map(r=>{
+      const cls = r.status === "approved" ? "approved" : (r.status === "rejected" ? "pending" : "pending");
+      return `<div class="form-msg ${cls}" style="margin-top:8px;"><b>${escapeHtml(r.fieldLabel||CHANGE_REQUEST_LABELS[r.field]||r.field)}</b>: ${escapeHtml(r.requestedValue||"")} — <b>${escapeHtml(r.status||"pending")}</b>${r.adminNote ? ` — ${escapeHtml(r.adminNote)}` : ""}</div>`;
+    }).join("") || `<div class="hint">No change requests submitted yet.</div>`;
+  }catch(err){ console.error(err); }
+}
+
+function loadBusinessChangeRequestsForAdmin(){
+  if(unsubChangeRequests) unsubChangeRequests();
+  const q = query(collection(db,"changeRequests"), orderBy("createdAt","desc"));
+  unsubChangeRequests = onSnapshot(q, snap=>{
+    const rows=[]; snap.forEach(d=>rows.push({id:d.id,...d.data()}));
+    renderBusinessChangeRequestsAdmin(rows);
+  }, err=>console.error("Change request listener:",err));
+}
+
+function renderBusinessChangeRequestsAdmin(rows){
+  const tbody=$("changeRequestTableBodyAdmin");
+  if(!tbody) return;
+  tbody.innerHTML="";
+  $("changeRequestEmptyStateAdmin")?.classList.toggle("hidden",rows.length>0);
+  for(const r of rows){
+    const tr=document.createElement("tr");
+    const status=r.status||"pending";
+    tr.innerHTML=`
+      <td>${escapeHtml(r.clientName||r.uid||"—")}</td>
+      <td>${escapeHtml(r.fieldLabel||CHANGE_REQUEST_LABELS[r.field]||r.field||"—")}</td>
+      <td>${escapeHtml(r.currentValue||"—")}</td>
+      <td>${escapeHtml(r.requestedValue||"—")}</td>
+      <td>${fmtDate(r.createdAt)}</td>
+      <td><span class="status-chip ${status==="approved"?"approved":status==="rejected"?"rejected":"pending"}">${escapeHtml(status)}</span></td>
+      <td>${status==="pending"?`<button class="btn-sm approve" data-action="approve-change" data-id="${r.id}">Accept & Apply</button> <button class="btn-sm reject" data-action="reject-change" data-id="${r.id}">Reject</button>`:`<button class="btn-sm reject" data-action="delete-change" data-id="${r.id}">Delete</button>`}</td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-action]").forEach(btn=>btn.onclick=async()=>{
+    const id=btn.dataset.id, action=btn.dataset.action, r=rows.find(x=>x.id===id);
+    if(!r) return;
+    try{
+      if(action==="approve-change") await approveBusinessChangeRequest(r);
+      else if(action==="reject-change") await rejectBusinessChangeRequest(r);
+      else if(action==="delete-change") await deleteDoc(doc(db,"changeRequests",id));
+    }catch(err){ console.error(err); toast(err?.message||"Could not process request."); }
+  });
+}
+
+async function approveBusinessChangeRequest(r){
+  if(r.status !== "pending") return;
+  const userRef=doc(db,"users",r.uid);
+  const userSnap=await getDoc(userRef);
+  if(!userSnap.exists()) throw new Error("Client profile could not be found.");
+  const userData=userSnap.data();
+  const patch={updatedAt:serverTimestamp()};
+  if(r.field==="businessName"){ patch.businessName=r.requestedValue; patch.fullName=r.requestedValue; }
+  else if(r.field==="address"){ patch.address=r.requestedValue; }
+  else if(r.field==="loginEmail"){ patch.email=r.requestedValue; patch.pendingLoginEmail=r.requestedValue; }
+  else throw new Error("Unsupported change type.");
+  await updateDoc(userRef,patch);
+  if(userData.clientRecordId){
+    const clientRef=doc(db,"clients",userData.clientRecordId);
+    const clientSnap=await getDoc(clientRef);
+    if(clientSnap.exists()){
+      const clientPatch={updatedAt:serverTimestamp()};
+      if(r.field==="businessName") clientPatch.clientName=r.requestedValue;
+      if(r.field==="address") clientPatch.address=r.requestedValue;
+      if(r.field==="loginEmail") clientPatch.email=r.requestedValue;
+      await updateDoc(clientRef,clientPatch);
+    }
+  }
+  await updateDoc(doc(db,"changeRequests",r.id),{status:"approved",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||"admin"});
+  if(r.field==="loginEmail") sendNotification(r.uid,"Login email change approved","Your requested login email has been approved. If the app cannot update your Firebase login automatically because your session is not recent enough, sign in again and contact admin/support to complete the authentication update.","business-change-approved");
+  else sendNotification(r.uid,"Business details updated","Your ${r.fieldLabel?.toLowerCase()||"business detail"} change request was approved and applied.","business-change-approved");
+  toast(`${r.fieldLabel||"Business detail"} change approved and applied.`);
+}
+
+async function rejectBusinessChangeRequest(r){
+  const note=prompt("Optional reason for rejecting this request:","");
+  await updateDoc(doc(db,"changeRequests",r.id),{status:"rejected",adminNote:note||"",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||"admin"});
+  sendNotification(r.uid,"Business change request rejected",`Your ${r.fieldLabel?.toLowerCase()||"business detail"} change request was rejected.${note?` Reason: ${note}`:""}`,"business-change-rejected");
+  toast("Change request rejected.");
+}
+
+async function tryApplyApprovedLoginEmail(){
+  if(!currentUser || !currentUserDoc?.pendingLoginEmail) return;
+  const newEmail=currentUserDoc.pendingLoginEmail.trim();
+  if(!newEmail || newEmail===currentUser.email) return;
+  try{
+    await updateEmail(currentUser,newEmail);
+    await updateDoc(doc(db,"users",currentUser.uid),{email:newEmail,pendingLoginEmail:null,updatedAt:serverTimestamp()});
+    currentUserDoc.email=newEmail;
+    currentUserDoc.pendingLoginEmail=null;
+    toast("Your approved login email has been applied.");
+  }catch(err){
+    if(err?.code!=="auth/requires-recent-login") console.error("Login email update:",err);
+  }
 }
 
 // ================= REP DASHBOARD =================
@@ -4667,6 +4882,7 @@ function initClientDashboard(clientRecordId, clientRecord){
   $("rcpBizNameOut").textContent = businessName;
   $("rcpBizAddressOut").textContent = address;
   renderBusinessLogo();
+  initBusinessChangeRequestUI();
   loadPremiumPricing();
 
   const referredByBanner = $("clientReferredByBanner");
