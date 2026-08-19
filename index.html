@@ -1859,7 +1859,7 @@
                 <div class="tx-sign-box"><div class="tx-sign-title" id="invBuyerSignatureTitle">Client / Buyer</div><div class="tx-sign-line">Signature & Date</div></div>
                 <div class="tx-sign-box"><div class="tx-sign-title" id="invWitness1SignatureTitle">Agent / Witness</div><div class="tx-sign-line">Signature & Date</div></div>
               </div>
-              <div class="tx-sign-box tx-extra-witness" id="invExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title" id="invWitness2SignatureTitle">Witness 2 (Optional)</div><div class="tx-sign-line">Signature & Date</div></div><div class="tx-required-signature-note hidden" id="invRequiredSignatureNote">Non-goods/services: Owner + Buyer + Witness 1 signatures are compulsory. Witness 2 is optional.</div>
+              <div class="tx-sign-box tx-extra-witness" id="invExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title" id="invWitness2SignatureTitle">Witness 2 (Optional)</div><div class="tx-sign-line">Signature & Date</div></div><div class="signatory-output" id="invAuthorizedSignatoriesOut"></div><div class="tx-required-signature-note hidden" id="invRequiredSignatureNote">Non-goods/services: Owner + Buyer + Witness 1 signatures are compulsory. Witness 2 is optional.</div>
             </div>
           </div>
 
@@ -2049,6 +2049,20 @@
             <div class="sig-typed-preview-wrap"><div class="sig-typed-preview" id="sigTypedPreview">Your signature</div></div>
             <button type="button" class="btn-primary" id="sigSaveTypedBtn" style="max-width:180px;">Save Signature</button>
           </div>
+        </div>
+        <div class="panel" style="margin-top:16px;">
+          <div class="panel-head"><h3>Owner & Authorized Signatories</h3><span class="hint">Use real photos and real signatures</span></div>
+          <p class="sub">Add the actual business owner photo and signature, then add other people who are authorized to sign your invoices or receipts. These are saved to your business profile and can appear on generated documents.</p>
+          <div class="person-card">
+            <div class="person-head"><div class="person-avatar" id="ownerPhotoPreview">👤</div><div><b>Business Owner</b><div class="hint">Owner photo</div></div></div>
+            <input type="file" id="ownerPhotoInput" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
+            <div class="person-actions"><button type="button" class="btn-sm confirm" id="ownerPhotoBtn">Upload Owner Picture</button><button type="button" class="btn-sm reject" id="ownerPhotoRemoveBtn">Remove</button></div>
+            <div class="field" style="margin-top:12px;"><label>Owner full name</label><input id="ownerFullNameInput" type="text" placeholder="Full legal name"></div>
+            <div class="field"><label>Owner position</label><input id="ownerPositionInput" type="text" placeholder="Owner / Director / Proprietor"></div>
+          </div>
+          <div class="people-grid" id="signatoriesList"></div>
+          <button type="button" class="btn-secondary" id="addSignatoryBtn" style="margin-top:14px;">＋ Add another person who needs to sign</button>
+          <div class="form-msg" id="peopleMsg"></div>
         </div>
         <div class="form-msg" id="sigMsg"></div>
       </div>
@@ -5061,6 +5075,7 @@ function updateInvoicePreview(){
   } else if(invSigImg){
     invSigImg.classList.add("hidden");
   }
+  if($('invAuthorizedSignatoriesOut')) $('invAuthorizedSignatoriesOut').innerHTML=authorizedSignatoriesHtml();
 }
 
 // ---------- Receipt ----------
@@ -6020,6 +6035,7 @@ let sigUploadDataUrl = null;
 function initSignatureSettings(){
   setupSignatureCanvas();
   renderSavedSignatureUI();
+  if(currentUser) renderOwnerAndSignatories();
 
   document.querySelectorAll("#sigMethodTabs button").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -6228,6 +6244,110 @@ $("sigSaveTypedBtn")?.addEventListener("click", async ()=>{
   ctx.fillText(text, canvas.width/2, canvas.height/2);
   await persistSignature("typed", canvas.toDataURL("image/png"), { text, fontFamily: sigSelectedFont });
 });
+
+// ===== OWNER PHOTO + MULTIPLE AUTHORIZED SIGNATORIES =====
+const MAX_AUTHORIZED_SIGNATORIES = 4;
+let authorizedSignatories = [];
+
+function compressPersonImage(file, maxBytes=70000){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onerror=reject;
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let maxW=700,maxH=700;
+        let w=img.width,h=img.height;
+        const scale=Math.min(1,maxW/w,maxH/h);
+        w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
+        const c=document.createElement('canvas'); c.width=w;c.height=h;
+        const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+        let q=.72, data=c.toDataURL('image/jpeg',q);
+        while(data.length>maxBytes && q>.28){q-=.08;data=c.toDataURL('image/jpeg',q);}
+        resolve(data);
+      }; img.onerror=reject; img.src=reader.result;
+    }; reader.readAsDataURL(file);
+  });
+}
+
+function renderOwnerAndSignatories(){
+  const owner=currentUserDoc?.ownerProfile||{};
+  const photo=$('ownerPhotoPreview');
+  if(photo) photo.innerHTML=owner.photoData?`<img src="${owner.photoData}" alt="Owner photo">`:'👤';
+  if($('ownerFullNameInput')) $('ownerFullNameInput').value=owner.fullName||currentUserDoc?.ownerName||'';
+  if($('ownerPositionInput')) $('ownerPositionInput').value=owner.position||'Owner';
+  authorizedSignatories=Array.isArray(currentUserDoc?.authorizedSignatories)?currentUserDoc.authorizedSignatories.slice(0,MAX_AUTHORIZED_SIGNATORIES):[];
+  const box=$('signatoriesList'); if(!box)return;
+  box.innerHTML='';
+  authorizedSignatories.forEach((person,i)=>{
+    const card=document.createElement('div'); card.className='person-card';
+    card.innerHTML=`<div class="person-head"><div class="person-avatar">${person.photoData?`<img src="${person.photoData}" alt="">`:'👤'}</div><div><b>${escapeHtml(person.fullName||'Signatory')}</b><div class="hint">${escapeHtml(person.position||'Authorized signatory')}</div></div></div>
+      <div class="person-sign-preview">${person.signatureData?`<img src="${person.signatureData}" alt="Real signature">`:'No signature added'}</div>
+      <div class="person-actions"><button type="button" class="btn-sm confirm" data-person-edit="${i}">Edit</button><button type="button" class="btn-sm reject" data-person-remove="${i}">Remove</button></div>`;
+    box.appendChild(card);
+  });
+  box.querySelectorAll('[data-person-remove]').forEach(b=>b.onclick=async()=>{authorizedSignatories.splice(Number(b.dataset.personRemove),1);await saveAuthorizedSignatories();});
+  box.querySelectorAll('[data-person-edit]').forEach(b=>b.onclick=()=>openSignatoryEditor(Number(b.dataset.personEdit)));
+}
+
+async function saveOwnerProfile(patch){
+  try{
+    const owner={...(currentUserDoc?.ownerProfile||{}),...patch};
+    if(estimateUserDocBytes({ownerProfile:owner,authorizedSignatories})>=FIRESTORE_DOC_BYTE_LIMIT){
+      setFormMsg($('peopleMsg'),'The photo/signature data is too large for this Firestore profile. Please use smaller images.','error');return false;
+    }
+    await updateDoc(doc(db,'users',currentUser.uid),{ownerProfile:owner});
+    currentUserDoc.ownerProfile=owner; renderOwnerAndSignatories(); updateInvoicePreview(); updateReceiptPreview();
+    setFormMsg($('peopleMsg'),'✓ Owner information saved.','success'); return true;
+  }catch(err){console.error(err);setFormMsg($('peopleMsg'),describeSaveError(err,'owner information'),'error');return false;}
+}
+async function saveAuthorizedSignatories(){
+  try{
+    if(estimateUserDocBytes({authorizedSignatories})>=FIRESTORE_DOC_BYTE_LIMIT){
+      setFormMsg($('peopleMsg'),'The signatories are too large to store together. Use smaller signature/photo images.','error');return;
+    }
+    await updateDoc(doc(db,'users',currentUser.uid),{authorizedSignatories});
+    currentUserDoc.authorizedSignatories=authorizedSignatories; renderOwnerAndSignatories(); updateInvoicePreview(); updateReceiptPreview();
+    setFormMsg($('peopleMsg'),'✓ Authorized signatories saved.','success');
+  }catch(err){console.error(err);setFormMsg($('peopleMsg'),describeSaveError(err,'authorized signatories'),'error');}
+}
+
+function openSignatoryEditor(index=null){
+  const existing=index===null?{}:(authorizedSignatories[index]||{});
+  const name=prompt('Full name of the person who will sign:',existing.fullName||''); if(name===null)return;
+  const position=prompt('Position / role:',existing.position||'Authorized Signatory'); if(position===null)return;
+  const photoHint=existing.photoData?'\nCurrent photo exists. Choose OK to keep it, or Cancel to leave it unchanged.':'';
+  const usePhoto=confirm('Do you want to upload a real photo for this signatory?'+photoHint);
+  const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='image/png,image/jpeg,image/jpg,image/webp';
+  const finish=async(photoData)=>{
+    const old=index===null?{}:(authorizedSignatories[index]||{});
+    const person={...old,fullName:name.trim(),position:position.trim(),photoData:photoData===undefined?old.photoData:(photoData||null)};
+    if(!person.fullName){setFormMsg($('peopleMsg'),'Please enter a name.','error');return;}
+    const sig=confirm('Do you want to upload this person\'s REAL signature now?');
+    if(sig){
+      const sf=document.createElement('input');sf.type='file';sf.accept='image/png,image/jpeg,image/jpg,image/webp';
+      sf.onchange=async()=>{if(sf.files[0]){try{person.signatureData=await compressPersonImage(sf.files[0],70000);commit();}catch(e){setFormMsg($('peopleMsg'),'Could not process the signature image.','error');}}else commit();};sf.click();
+    } else commit();
+    async function commit(){if(index===null) authorizedSignatories.push(person); else authorizedSignatories[index]=person; await saveAuthorizedSignatories();}
+  };
+  if(usePhoto){fileInput.onchange=async()=>{if(fileInput.files[0]){try{finish(await compressPersonImage(fileInput.files[0],70000));}catch(e){setFormMsg($('peopleMsg'),'Could not process the photo.','error');}}};fileInput.click();}else finish(undefined);
+}
+
+$('ownerPhotoBtn')?.addEventListener('click',()=>$('ownerPhotoInput').click());
+$('ownerPhotoInput')?.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const data=await compressPersonImage(f,70000);await saveOwnerProfile({photoData:data});}catch(err){setFormMsg($('peopleMsg'),'Could not process the owner picture.','error');}});
+$('ownerPhotoRemoveBtn')?.addEventListener('click',()=>saveOwnerProfile({photoData:null}));
+$('ownerFullNameInput')?.addEventListener('change',()=>saveOwnerProfile({fullName:$('ownerFullNameInput').value.trim()}));
+$('ownerPositionInput')?.addEventListener('change',()=>saveOwnerProfile({position:$('ownerPositionInput').value.trim()}));
+$('addSignatoryBtn')?.addEventListener('click',()=>{if(authorizedSignatories.length>=MAX_AUTHORIZED_SIGNATORIES){setFormMsg($('peopleMsg'),`You can add up to ${MAX_AUTHORIZED_SIGNATORIES} additional signatories.`,'error');return;}openSignatoryEditor();});
+
+function authorizedSignatoriesHtml(){
+  const owner=currentUserDoc?.ownerProfile||{};
+  const people=[];
+  if(owner.fullName||owner.photoData){people.push({fullName:owner.fullName||'Business Owner',position:owner.position||'Owner',photoData:owner.photoData,signatureData:currentUserDoc?.signature?.imageData});}
+  (Array.isArray(currentUserDoc?.authorizedSignatories)?currentUserDoc.authorizedSignatories:[]).forEach(p=>people.push(p));
+  return people.filter(p=>p.signatureData).map(p=>`<div class="signatory-output-card">${p.photoData?`<img class="owner-photo-output" src="${p.photoData}" alt="">`:''}<b>${escapeHtml(p.fullName||'Signatory')}</b><div style="font-size:9px;color:#777;">${escapeHtml(p.position||'Authorized Signatory')}</div><img src="${p.signatureData}" alt="Signature"><div style="font-size:8px;color:#888;border-top:1px dashed #ccc;padding-top:3px;">Signature</div></div>`).join('');
+}
+
 
 // Firestore rejects any document over ~1 MiB total. This app stores logoData
 // and signature.imageData as base64 strings directly on the same
