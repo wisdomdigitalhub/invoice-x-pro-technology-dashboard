@@ -637,6 +637,17 @@
   /* ===== Client invoice/receipt documents ===== */
   .doc-item-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-bottom:10px; }
   .doc-item-row input{ padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; font-family:inherit; }
+  .doc-item-row{ grid-template-columns:1.7fr 1.7fr .7fr .9fr 1fr auto; align-items:start; }
+  .doc-item-row .inv-sku,.doc-item-row .inv-unit,.doc-item-row .inv-detail{ min-width:0; }
+  .owner-photo-uploader{display:flex;gap:14px;align-items:center;padding:12px;border:1px dashed #c8d0dc;border-radius:10px;background:#fff;margin-top:10px;}
+  .owner-photo-preview{width:78px;height:78px;border-radius:12px;border:1px solid #d5dbe5;background:#f4f6f9;display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:24px;color:#8a94a6;font-weight:800;flex-shrink:0;}
+  .owner-photo-preview img{width:100%;height:100%;object-fit:cover;}
+  .asset-detail-card{margin-top:10px;padding:14px;border:1px solid #dfe4eb;border-radius:12px;background:#f8fafc;}
+  .inv-asset-proof{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:start;margin-top:14px;padding-top:12px;border-top:1px solid #e5e7eb;}
+  .inv-owner-photo-out{width:78px;height:78px;border-radius:10px;object-fit:cover;border:1px solid #cfd6e2;}
+  .inv-item-detail{font-size:10px;color:#666;line-height:1.35;margin-top:3px;}
+  .inv-item-code{font-size:9px;color:#777;margin-top:2px;}
+  @media(max-width:820px){ .doc-item-row{grid-template-columns:1fr 1fr;} .doc-item-row .inv-desc{grid-column:1/-1;} }
   .doc-remove-row{ background:var(--reject-bg); color:var(--reject); border:none; border-radius:8px; padding:0 12px; font-size:13px; font-weight:600; }
   .doc-actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
   .doc-preview-wrap{ background:#2a2f3a; border-radius:16px; padding:28px; overflow-x:auto; }
@@ -1736,11 +1747,31 @@
             <div class="field"><label>Representative name</label><input id="invRepName" type="text" /></div>
             <div class="field"><label>Representative phone</label><input id="invRepPhone" type="text" /></div>
           </div></div>
+          <div class="owner-photo-uploader">
+            <div class="owner-photo-preview" id="invOwnerPhotoPreview">👤</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">Owner / Seller picture</div>
+              <div class="hint">For transactions where you are acting for another person, add the actual owner's picture. The image is embedded locally in this document and is not uploaded to storage.</div>
+              <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                <button type="button" class="btn-sm confirm" id="invOwnerPhotoBtn">Upload owner picture</button>
+                <button type="button" class="btn-sm reject hidden" id="invOwnerPhotoRemoveBtn">Remove</button>
+              </div>
+              <input type="file" id="invOwnerPhotoFile" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden" />
+            </div>
+          </div>
         </div>
         <div class="panel-head" style="margin-top:12px;"><h3 style="font-size:15px;">Asset / transaction details (optional)</h3></div>
         <div class="grid-2">
-          <div class="field"><label>Asset type</label><input id="invAssetType" type="text" placeholder="Land, vehicle, equipment, goods…" /></div>
-          <div class="field"><label>Asset location / reference</label><input id="invAssetLocation" type="text" /></div>
+          <div class="field"><label>Asset / goods name</label><input id="invAssetType" type="text" placeholder="Vehicle, land, phone, equipment, goods…" /></div>
+          <div class="field"><label>Asset location</label><input id="invAssetLocation" type="text" placeholder="Location / delivery point" /></div>
+          <div class="field"><label>Asset / goods condition</label><select id="invAssetCondition"><option value="">Not specified</option><option>New</option><option>Used</option><option>Refurbished</option><option>Fair</option><option>Good</option><option>Excellent</option></select></div>
+          <div class="field"><label>Serial / VIN / registration number</label><input id="invAssetSerial" type="text" placeholder="Optional identification number" /></div>
+          <div class="field"><label>Title / document / reference number</label><input id="invAssetReference" type="text" /></div>
+          <div class="field"><label>Quantity / units</label><input id="invAssetQuantity" type="text" placeholder="e.g. 1 unit, 20 pieces" /></div>
+        </div>
+        <div class="asset-detail-card">
+          <div class="field"><label>Full asset / goods description</label><textarea id="invAssetDescription" rows="3" placeholder="Describe the goods or asset clearly: model, colour, size, specifications, included accessories, ownership notes, condition, identifying features, and any other important information."></textarea></div>
+          <div class="field" style="margin-top:10px;"><label>Transaction / ownership notes</label><textarea id="invAssetNotes" rows="2" placeholder="Optional notes, warranties, delivery terms, ownership acknowledgement, or special conditions."></textarea></div>
         </div>
         <div class="panel-head" style="margin-top:6px;">
           <h3 style="font-size:15px;">Business details (used only when you are the owner / seller)</h3>
@@ -1765,7 +1796,7 @@
           <div class="field"><label>Account name</label><input type="text" id="invAccountName" /></div>
           <div class="field"><label>Account number</label><input type="text" id="invAccountNumber" /></div>
         </div>
-        <div class="panel-head" style="margin-top:10px;"><h3 style="font-size:15px;">Items</h3>
+        <div class="panel-head" style="margin-top:10px;"><h3 style="font-size:15px;">Goods / Items — detailed description for every item</h3>
           <button type="button" class="btn-sm approve" id="invAddItemBtn">+ Add item</button>
         </div>
         <div id="invItemRows"></div>
@@ -1803,7 +1834,7 @@
           </div>
 
           <table class="inv-table">
-            <thead><tr><th>Sr.</th><th>Description</th><th>Qty</th><th>Rate (<span id="invCurrencyHead">₦</span>)</th><th>Amount (<span id="invCurrencyHead2">₦</span>)</th></tr></thead>
+            <thead><tr><th>Sr.</th><th>Goods / Item</th><th>Qty</th><th>Rate (<span id="invCurrencyHead">₦</span>)</th><th>Amount (<span id="invCurrencyHead2">₦</span>)</th></tr></thead>
             <tbody id="invRowsOut"></tbody>
           </table>
 
@@ -1819,6 +1850,7 @@
           <div class="inv-words" id="invWordsOut">Amount in words: Zero Naira Only</div>
 
           <div id="invRoleInfoOut" style="margin-top:12px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:11px;"></div>
+          <div id="invOwnerPhotoOutWrap" class="inv-asset-proof hidden"><img id="invOwnerPhotoOut" class="inv-owner-photo-out" alt="Actual owner / seller" /><div><div style="font-weight:800;font-size:11px;">Owner / Seller Identification</div><div style="font-size:10px;color:#666;margin-top:4px;">Picture supplied by the document creator for identification/transaction reference.</div></div></div>
           <div class="inv-bottom-grid">
             <div class="inv-bank-box" id="invBankBox">
               <div class="inv-box-label">Payment Details</div>
@@ -4815,7 +4847,10 @@ function resetInvoiceSession(){
   $("invClientAddress").value = "";
   $("invDocumentType").value = "invoice";
   document.querySelector('input[name="invOwnerRole"][value="owner"]').checked = true;
-  ["invOwnerName","invOwnerPhone","invOwnerEmail","invOwnerAddress","invActualOwnerName","invActualOwnerPhone","invActualOwnerEmail","invActualOwnerAddress","invRepName","invRepPhone","invAssetType","invAssetLocation"].forEach(id=>{ if($(id)) $(id).value=""; });
+  ["invOwnerName","invOwnerPhone","invOwnerEmail","invOwnerAddress","invActualOwnerName","invActualOwnerPhone","invActualOwnerEmail","invActualOwnerAddress","invRepName","invRepPhone","invAssetType","invAssetLocation","invAssetCondition","invAssetSerial","invAssetReference","invAssetQuantity","invAssetDescription","invAssetNotes","invAssetCondition","invAssetSerial","invAssetReference","invAssetQuantity","invAssetDescription","invAssetNotes"].forEach(id=>{ if($(id)) $(id).value=""; });
+  invOwnerPhotoData = "";
+  if($("invOwnerPhotoPreview")) $("invOwnerPhotoPreview").innerHTML = "👤";
+  $("invOwnerPhotoRemoveBtn")?.classList.add("hidden");
   if($("invOwnerName")) $("invOwnerName").value=window.__currentBusinessName || "";
   if($("invOwnerAddress")) $("invOwnerAddress").value=$("clientBizAddressHead")?.textContent || "";
   $("invOwnerFields").classList.remove("hidden");
@@ -4842,15 +4877,19 @@ function addInvoiceRow(){
   const row = document.createElement("div");
   row.className = "doc-item-row";
   row.innerHTML = `
-    <input placeholder="Description" class="inv-desc" />
+    <input placeholder="Item / goods name" class="inv-desc" />
+    <input placeholder="Detailed description / model / colour / size" class="inv-detail" />
+    <input placeholder="SKU / code" class="inv-sku" />
+    <input placeholder="Unit" value="pcs" class="inv-unit" />
     <input type="number" placeholder="Qty" value="1" min="1" class="inv-qty" />
-    <input type="number" placeholder="Price" value="0" min="0" class="inv-price" />
+    <input type="number" placeholder="Unit price" value="0" min="0" class="inv-price" />
     <button type="button" class="doc-remove-row">✕</button>`;
   row.querySelectorAll("input").forEach(inp=> inp.addEventListener("input", updateInvoicePreview));
   row.querySelector(".doc-remove-row").addEventListener("click", ()=>{ row.remove(); updateInvoicePreview(); });
   $("invItemRows").appendChild(row);
 }
 
+let invOwnerPhotoData = "";
 let invBuyerSignatureData = "";
 let invBuyerSigDrawing = false;
 function setupBuyerSignaturePad(){
@@ -4872,12 +4911,15 @@ function initInvoiceGenerator(){
   setupBuyerSignaturePad();
   $("invBuyerSigClearBtn")?.addEventListener("click",clearBuyerSignature);
   $("invBuyerSigUseBtn")?.addEventListener("click",useBuyerSignature);
+  $("invOwnerPhotoBtn")?.addEventListener("click",()=>$("invOwnerPhotoFile")?.click());
+  $("invOwnerPhotoRemoveBtn")?.addEventListener("click",()=>{invOwnerPhotoData="";$("invOwnerPhotoPreview").innerHTML="👤";$("invOwnerPhotoRemoveBtn").classList.add("hidden");updateInvoicePreview();});
+  $("invOwnerPhotoFile")?.addEventListener("change", e=>{ const f=e.target.files?.[0]; if(!f)return; if(f.size>3*1024*1024){setFormMsg($("invGenerateMsg"),"Owner picture must be 3MB or smaller.","error");return;} const r=new FileReader(); r.onload=()=>{invOwnerPhotoData=r.result;$("invOwnerPhotoPreview").innerHTML=`<img src="${invOwnerPhotoData}" alt="Owner" />`;$("invOwnerPhotoRemoveBtn").classList.remove("hidden");updateInvoicePreview();}; r.readAsDataURL(f); });
   document.querySelectorAll('input[name="invOwnerRole"]').forEach(r=>r.addEventListener("change",syncInvoiceOwnerMode));
   $("invDocumentType")?.addEventListener("change",updateInvoicePreview);
   populateCurrencySelect("invCurrency", DEFAULT_CURRENCY);
   $("invCurrency")?.addEventListener("change", updateInvoicePreview);
 
-  ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber","invOwnerName","invOwnerPhone","invOwnerEmail","invOwnerAddress","invActualOwnerName","invActualOwnerPhone","invActualOwnerEmail","invActualOwnerAddress","invRepName","invRepPhone","invAssetType","invAssetLocation"].forEach(id=>{
+  ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber","invOwnerName","invOwnerPhone","invOwnerEmail","invOwnerAddress","invActualOwnerName","invActualOwnerPhone","invActualOwnerEmail","invActualOwnerAddress","invRepName","invRepPhone","invAssetType","invAssetLocation","invAssetCondition","invAssetSerial","invAssetReference","invAssetQuantity","invAssetDescription","invAssetNotes"].forEach(id=>{
     $(id).addEventListener("input", updateInvoicePreview);
   });
 
@@ -4927,11 +4969,15 @@ function updateInvoicePreview(){
     sellerName=$("invActualOwnerName").value.trim()||"Actual owner / seller"; sellerAddress=$("invActualOwnerAddress").value.trim(); sellerPhone=$("invActualOwnerPhone").value.trim(); sellerEmail=$("invActualOwnerEmail").value.trim();
     const rn=$("invRepName").value.trim()||"Representative", rp=$("invRepPhone").value.trim();
     const asset=$("invAssetType").value.trim(), loc=$("invAssetLocation").value.trim();
-    roleHtml=`<b>Actual Owner / Seller:</b> ${escapeHtml(sellerName)}${sellerAddress?" · "+escapeHtml(sellerAddress):""}<br><b>Prepared / Represented By:</b> ${escapeHtml(rn)}${rp?" · "+escapeHtml(rp):""}${asset?`<br><b>Asset:</b> ${escapeHtml(asset)}`:""}${loc?` · ${escapeHtml(loc)}`:""}`;
+    const assetCond=$("invAssetCondition")?.value.trim(), serial=$("invAssetSerial")?.value.trim(), ref=$("invAssetReference")?.value.trim(), aq=$("invAssetQuantity")?.value.trim();
+    const ad=$("invAssetDescription")?.value.trim(), notes=$("invAssetNotes")?.value.trim();
+    roleHtml=`<b>Actual Owner / Seller:</b> ${escapeHtml(sellerName)}${sellerAddress?" · "+escapeHtml(sellerAddress):""}<br><b>Prepared / Represented By:</b> ${escapeHtml(rn)}${rp?" · "+escapeHtml(rp):""}${asset?`<br><b>Asset / Goods:</b> ${escapeHtml(asset)}`:""}${loc?` · ${escapeHtml(loc)}`:""}${assetCond?`<br><b>Condition:</b> ${escapeHtml(assetCond)}`:""}${aq?` · <b>Qty:</b> ${escapeHtml(aq)}`:""}${serial?`<br><b>Serial / VIN / Reg:</b> ${escapeHtml(serial)}`:""}${ref?` · <b>Ref:</b> ${escapeHtml(ref)}`:""}${ad?`<br><b>Description:</b> ${escapeHtml(ad)}`:""}${notes?`<br><b>Notes:</b> ${escapeHtml(notes)}`:""}`;
   } else {
     sellerName=$("invOwnerName").value.trim()||window.__currentBusinessName||"Owner / Seller"; sellerAddress=$("invOwnerAddress").value.trim(); sellerPhone=$("invOwnerPhone").value.trim()||$("invBizPhone").value.trim(); sellerEmail=$("invOwnerEmail").value.trim()||$("invBizEmail").value.trim();
     const asset=$("invAssetType").value.trim(), loc=$("invAssetLocation").value.trim();
-    roleHtml=`<b>Owner / Seller:</b> ${escapeHtml(sellerName)}${sellerAddress?" · "+escapeHtml(sellerAddress):""}${asset?`<br><b>Asset:</b> ${escapeHtml(asset)}`:""}${loc?` · ${escapeHtml(loc)}`:""}`;
+    const assetCond=$("invAssetCondition")?.value.trim(), serial=$("invAssetSerial")?.value.trim(), ref=$("invAssetReference")?.value.trim(), aq=$("invAssetQuantity")?.value.trim();
+    const ad=$("invAssetDescription")?.value.trim(), notes=$("invAssetNotes")?.value.trim();
+    roleHtml=`<b>Owner / Seller:</b> ${escapeHtml(sellerName)}${sellerAddress?" · "+escapeHtml(sellerAddress):""}${asset?`<br><b>Asset / Goods:</b> ${escapeHtml(asset)}`:""}${loc?` · ${escapeHtml(loc)}`:""}${assetCond?`<br><b>Condition:</b> ${escapeHtml(assetCond)}`:""}${aq?` · <b>Qty:</b> ${escapeHtml(aq)}`:""}${serial?`<br><b>Serial / VIN / Reg:</b> ${escapeHtml(serial)}`:""}${ref?` · <b>Ref:</b> ${escapeHtml(ref)}`:""}${ad?`<br><b>Description:</b> ${escapeHtml(ad)}`:""}${notes?`<br><b>Notes:</b> ${escapeHtml(notes)}`:""}`;
   }
   $("invBizNameOut").textContent=sellerName; $("invBizAddressOut").textContent=sellerAddress; $("invRoleInfoOut").innerHTML=roleHtml;
   $("invLogoMark")?.classList.toggle("hidden", role === "representative");
@@ -4947,6 +4993,9 @@ function updateInvoicePreview(){
   $("invMetaNoOut").textContent = $("invNoOut").textContent;
   $("invMetaDateOut").textContent = $("invDateOut").textContent;
   $("invMetaTermsOut").textContent = $("invPaymentTerms").value.trim() || "Immediate";
+
+  const ownerPhotoWrap=$("invOwnerPhotoOutWrap"), ownerPhotoOut=$("invOwnerPhotoOut");
+  if(invOwnerPhotoData){ ownerPhotoOut.src=invOwnerPhotoData; ownerPhotoWrap.classList.remove("hidden"); } else { ownerPhotoWrap.classList.add("hidden"); }
 
   // Bank details box — only rendered if the client filled at least one field
   const bankName = $("invBankName").value.trim();
@@ -4978,11 +5027,14 @@ function updateInvoicePreview(){
   let sr = 1;
   document.querySelectorAll("#invItemRows .doc-item-row").forEach(row=>{
     const desc = row.querySelector(".inv-desc").value || "Item";
+    const detail = row.querySelector(".inv-detail")?.value.trim() || "";
+    const sku = row.querySelector(".inv-sku")?.value.trim() || "";
+    const unit = row.querySelector(".inv-unit")?.value.trim() || "pcs";
     const qty = Number(row.querySelector(".inv-qty").value) || 0;
     const price = Number(row.querySelector(".inv-price").value) || 0;
     const total = qty * price;
     sub += total;
-    rowsHtml += `<tr><td>${sr}</td><td>${escapeHtml(desc)}</td><td>${qty}</td><td>${formatCurrency(price, currency)}</td><td>${formatCurrency(total, currency)}</td></tr>`;
+    rowsHtml += `<tr><td>${sr}</td><td><b>${escapeHtml(desc)}</b>${detail?`<div class="inv-item-detail">${escapeHtml(detail)}</div>`:""}${sku?`<div class="inv-item-code">Code/SKU: ${escapeHtml(sku)}</div>`:""}</td><td>${qty} ${escapeHtml(unit)}</td><td>${formatCurrency(price, currency)}</td><td>${formatCurrency(total, currency)}</td></tr>`;
     sr++;
   });
   $("invRowsOut").innerHTML = rowsHtml;
