@@ -634,6 +634,23 @@
   }
   @keyframes authSlide{ 0%{ transform:translateX(-100%); } 100%{ transform:translateX(340%); } }
 
+  /* ===== Seller / buyer transaction proof ===== */
+  .proof-card{margin-top:16px;padding:18px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(135deg,#fffdf8,#f8f5ee);box-shadow:0 8px 24px rgba(15,26,46,.05)}
+  .proof-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .proof-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:#eef6f0;color:#24613c;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+  .proof-note{font-size:11px;line-height:1.45;color:rgba(15,26,46,.58);margin:0 0 12px}
+  .proof-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .proof-photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px}
+  .proof-photo-preview{width:76px;height:76px;border-radius:50%;border:2px solid var(--brass);background:#f1eee7;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:800;color:rgba(15,26,46,.45);font-size:11px;text-align:center}
+  .proof-photo-preview img{width:100%;height:100%;object-fit:cover}
+  .proof-check{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:11px;color:rgba(15,26,46,.7)}
+  .proof-check input{margin-top:2px}
+  .proof-document-box{margin-top:14px;padding:12px;border:1px dashed #cdbb98;border-radius:10px;background:#fff}
+  .proof-document-box .proof-mini-title{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:#8a6931;margin-bottom:7px}
+  .proof-doc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px;font-size:10px;color:#333}
+  .proof-doc-grid div{padding-bottom:4px;border-bottom:1px dotted #ddd}
+  .proof-doc-grid b{color:#111}
+  @media(max-width:620px){.proof-grid,.proof-doc-grid{grid-template-columns:1fr}}
   /* ===== Client invoice/receipt documents ===== */
   .doc-item-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-bottom:10px; }
   .doc-item-row input{ padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; font-family:inherit; }
@@ -790,11 +807,10 @@
       <button class="nav-cta" id="signUpNavBtn" style="background:var(--brass); color:#1c1206;">Sign Up</button>
       <button class="nav-cta" id="clientLoginNavBtn" style="background:none; color:var(--ink); border:1.5px solid var(--line);">Client Login</button>
       <button class="nav-cta" id="repLoginNavBtn">Representative Login</button>
-<div id="installFirstNotice" style="display:none; position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:9999; width:min(92vw,520px); background:#071426; color:#fff; border:1px solid rgba(200,155,60,.55); border-radius:16px; padding:14px 16px; box-shadow:0 18px 50px rgba(0,0,0,.28);"><div style="font-weight:800; margin-bottom:5px;">Install Invoice X Pro first</div><div style="font-size:13px; line-height:1.45; opacity:.9;">For the best experience, install the app before completing your client signup.</div><button id="installFirstBtn" style="margin-top:10px; width:100%; border:0; border-radius:10px; padding:11px 14px; font-weight:800; background:#c89b3c; color:#1c1206;">Install App</button></div>
     </div>
   </nav>
 
-  <div style="margin:0 auto 18px; max-width:1200px; padding:10px 14px; border-radius:12px; background:rgba(200,155,60,.10); border:1px solid rgba(200,155,60,.25); font-size:13px; text-align:center;"><strong>Now available:</strong> professional invoices & receipts, multiple currencies, digital signatures, PDF/PNG downloads, sharing, client change requests, and representative referrals.</div><section class="hero">
+  <section class="hero">
     <div>
       <span class="eyebrow">Field sales, ledgered properly</span>
       <h1>Every client, <em>every payment</em>, accounted for.</h1>
@@ -902,7 +918,7 @@
       <button type="button" data-role="rep" id="suRoleRepBtn">I'm a Representative</button>
     </div>
     <h3 id="signUpTitle">Create your business account</h3>
-    <p class="sub" id="signUpSub">Free plan includes 20 invoices/receipts to start — no card required.</p>
+    <p class="sub" id="signUpSub">Free plan includes 5 invoices/receipts to start — no card required.</p>
 
     <form id="signUpForm">
       <div id="suClientFields">
@@ -1720,6 +1736,40 @@
           <button type="button" class="btn-sm approve" id="invAddItemBtn">+ Add item</button>
         </div>
         <div id="invItemRows"></div>
+
+        <div class="proof-card">
+          <div class="proof-head">
+            <div>
+              <div class="proof-badge">🛡 Transaction proof</div>
+              <h3 style="font-size:16px;margin:8px 0 4px;">Seller & buyer proof</h3>
+            </div>
+            <span style="font-size:10px;color:rgba(15,26,46,.45);">Optional but recommended</span>
+          </div>
+          <p class="proof-note">Use this section when a product, vehicle, land, equipment or other valuable asset is being sold or transferred. It creates a stronger transaction record. It does not by itself prove legal ownership or replace government verification.</p>
+          <div class="proof-grid">
+            <div class="field"><label>Asset / transaction type</label><select id="invProofType"><option value="goods">Goods / Product</option><option value="vehicle">Vehicle / Car</option><option value="land">Land / Property</option><option value="equipment">Equipment / Machinery</option><option value="service">Service</option><option value="other">Other</option></select></div>
+            <div class="field"><label>Seller / current owner full name</label><input type="text" id="invSellerName" /></div>
+            <div class="field"><label>Seller phone</label><input type="text" id="invSellerPhone" /></div>
+            <div class="field"><label>Seller address</label><input type="text" id="invSellerAddress" /></div>
+            <div class="field"><label>Buyer ID / reference number</label><input type="text" id="invBuyerId" placeholder="Optional buyer ID / reference" /></div>
+            <div class="field"><label>Seller ID / reference number</label><input type="text" id="invSellerId" placeholder="ID / passport / driver's licence ref." /></div>
+            <div class="field"><label>Asset ID / serial / VIN / plot number</label><input type="text" id="invAssetId" /></div>
+            <div class="field"><label>Ownership / source details</label><input type="text" id="invOwnershipDetails" placeholder="Title, receipt, serial, source, etc." /></div>
+            <div class="field"><label>Witness / additional reference</label><input type="text" id="invWitness" /></div>
+          </div>
+          <div class="proof-photo-row">
+            <div class="proof-photo-preview" id="invSellerPhotoPreview">Seller<br>photo</div>
+            <div>
+              <button type="button" class="btn-sm approve" id="invSellerPhotoBtn">Add seller face photo</button>
+              <button type="button" class="btn-sm reject hidden" id="invSellerPhotoRemove">Remove</button>
+              <input type="file" id="invSellerPhotoInput" accept="image/png,image/jpeg,image/jpg" class="hidden" capture="user" />
+              <div style="font-size:10px;color:rgba(15,26,46,.5);margin-top:5px;">Clear face photo. The image is compressed in the browser and embedded only in the generated document; this feature does not use Firebase Storage.</div>
+            </div>
+          </div>
+          <label class="proof-check"><input type="checkbox" id="invSellerPhotoConsent" /> Seller confirms consent for this facial image to appear on this transaction document.</label>
+          <label class="proof-check"><input type="checkbox" id="invBuyerAcknowledgement" /> Buyer confirms receipt/acceptance of the goods, asset or service described on this document and acknowledges the transaction details.</label>
+          <div class="field" style="margin-top:10px;"><label>Seller declaration</label><textarea id="invSellerDeclaration" rows="2" placeholder="Example: I confirm that I am the seller/current owner and the information supplied above is accurate to the best of my knowledge."></textarea></div>
+        </div>
       </div>
 
       <div class="doc-preview-wrap">
@@ -1780,7 +1830,27 @@
             </div>
           </div>
 
-          <div class="inv-footer-note">Goods once sold will not be taken back · This is a computer-generated invoice.</div>
+          <div class="proof-document-box" id="invProofOutBox">
+            <div class="proof-mini-title">Transaction & ownership record</div>
+            <div class="proof-doc-grid">
+              <div>Type: <b id="invProofTypeOut">—</b></div>
+              <div>Seller: <b id="invSellerNameOut">—</b></div>
+              <div>Seller address: <b id="invSellerAddressOut">—</b></div>
+              <div>Buyer ID/ref: <b id="invBuyerIdOut">—</b></div>
+              <div>Seller phone: <b id="invSellerPhoneOut">—</b></div>
+              <div>Seller ID/ref: <b id="invSellerIdOut">—</b></div>
+              <div>Asset ID: <b id="invAssetIdOut">—</b></div>
+              <div>Witness/ref: <b id="invWitnessOut">—</b></div>
+              <div style="grid-column:1/-1">Ownership/source: <b id="invOwnershipOut">—</b></div>
+              <div style="grid-column:1/-1">Seller declaration: <b id="invDeclarationOut">—</b></div>
+              <div style="grid-column:1/-1">Buyer acknowledgement: <b id="invBuyerAckOut">—</b></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+              <img id="invSellerPhotoOut" class="proof-photo-preview hidden" alt="Seller face" />
+              <span style="font-size:9px;color:rgba(15,26,46,.48);">Seller facial image shown only where consent was provided.</span>
+            </div>
+          </div>
+          <div class="inv-footer-note">Goods once sold will not be taken back · This is a computer-generated invoice · Transaction proof is a record, not independent legal verification.</div>
         </div>
       </div>
       <label class="sig-toggle-row hidden" id="invSigToggleRow">
@@ -1820,6 +1890,36 @@
           <div class="field"><label>Total amount (₦)</label><input type="number" id="rcpTotal" min="0" /></div>
           <div class="field"><label>Amount paid (₦)</label><input type="number" id="rcpPaid" min="0" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="rcpVat" value="7.5" min="0" max="100" /></div>
+        </div>
+        <div class="proof-card">
+          <div class="proof-head">
+            <div><div class="proof-badge">🛡 Transaction proof</div><h3 style="font-size:16px;margin:8px 0 4px;">Seller & buyer proof</h3></div>
+            <span style="font-size:10px;color:rgba(15,26,46,.45);">Optional but recommended</span>
+          </div>
+          <p class="proof-note">For high-value sales such as vehicles, land, equipment and goods, record the seller's identity and asset details alongside the payment receipt. This is supporting evidence only and does not replace government/title verification.</p>
+          <div class="proof-grid">
+            <div class="field"><label>Asset / transaction type</label><select id="rcpProofType"><option value="goods">Goods / Product</option><option value="vehicle">Vehicle / Car</option><option value="land">Land / Property</option><option value="equipment">Equipment / Machinery</option><option value="service">Service</option><option value="other">Other</option></select></div>
+            <div class="field"><label>Seller / current owner full name</label><input type="text" id="rcpSellerName" /></div>
+            <div class="field"><label>Seller phone</label><input type="text" id="rcpSellerPhone" /></div>
+            <div class="field"><label>Seller address</label><input type="text" id="rcpSellerAddress" /></div>
+            <div class="field"><label>Buyer ID / reference number</label><input type="text" id="rcpBuyerId" placeholder="Optional buyer ID / reference" /></div>
+            <div class="field"><label>Seller ID / reference number</label><input type="text" id="rcpSellerId" /></div>
+            <div class="field"><label>Asset ID / serial / VIN / plot number</label><input type="text" id="rcpAssetId" /></div>
+            <div class="field"><label>Ownership / source details</label><input type="text" id="rcpOwnershipDetails" /></div>
+            <div class="field"><label>Witness / additional reference</label><input type="text" id="rcpWitness" /></div>
+          </div>
+          <div class="proof-photo-row">
+            <div class="proof-photo-preview" id="rcpSellerPhotoPreview">Seller<br>photo</div>
+            <div>
+              <button type="button" class="btn-sm approve" id="rcpSellerPhotoBtn">Add seller face photo</button>
+              <button type="button" class="btn-sm reject hidden" id="rcpSellerPhotoRemove">Remove</button>
+              <input type="file" id="rcpSellerPhotoInput" accept="image/png,image/jpeg,image/jpg" class="hidden" capture="user" />
+              <div style="font-size:10px;color:rgba(15,26,46,.5);margin-top:5px;">Compressed in the browser and embedded only in the generated receipt. No Firebase Storage is used.</div>
+            </div>
+          </div>
+          <label class="proof-check"><input type="checkbox" id="rcpSellerPhotoConsent" /> Seller confirms consent for this facial image to appear on this transaction document.</label>
+          <label class="proof-check"><input type="checkbox" id="rcpBuyerAcknowledgement" /> Buyer confirms receipt/acceptance of the goods, asset or service described on this document and acknowledges the transaction details.</label>
+          <div class="field" style="margin-top:10px;"><label>Seller declaration</label><textarea id="rcpSellerDeclaration" rows="2" placeholder="I confirm that I am the seller/current owner and the information supplied above is accurate to the best of my knowledge."></textarea></div>
         </div>
         <button type="button" class="btn-primary" id="rcpGenerateBtn" style="max-width:200px;">Generate receipt</button>
         <div class="form-msg" id="rcpGenerateMsg"></div>
@@ -1861,6 +1961,26 @@
           <div class="pos-sign-area">
             <img id="rcpSignatureImg" class="pos-signature-img hidden" />
             <div class="pos-sign-line">Authorised Signature</div>
+          </div>
+          <div class="proof-document-box" id="rcpProofOutBox">
+            <div class="proof-mini-title">Transaction & ownership record</div>
+            <div class="proof-doc-grid">
+              <div>Type: <b id="rcpProofTypeOut">—</b></div>
+              <div>Seller: <b id="rcpSellerNameOut">—</b></div>
+              <div>Seller address: <b id="rcpSellerAddressOut">—</b></div>
+              <div>Buyer ID/ref: <b id="rcpBuyerIdOut">—</b></div>
+              <div>Seller phone: <b id="rcpSellerPhoneOut">—</b></div>
+              <div>Seller ID/ref: <b id="rcpSellerIdOut">—</b></div>
+              <div>Asset ID: <b id="rcpAssetIdOut">—</b></div>
+              <div>Witness/ref: <b id="rcpWitnessOut">—</b></div>
+              <div style="grid-column:1/-1">Ownership/source: <b id="rcpOwnershipOut">—</b></div>
+              <div style="grid-column:1/-1">Seller declaration: <b id="rcpDeclarationOut">—</b></div>
+              <div style="grid-column:1/-1">Buyer acknowledgement: <b id="rcpBuyerAckOut">—</b></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+              <img id="rcpSellerPhotoOut" class="proof-photo-preview hidden" alt="Seller face" />
+              <span style="font-size:9px;color:rgba(15,26,46,.48);">Seller facial image shown only where consent was provided.</span>
+            </div>
           </div>
           <div class="pos-thankyou">Thank you for your payment!</div>
           <div class="pos-subthanks">We appreciate your business</div>
@@ -2265,7 +2385,7 @@ function updateSignUpUI(){
     $("signUpSub").textContent = "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro.";
   } else {
     $("signUpTitle").textContent = "Create your business account";
-    $("signUpSub").textContent = "Free plan includes 20 invoices/receipts to start — no card required.";
+    $("signUpSub").textContent = "Free plan includes 5 invoices/receipts to start — no card required.";
   }
   const banner = $("suReferralBanner");
   if(signUpRole === "client" && pendingReferralRep){
@@ -2275,8 +2395,7 @@ function updateSignUpUI(){
     banner.classList.add("hidden");
   }
 }
-$("signUpNavBtn").addEventListener("click", ()=>{ const installBtn=$("installAppBtn"); const standalone=window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true; if(!standalone && installBtn && !installBtn.classList.contains("hidden")){ const n=$("installFirstNotice"); if(n)n.style.display="block"; return; } openSignUp("client"); });
-$("installFirstBtn")?.addEventListener("click",()=>{ const b=$("installAppBtn"); if(b && !b.classList.contains("hidden")) b.click(); });
+$("signUpNavBtn").addEventListener("click", ()=> openSignUp("client"));
 $("closeSignUpBtn").addEventListener("click", closeSignUp);
 $("signUpOverlay").addEventListener("click", (e)=>{ if(e.target.id === "signUpOverlay") closeSignUp(); });
 $("suRoleClientBtn").addEventListener("click", ()=>{ signUpRole = "client"; updateSignUpUI(); });
@@ -4603,9 +4722,75 @@ function initClientDashboard(clientRecordId, clientRecord){
   $("rcpShowSignature")?.addEventListener("change", updateReceiptPreview);
 }
 
+// ---------- Seller / buyer transaction-proof helpers ----------
+const PROOF_TYPE_LABELS = {goods:"Goods / Product",vehicle:"Vehicle / Car",land:"Land / Property",equipment:"Equipment / Machinery",service:"Service",other:"Other"};
+function proofValue(id){ const el=$(id); return el ? el.value.trim() : ""; }
+function proofTypeLabel(id){ return PROOF_TYPE_LABELS[($(id)?.value || "goods")] || "Other"; }
+function compressSellerPhoto(file, maxSize=480, quality=.78){
+  return new Promise((resolve,reject)=>{
+    if(!file){ resolve(""); return; }
+    if(!/^image\/(png|jpeg|jpg)$/.test(file.type)){ reject(new Error("Please select a JPG or PNG image.")); return; }
+    const reader=new FileReader();
+    reader.onerror=()=>reject(new Error("Could not read the image."));
+    reader.onload=()=>{
+      const img=new Image();
+      img.onerror=()=>reject(new Error("Could not process the image."));
+      img.onload=()=>{
+        const scale=Math.min(1,maxSize/Math.max(img.width,img.height));
+        const c=document.createElement("canvas");
+        c.width=Math.max(1,Math.round(img.width*scale)); c.height=Math.max(1,Math.round(img.height*scale));
+        const ctx=c.getContext("2d"); ctx.drawImage(img,0,0,c.width,c.height);
+        resolve(c.toDataURL("image/jpeg",quality));
+      };
+      img.src=reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function wireSellerPhoto(inputId, previewId, removeId, consentId, stateObj, msgId){
+  const input=$(inputId), preview=$(previewId), remove=$(removeId), btn=$(inputId.replace("Input","Btn"));
+  if(!input||!preview||!remove||!btn) return;
+  btn.onclick=()=>input.click();
+  input.onchange=async()=>{
+    try{
+      const data=await compressSellerPhoto(input.files?.[0]);
+      stateObj.data=data;
+      if(data){ preview.innerHTML=`<img src="${data}" alt="Seller face preview">`; remove.classList.remove("hidden"); }
+      setFormMsg($(msgId), data ? "Seller photo added to this document." : "", data ? "success" : "");
+    }catch(err){ stateObj.data=""; setFormMsg($(msgId), err.message || "Could not add photo.", "error"); }
+  };
+  remove.onclick=()=>{ stateObj.data=""; input.value=""; preview.textContent="Seller\nphoto"; remove.classList.add("hidden"); updateInvoicePreview(); updateReceiptPreview(); };
+}
+function setProofOutput(prefix, stateObj){
+  const type=proofTypeLabel(prefix+"ProofType");
+  const map={
+    ProofTypeOut:type,
+    SellerNameOut:proofValue(prefix+"SellerName")||"—",
+    SellerAddressOut:proofValue(prefix+"SellerAddress")||"—",
+    BuyerIdOut:proofValue(prefix+"BuyerId")||"—",
+    SellerPhoneOut:proofValue(prefix+"SellerPhone")||"—",
+    SellerIdOut:proofValue(prefix+"SellerId")||"—",
+    AssetIdOut:proofValue(prefix+"AssetId")||"—",
+    WitnessOut:proofValue(prefix+"Witness")||"—",
+    OwnershipOut:proofValue(prefix+"OwnershipDetails")||"—",
+    DeclarationOut:proofValue(prefix+"SellerDeclaration")||"—",
+    BuyerAckOut:$(prefix+"BuyerAcknowledgement")?.checked ? "Acknowledged by buyer" : "Not recorded"
+  };
+  Object.entries(map).forEach(([suffix,val])=>{ const el=$(prefix+suffix); if(el) el.textContent=val; });
+  const consent=$(prefix+"SellerPhotoConsent")?.checked;
+  const photo=$(prefix+"SellerPhotoOut");
+  if(photo){
+    if(consent && stateObj.data){ photo.src=stateObj.data; photo.classList.remove("hidden"); }
+    else { photo.classList.add("hidden"); photo.removeAttribute("src"); }
+  }
+  const box=$(prefix+"ProofOutBox");
+  if(box){ const meaningful=[proofValue(prefix+"SellerName"),proofValue(prefix+"SellerId"),proofValue(prefix+"BuyerId"),proofValue(prefix+"AssetId"),proofValue(prefix+"OwnershipDetails"),stateObj.data,$(prefix+"BuyerAcknowledgement")?.checked].some(Boolean); box.classList.toggle("hidden",!meaningful); }
+}
+
 // ---------- Invoice ----------
 let invNo = "";
 let invSessionConsumed = false;
+let invSellerProofState = {data:""};
 
 function resetInvoiceSession(){
   invNo = "INV-" + (Math.floor(Math.random()*900000)+100000);
@@ -4618,6 +4803,14 @@ function resetInvoiceSession(){
   $("invItemRows").innerHTML = "";
   addInvoiceRow();
   invSessionConsumed = false;
+  invSellerProofState.data = "";
+  ["invSellerName","invSellerPhone","invSellerAddress","invSellerId","invBuyerId","invAssetId","invOwnershipDetails","invWitness","invSellerDeclaration"].forEach(id=>{ if($(id)) $(id).value=""; });
+  if($("invProofType")) $("invProofType").value="goods";
+  if($("invSellerPhotoConsent")) $("invSellerPhotoConsent").checked=false;
+  if($("invBuyerAcknowledgement")) $("invBuyerAcknowledgement").checked=false;
+  if($("invSellerPhotoInput")) $("invSellerPhotoInput").value="";
+  if($("invSellerPhotoPreview")) $("invSellerPhotoPreview").innerHTML="Seller<br>photo";
+  $("invSellerPhotoRemove")?.classList.add("hidden");
   $("invDownloadPdfBtn").classList.add("hidden");
   $("invPrintBtn").classList.add("hidden");
   $("invDownloadPngBtn").classList.add("hidden");
@@ -4643,6 +4836,12 @@ function addInvoiceRow(){
 function initInvoiceGenerator(){
   $("invAddItemBtn").onclick = addInvoiceRow;
   $("invNewBtn").onclick = resetInvoiceSession;
+
+  ["invProofType","invSellerName","invSellerPhone","invSellerAddress","invSellerId","invBuyerId","invAssetId","invOwnershipDetails","invWitness","invSellerDeclaration","invSellerPhotoConsent","invBuyerAcknowledgement"].forEach(id=>{
+    $(id)?.addEventListener("input", updateInvoicePreview);
+    $(id)?.addEventListener("change", updateInvoicePreview);
+  });
+  wireSellerPhoto("invSellerPhotoInput","invSellerPhotoPreview","invSellerPhotoRemove","invSellerPhotoConsent",invSellerProofState,"invGenerateMsg");
 
   ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber"].forEach(id=>{
     $(id).addEventListener("input", updateInvoicePreview);
@@ -4743,6 +4942,8 @@ function updateInvoicePreview(){
   $("invGrandOut").textContent = grand.toLocaleString();
   $("invWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(grand) + " Naira Only</b>";
 
+  setProofOutput("inv", invSellerProofState);
+
   const sig = currentUserDoc?.signature;
   const wantSig = $("invShowSignature") ? $("invShowSignature").checked : true;
   const invSigImg = $("invSignatureImg");
@@ -4756,6 +4957,7 @@ function updateInvoicePreview(){
 
 // ---------- Receipt ----------
 let rcpSessionConsumed = false;
+let rcpSellerProofState = {data:""};
 
 function resetReceiptSession(){
   $("rcpClientName").value = "";
@@ -4765,6 +4967,14 @@ function resetReceiptSession(){
   $("rcpPaid").value = "";
   $("rcpNoOut").textContent = "";
   rcpSessionConsumed = false;
+  rcpSellerProofState.data = "";
+  ["rcpSellerName","rcpSellerPhone","rcpSellerAddress","rcpSellerId","rcpBuyerId","rcpAssetId","rcpOwnershipDetails","rcpWitness","rcpSellerDeclaration"].forEach(id=>{ if($(id)) $(id).value=""; });
+  if($("rcpProofType")) $("rcpProofType").value="goods";
+  if($("rcpSellerPhotoConsent")) $("rcpSellerPhotoConsent").checked=false;
+  if($("rcpBuyerAcknowledgement")) $("rcpBuyerAcknowledgement").checked=false;
+  if($("rcpSellerPhotoInput")) $("rcpSellerPhotoInput").value="";
+  if($("rcpSellerPhotoPreview")) $("rcpSellerPhotoPreview").innerHTML="Seller<br>photo";
+  $("rcpSellerPhotoRemove")?.classList.add("hidden");
   $("rcpDownloadPdfBtn").classList.add("hidden");
   $("rcpPrintBtn").classList.add("hidden");
   $("rcpDownloadPngBtn").classList.add("hidden");
@@ -4775,6 +4985,11 @@ function resetReceiptSession(){
 
 function initReceiptGenerator(){
   $("rcpNewBtn").onclick = resetReceiptSession;
+  ["rcpClientName","rcpClientAddress","rcpPackage","rcpTotal","rcpPaid","rcpVat","rcpProofType","rcpSellerName","rcpSellerPhone","rcpSellerAddress","rcpSellerId","rcpBuyerId","rcpAssetId","rcpOwnershipDetails","rcpWitness","rcpSellerDeclaration","rcpSellerPhotoConsent","rcpBuyerAcknowledgement"].forEach(id=>{
+    $(id)?.addEventListener("input", updateReceiptPreview);
+    $(id)?.addEventListener("change", updateReceiptPreview);
+  });
+  wireSellerPhoto("rcpSellerPhotoInput","rcpSellerPhotoPreview","rcpSellerPhotoRemove","rcpSellerPhotoConsent",rcpSellerProofState,"rcpGenerateMsg");
 
   $("rcpGenerateBtn").onclick = async ()=>{
     if(rcpSessionConsumed){
@@ -4841,6 +5056,8 @@ function updateReceiptPreview(){
   $("rcpPaidOut").textContent = paid.toLocaleString();
   $("rcpBalanceOut").textContent = balance.toLocaleString();
   $("rcpWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(paid) + " Naira Only</b>";
+
+  setProofOutput("rcp", rcpSellerProofState);
 
   const rcpSig = currentUserDoc?.signature;
   const rcpWantSig = $("rcpShowSignature") ? $("rcpShowSignature").checked : true;
