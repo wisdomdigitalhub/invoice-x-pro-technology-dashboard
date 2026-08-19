@@ -753,19 +753,6 @@
     .inv-sign-box{ text-align:left; align-items:flex-start; }
     .doc-stamp-circle{ right:16px; top:auto; bottom:16px; }
   }
-
-/* ===== Transaction-ready seller / buyer / agent document upgrade ===== */
-.tx-section{margin-top:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.62)}
-.tx-section-title{font-weight:800;font-size:14px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.tx-badge{font-size:10px;padding:3px 7px;border-radius:999px;background:rgba(200,155,60,.14);color:#7a5a18;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
-.tx-property-fields{display:none}.tx-property-fields.show{display:block}
-.tx-vehicle-fields{display:none}.tx-vehicle-fields.show{display:block}
-.tx-sign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-.tx-sign-box{border:1px solid #d9dde5;border-radius:12px;padding:12px;min-height:92px;background:#fff}
-.tx-sign-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#667085;margin-bottom:25px}
-.tx-sign-line{border-top:1px solid #222;padding-top:5px;font-size:10px;color:#555}
-.tx-extra-witness{display:none}.tx-extra-witness.show{display:block}
-@media(max-width:820px){.tx-sign-grid{grid-template-columns:1fr}.tx-section .grid-2{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1717,75 +1704,39 @@
     <div class="subpanel active" data-panel="clientInvoiceTab" id="clientInvoicePanel">
       <div class="panel">
         <div class="panel-head">
-          <h3>Transaction details</h3>
+          <h3>Bill to</h3>
           <button type="button" class="btn-sm reject" id="invNewBtn">New invoice</button>
         </div>
         <div class="grid-2">
-          <div class="field"><label>Transaction type</label><select id="invTransactionType">
-            <option value="goods-service">Goods / Services</option><option value="vehicle">Vehicle / Car</option><option value="land">Land / Property</option><option value="building">Building / Property</option><option value="other">Other transaction</option>
-          </select></div>
-          <div class="field"><label>Seller role</label><select id="invSellerRole"><option value="seller">I am the seller / provider</option><option value="agent">I am acting as an agent</option><option value="seller-agent">Seller + agent</option></select></div>
-        </div>
-        <div class="tx-section" id="invSellerDetailsSection">
-          <div class="tx-section-title" id="invSellerDetailsTitle">🏪 Seller / Provider <span class="tx-badge">actual seller</span></div>
-          <div class="grid-2">
-            <div class="field"><label id="invSellerNameLabel">Seller name / business name</label><input type="text" id="invSellerName" /></div>
-            <div class="field"><label>Seller address</label><input type="text" id="invSellerAddress" /></div>
-            <div class="field"><label>Seller phone</label><input type="text" id="invSellerPhone" /></div>
-            <div class="field"><label>Seller email</label><input type="email" id="invSellerEmail" /></div>
-          </div>
-        </div>
-        <div class="tx-section">
-          <div class="tx-section-title">👤 Client / Buyer <span class="tx-badge">customer</span></div>
-          <div class="grid-2">
-            <div class="field"><label>Client / buyer name</label><input type="text" id="invClientName" /></div>
-            <div class="field"><label>Client / buyer address</label><input type="text" id="invClientAddress" /></div>
-            <div class="field"><label>Client phone</label><input type="text" id="invClientPhone" /></div>
-            <div class="field"><label>Client email</label><input type="email" id="invClientEmail" /></div>
-          </div>
-        </div>
-        <div class="tx-section">
-          <div class="tx-section-title">🤝 Agent / Representative <span class="tx-badge">witness</span></div>
-          <div class="grid-2">
-            <div class="field"><label>Agent name</label><input type="text" id="invAgentName" /></div>
-            <div class="field"><label>Agent phone / ID</label><input type="text" id="invAgentContact" /></div>
-          </div>
-        </div>
-        <div class="tx-section tx-vehicle-fields" id="invVehicleFields">
-          <div class="tx-section-title">🚗 Vehicle details</div>
-          <div class="grid-2">
-            <div class="field"><label>Make</label><input type="text" id="invVehicleMake" /></div>
-            <div class="field"><label>Model</label><input type="text" id="invVehicleModel" /></div>
-            <div class="field"><label>Year</label><input type="text" id="invVehicleYear" /></div>
-            <div class="field"><label>VIN / Chassis number</label><input type="text" id="invVehicleVin" /></div>
-            <div class="field"><label>Plate / Registration number</label><input type="text" id="invVehiclePlate" /></div>
-            <div class="field"><label>Mileage / Odometer</label><input type="text" id="invVehicleMileage" /></div>
-          </div>
-        </div>
-        <div class="tx-section tx-property-fields" id="invPropertyFields">
-          <div class="tx-section-title">🏠 Land / Building details</div>
-          <div class="grid-2">
-            <div class="field"><label>Property location</label><input type="text" id="invPropertyLocation" /></div>
-            <div class="field"><label>Plot / House / Property description</label><input type="text" id="invPropertyDescription" /></div>
-            <div class="field"><label>Title / Document reference</label><input type="text" id="invPropertyTitle" /></div>
-            <div class="field"><label>Survey / Plot reference</label><input type="text" id="invPropertyRef" /></div>
-          </div>
-        </div>
-        <div class="grid-2" style="margin-top:14px;">
-          <div class="field"><label>Currency</label><select id="invCurrency" aria-label="Invoice currency"></select></div>
-          <div class="field"><label>Payment terms</label><input type="text" id="invPaymentTerms" value="Immediate" /></div>
+          <div class="field"><label>Customer name</label><input type="text" id="invClientName" /></div>
+          <div class="field"><label>Customer address</label><input type="text" id="invClientAddress" /></div>
+          <div class="field"><label>Currency</label><select id="invCurrency" aria-label="Invoice currency" title="Choose any ISO 4217 currency supported by your browser"></select></div>
           <div class="field"><label>Discount (%)</label><input type="number" id="invDiscount" value="0" min="0" max="100" /></div>
-          <div class="field"><label>VAT / Tax (%)</label><input type="number" id="invVat" value="7.5" min="0" max="100" /></div>
+          <div class="field"><label>VAT (%)</label><input type="number" id="invVat" value="7.5" min="0" max="100" /></div>
+        </div>
+        <div class="panel-head" style="margin-top:6px;">
+          <h3 style="font-size:15px;">Business details (optional, shown on the invoice)</h3>
+        </div>
+        <div class="logo-uploader">
+          <div class="logo-uploader-preview" id="logoPreviewBox">?</div>
+          <div>
+            <div class="logo-uploader-actions">
+              <button type="button" id="logoUploadBtn">Upload logo</button>
+              <button type="button" class="remove hidden" id="logoRemoveBtn">Remove</button>
+            </div>
+            <div class="logo-uploader-hint">JPG or PNG. If you don't add one, we'll use your business initials instead — used on both your invoices and receipts.</div>
+            <input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg" class="hidden" />
+          </div>
+        </div>
+        <div class="form-msg" id="logoMsg"></div>
+        <div class="grid-2">
+          <div class="field"><label>Business phone</label><input type="text" id="invBizPhone" /></div>
+          <div class="field"><label>Business email</label><input type="email" id="invBizEmail" /></div>
+          <div class="field"><label>Payment terms</label><input type="text" id="invPaymentTerms" value="Immediate" /></div>
           <div class="field"><label>Bank name</label><input type="text" id="invBankName" /></div>
           <div class="field"><label>Account name</label><input type="text" id="invAccountName" /></div>
           <div class="field"><label>Account number</label><input type="text" id="invAccountNumber" /></div>
         </div>
-        <div class="panel-head" style="margin-top:6px;"><h3 style="font-size:15px;">Seller branding (optional)</h3></div>
-        <div class="logo-uploader">
-          <div class="logo-uploader-preview" id="logoPreviewBox">?</div>
-          <div><div class="logo-uploader-actions"><button type="button" id="logoUploadBtn">Upload logo</button><button type="button" class="remove hidden" id="logoRemoveBtn">Remove</button></div><div class="logo-uploader-hint">JPG or PNG. Used as the seller/provider mark.</div><input type="file" id="logoFileInput" accept="image/png,image/jpeg,image/jpg" class="hidden" /></div>
-        </div>
-        <div class="form-msg" id="logoMsg"></div>
         <div class="panel-head" style="margin-top:10px;"><h3 style="font-size:15px;">Items</h3>
           <button type="button" class="btn-sm approve" id="invAddItemBtn">+ Add item</button>
         </div>
@@ -1798,8 +1749,8 @@
             <div class="inv-logo-block">
               <div class="inv-logo-mark" id="invLogoMark">IX</div>
               <div>
-                <div class="inv-biz-name" id="invBizNameOut">Seller / Provider</div>
-                <div class="inv-biz-sub" id="invBizAddressOut">Seller address</div>
+                <div class="inv-biz-name" id="invBizNameOut">Business</div>
+                <div class="inv-biz-sub" id="invBizAddressOut">Address</div>
                 <div class="inv-biz-contact" id="invBizContactOut"></div>
               </div>
             </div>
@@ -1812,23 +1763,15 @@
 
           <div class="inv-info-grid">
             <div class="inv-box">
-              <div class="inv-box-label">Client / Buyer</div>
+              <div class="inv-box-label">Bill To</div>
               <div class="inv-box-name" id="invClientNameOut">Customer name</div>
               <div class="inv-box-line" id="invClientAddressOut">Customer address</div>
-              <div class="inv-box-line" id="invClientContactOut"></div>
             </div>
             <div class="inv-box inv-meta-box">
               <div class="inv-meta-row"><span>Invoice No.</span><span id="invMetaNoOut"></span></div>
               <div class="inv-meta-row"><span>Date</span><span id="invMetaDateOut"></span></div>
               <div class="inv-meta-row"><span>Payment Terms</span><span id="invMetaTermsOut">Immediate</span></div>
             </div>
-          </div>
-
-          <div class="tx-section" style="margin-top:14px; background:#fff;">
-            <div class="inv-box-label">Transaction & representation</div>
-            <div class="inv-meta-row"><span>Type</span><span id="invTxTypeOut">Goods / Services</span></div>
-            <div class="inv-meta-row"><span>Agent / Representative</span><span id="invAgentOut">—</span></div>
-            <div id="invSpecialDetailsOut" style="font-size:10px;margin-top:6px;color:#555;"></div>
           </div>
 
           <table class="inv-table">
@@ -1854,16 +1797,11 @@
             </div>
             <div class="inv-sign-box">
               <img id="invSignatureImg" class="inv-signature-img hidden" />
-              <div class="inv-sign-line" id="invPrimarySignatureLabel">Seller / Provider Signature</div>
-              <div class="tx-sign-grid tx-transaction-signatures" id="invOtherPartySignatures" style="grid-template-columns:repeat(2,1fr);margin-top:12px;display:none;">
-                <div class="tx-sign-box"><div class="tx-sign-title" id="invBuyerSignatureTitle">Client / Buyer</div><div class="tx-sign-line">Signature & Date</div></div>
-                <div class="tx-sign-box"><div class="tx-sign-title" id="invWitness1SignatureTitle">Agent / Witness</div><div class="tx-sign-line">Signature & Date</div></div>
-              </div>
-              <div class="tx-sign-box tx-extra-witness" id="invExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title" id="invWitness2SignatureTitle">Witness 2 (Optional)</div><div class="tx-sign-line">Signature & Date</div></div><div class="signatory-output" id="invAuthorizedSignatoriesOut"></div><div class="tx-required-signature-note hidden" id="invRequiredSignatureNote">Non-goods/services: Owner + Buyer + Witness 1 signatures are compulsory. Witness 2 is optional.</div>
+              <div class="inv-sign-line">Authorised Signatory</div>
             </div>
           </div>
 
-          <div class="inv-footer-note"></div>
+          <div class="inv-footer-note">Goods once sold will not be taken back · This is a computer-generated invoice.</div>
         </div>
       </div>
       <label class="sig-toggle-row hidden" id="invSigToggleRow">
@@ -1892,36 +1830,21 @@
     <!-- Receipt -->
     <div class="subpanel" data-panel="clientReceiptTab" id="clientReceiptPanel">
       <div class="panel">
+        <div class="owner-auth-note" style="margin-bottom:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--soft);font-size:12.5px;">
+          🔐 <b>Business owner protected:</b> receipts are generated only from the signed-in business account. The owner name/photo is for identification and cannot be used to impersonate the account.
+        </div>
         <div class="panel-head">
-          <h3>Receipt transaction details</h3>
+          <h3>Receipt details</h3>
           <button type="button" class="btn-sm reject" id="rcpNewBtn">New receipt</button>
         </div>
         <div class="grid-2">
-          <div class="field"><label>Transaction type</label><select id="rcpTransactionType"><option value="goods-service">Goods / Services</option><option value="vehicle">Vehicle / Car</option><option value="land">Land / Property</option><option value="building">Building / Property</option><option value="other">Other transaction</option></select></div>
-          <div class="field"><label>Seller role</label><select id="rcpSellerRole"><option value="seller">I am the seller / provider</option><option value="agent">I am acting as an agent</option><option value="seller-agent">Seller + agent</option></select></div>
-          <div class="field"><label>Payment method</label><select id="rcpPaymentMethod"><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>POS</option><option>Mobile Money</option><option>Other</option></select></div>
-        </div>
-        <div class="tx-section" id="rcpSellerDetailsSection"><div class="tx-section-title" id="rcpSellerDetailsTitle">🏪 Seller / Provider <span class="tx-badge">actual seller</span></div><div class="grid-2">
-          <div class="field"><label id="rcpSellerNameLabel">Seller name / business name</label><input type="text" id="rcpSellerName" /></div><div class="field"><label>Seller address</label><input type="text" id="rcpSellerAddress" /></div>
-          <div class="field"><label>Seller phone</label><input type="text" id="rcpSellerPhone" /></div><div class="field"><label>Seller email</label><input type="email" id="rcpSellerEmail" /></div>
-        </div></div>
-        <div class="tx-section"><div class="tx-section-title">👤 Client / Buyer <span class="tx-badge">payment received from</span></div><div class="grid-2">
-          <div class="field"><label>Client / buyer name</label><input type="text" id="rcpClientName" /></div><div class="field"><label>Client / buyer address</label><input type="text" id="rcpClientAddress" /></div>
-          <div class="field"><label>Client phone</label><input type="text" id="rcpClientPhone" /></div><div class="field"><label>Client email</label><input type="email" id="rcpClientEmail" /></div>
-        </div></div>
-        <div class="tx-section"><div class="tx-section-title">🤝 Agent / Representative <span class="tx-badge">witness</span></div><div class="grid-2">
-          <div class="field"><label>Agent name</label><input type="text" id="rcpAgentName" /></div><div class="field"><label>Agent phone / ID</label><input type="text" id="rcpAgentContact" /></div>
-        </div></div>
-        <div class="tx-section tx-vehicle-fields" id="rcpVehicleFields"><div class="tx-section-title">🚗 Vehicle details</div><div class="grid-2">
-          <div class="field"><label>Make</label><input type="text" id="rcpVehicleMake" /></div><div class="field"><label>Model</label><input type="text" id="rcpVehicleModel" /></div><div class="field"><label>Year</label><input type="text" id="rcpVehicleYear" /></div><div class="field"><label>VIN / Chassis number</label><input type="text" id="rcpVehicleVin" /></div><div class="field"><label>Plate / Registration number</label><input type="text" id="rcpVehiclePlate" /></div><div class="field"><label>Mileage / Odometer</label><input type="text" id="rcpVehicleMileage" /></div>
-        </div></div>
-        <div class="tx-section tx-property-fields" id="rcpPropertyFields"><div class="tx-section-title">🏠 Land / Building details</div><div class="grid-2">
-          <div class="field"><label>Property location</label><input type="text" id="rcpPropertyLocation" /></div><div class="field"><label>Plot / House / Property description</label><input type="text" id="rcpPropertyDescription" /></div><div class="field"><label>Title / Document reference</label><input type="text" id="rcpPropertyTitle" /></div><div class="field"><label>Survey / Plot reference</label><input type="text" id="rcpPropertyRef" /></div>
-        </div></div>
-        <div class="grid-2" style="margin-top:14px;">
-          <div class="field"><label>Package / service / item</label><input type="text" id="rcpPackage" /></div><div class="field"><label>Currency</label><select id="rcpCurrency" aria-label="Receipt currency"></select></div>
-          <div class="field"><label>Total amount</label><input type="number" id="rcpTotal" min="0" /></div><div class="field"><label>Amount paid</label><input type="number" id="rcpPaid" min="0" /></div>
-          <div class="field"><label>VAT / Tax (%)</label><input type="number" id="rcpVat" value="7.5" min="0" max="100" /></div>
+          <div class="field"><label>Received from (customer)</label><input type="text" id="rcpClientName" /></div>
+          <div class="field"><label>Customer address</label><input type="text" id="rcpClientAddress" /></div>
+          <div class="field"><label>Product / goods / service sold</label><input type="text" id="rcpPackage" placeholder="e.g. Laptop, Clothing, Catering, Service" /></div>
+          <div class="field"><label>Currency</label><select id="rcpCurrency" aria-label="Receipt currency" title="Choose any ISO 4217 currency supported by your browser"></select></div>
+          <div class="field"><label>Total amount</label><input type="number" id="rcpTotal" min="0" /></div>
+          <div class="field"><label>Amount paid</label><input type="number" id="rcpPaid" min="0" /></div>
+          <div class="field"><label>VAT (%)</label><input type="number" id="rcpVat" value="7.5" min="0" max="100" /></div>
         </div>
         <button type="button" class="btn-primary" id="rcpGenerateBtn" style="max-width:200px;">Generate receipt</button>
         <div class="form-msg" id="rcpGenerateMsg"></div>
@@ -1935,20 +1858,20 @@
           </div>
           <div class="pos-header">
             <div class="pos-logo-mark" id="posLogoMark">IX</div>
-            <div class="pos-biz-name" id="rcpBizNameOut">Seller / Provider</div>
+            <div class="pos-biz-name" id="rcpBizNameOut">Business</div>
             <div class="pos-biz-tag">RECEIPT</div>
-            <div class="pos-biz-address" id="rcpBizAddressOut"></div><div class="pos-biz-address" id="rcpSellerContactOut"></div>
+            <div class="pos-biz-address" id="rcpBizAddressOut"></div>
           </div>
           <div class="pos-divider"></div>
           <div class="pos-meta-row"><span>Receipt No.:</span><span id="rcpNoOut"></span></div>
           <div class="pos-meta-row"><span>Date:</span><span id="rcpDateOut"></span></div>
-          <div class="pos-meta-row"><span>Time:</span><span id="rcpTimeOut"></span></div><div class="pos-meta-row"><span>Payment Method:</span><span id="rcpPaymentMethodOut">Cash</span></div>
+          <div class="pos-meta-row"><span>Time:</span><span id="rcpTimeOut"></span></div>
           <div class="pos-divider dashed"></div>
           <div class="pos-bill-to">
-            <div class="pos-label">Client / Buyer — Payment Received From</div>
+            <div class="pos-label">Received From</div>
             <div class="pos-client-name" id="rcpClientNameOut"></div>
             <div id="rcpClientAddressOut"></div>
-            <div id="rcpPackageOut" style="margin-top:4px;"></div><div id="rcpAgentOut" style="margin-top:4px;"></div><div id="rcpSpecialDetailsOut" style="margin-top:4px;"></div>
+            <div id="rcpPackageOut" style="margin-top:4px;"></div>
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-summary">
@@ -1962,15 +1885,10 @@
           <div class="pos-words" id="rcpWordsOut"></div>
           <div class="pos-sign-area">
             <img id="rcpSignatureImg" class="pos-signature-img hidden" />
-            <div class="pos-sign-line" id="rcpPrimarySignatureLabel">Seller / Provider Signature</div>
-            <div class="tx-sign-grid tx-transaction-signatures" id="rcpOtherPartySignatures" style="grid-template-columns:repeat(2,1fr);margin-top:12px;display:none;">
-              <div class="tx-sign-box"><div class="tx-sign-title" id="rcpBuyerSignatureTitle">Client / Buyer</div><div class="tx-sign-line">Signature & Date</div></div>
-              <div class="tx-sign-box"><div class="tx-sign-title" id="rcpWitness1SignatureTitle">Agent / Witness</div><div class="tx-sign-line">Signature & Date</div></div>
-            </div>
-            <div class="tx-sign-box tx-extra-witness" id="rcpExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title" id="rcpWitness2SignatureTitle">Witness 2 (Optional)</div><div class="tx-sign-line">Signature & Date</div></div><div class="tx-required-signature-note hidden" id="rcpRequiredSignatureNote">Non-goods/services: Owner + Buyer + Witness 1 signatures are compulsory. Witness 2 is optional.</div>
+            <div class="pos-sign-line">Authorised Signature</div>
           </div>
           <div class="pos-thankyou">Thank you for your payment!</div>
-          <div class="pos-subthanks">We appreciate your business</div><div style="font-size:8px;color:#777;margin-top:8px;text-align:center;"></div>
+          <div class="pos-subthanks">We appreciate your business</div>
           <div class="pos-barcode" id="rcpBarcode"></div>
           <div class="pos-barcode-text" id="rcpBarcodeText"></div>
         </div>
@@ -2049,20 +1967,6 @@
             <div class="sig-typed-preview-wrap"><div class="sig-typed-preview" id="sigTypedPreview">Your signature</div></div>
             <button type="button" class="btn-primary" id="sigSaveTypedBtn" style="max-width:180px;">Save Signature</button>
           </div>
-        </div>
-        <div class="panel" style="margin-top:16px;">
-          <div class="panel-head"><h3>Owner & Authorized Signatories</h3><span class="hint">Use real photos and real signatures</span></div>
-          <p class="sub">Add the actual business owner photo and signature, then add other people who are authorized to sign your invoices or receipts. These are saved to your business profile and can appear on generated documents.</p>
-          <div class="person-card">
-            <div class="person-head"><div class="person-avatar" id="ownerPhotoPreview">👤</div><div><b>Business Owner</b><div class="hint">Owner photo</div></div></div>
-            <input type="file" id="ownerPhotoInput" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
-            <div class="person-actions"><button type="button" class="btn-sm confirm" id="ownerPhotoBtn">Upload Owner Picture</button><button type="button" class="btn-sm reject" id="ownerPhotoRemoveBtn">Remove</button></div>
-            <div class="field" style="margin-top:12px;"><label>Owner full name</label><input id="ownerFullNameInput" type="text" placeholder="Full legal name"></div>
-            <div class="field"><label>Owner position</label><input id="ownerPositionInput" type="text" placeholder="Owner / Director / Proprietor"></div>
-          </div>
-          <div class="people-grid" id="signatoriesList"></div>
-          <button type="button" class="btn-secondary" id="addSignatoryBtn" style="margin-top:14px;">＋ Add another person who needs to sign</button>
-          <div class="form-msg" id="peopleMsg"></div>
         </div>
         <div class="form-msg" id="sigMsg"></div>
       </div>
@@ -2568,6 +2472,10 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         fullName: $("suBusinessName").value.trim(),
         businessName: $("suBusinessName").value.trim(),
         address: $("suAddress").value.trim(),
+        // The Firebase Auth UID is the authoritative owner identity.
+        // Names/photos are display information and are never used as authentication.
+        ownerUid: uid,
+        ownerName: $("suBusinessName").value.trim(),
         documentAccess: "both",
         credits: STARTING_CREDITS,
         creditsExpireAt: new Date(Date.now() + CREDIT_EXPIRY_DAYS*24*60*60*1000),
@@ -4813,6 +4721,9 @@ function initClientDashboard(clientRecordId, clientRecord){
   // to their own profile doc for business name/address/document access.
   const source = clientRecord || currentUserDoc || {};
   const businessName = source.businessName || source.clientName || source.fullName || "Your Business";
+  // Display-only owner identity. Authorization is still based on Firebase Auth UID.
+  window.__currentOwnerName = source.ownerName || source.fullName || source.businessName || "";
+  window.__currentOwnerImage = source.ownerImage || "";
   const address = source.address || "";
   window.__currentBusinessName = businessName; // used by renderBusinessLogo() for the initials fallback
   $("clientBizNameHead").textContent = businessName;
@@ -4821,6 +4732,7 @@ function initClientDashboard(clientRecordId, clientRecord){
   $("invBizAddressOut").textContent = address;
   $("rcpBizNameOut").textContent = businessName;
   $("rcpBizAddressOut").textContent = address;
+  if($("rcpOwnerOut")) $("rcpOwnerOut").textContent = window.__currentOwnerName ? `Owner: ${window.__currentOwnerName}` : "";
   renderBusinessLogo();
   loadPremiumPricing();
 
@@ -4870,9 +4782,6 @@ function resetInvoiceSession(){
   $("invDateOut").textContent = new Date().toLocaleDateString('en-NG', {year:'numeric', month:'short', day:'numeric'});
   $("invClientName").value = "";
   $("invClientAddress").value = "";
-  ["invClientPhone","invClientEmail","invAgentName","invAgentContact"].forEach(id=>{ if($(id)) $(id).value=""; });
-  $("invTransactionType").value="goods-service"; syncTransactionFields("inv");
-  fillSellerDefaults("inv");
   if($("invCurrency")) $("invCurrency").value = DEFAULT_CURRENCY;
   $("invDiscount").value = 0;
   $("invVat").value = 7.5;
@@ -4901,65 +4810,23 @@ function addInvoiceRow(){
   $("invItemRows").appendChild(row);
 }
 
-
-function txTypeLabel(v){return ({"goods-service":"Goods / Services",vehicle:"Vehicle / Car",land:"Land / Property",building:"Building / Property",other:"Other transaction"}[v]||"Other transaction");}
-function syncTransactionFields(prefix){
-  const type=$(prefix+"TransactionType")?.value||"goods-service";
-  const nonGoods=type!=="goods-service";
-  $(prefix+"VehicleFields")?.classList.toggle("show", type==="vehicle");
-  $(prefix+"PropertyFields")?.classList.toggle("show", type==="land"||type==="building");
-  const seller=$(prefix+"SellerDetailsSection"); if(seller) seller.classList.toggle("hidden",nonGoods);
-  const title=$(prefix+"SellerDetailsTitle"); if(title) title.innerHTML=nonGoods?"👤 Owner / Seller":"🏪 Seller / Provider <span class=\"tx-badge\">actual seller</span>";
-  const label=$(prefix+"SellerNameLabel"); if(label) label.textContent=nonGoods?"Owner name":"Seller name / business name";
-  const primary=$(prefix+"PrimarySignatureLabel"); if(primary) primary.textContent=nonGoods?"Owner Signature (Required)":"Seller / Provider Signature";
-  const other=$(prefix+"OtherPartySignatures"); if(other) other.style.display=nonGoods?"grid":"none";
-  const buyer=$(prefix+"BuyerSignatureTitle"); if(buyer) buyer.textContent=nonGoods?"Buyer":"Client / Buyer";
-  const w1=$(prefix+"Witness1SignatureTitle"); if(w1) w1.textContent=nonGoods?"Witness 1 (Required)":"Agent / Witness";
-  const w2=$(prefix+"Witness2SignatureTitle"); if(w2) w2.textContent=nonGoods?"Witness 2 (Optional)":"Additional Property Witness";
-  const extra=$(prefix+"ExtraWitnessBox"); if(extra){extra.style.display=nonGoods?"block":"none";extra.classList.toggle("show",nonGoods);}
-  const note=$(prefix+"RequiredSignatureNote"); if(note) note.classList.toggle("hidden",!nonGoods);
-}
-function syncTransactionSignatureAreas(prefix){
-  const type=$(prefix+"TransactionType")?.value||"goods-service";
-  const isGoodsServices=type==="goods-service";
-  const other=$(prefix+"OtherPartySignatures");
-  const extra=$(prefix+"ExtraWitnessBox");
-  const note=$(prefix+"RequiredSignatureNote");
-  if(other) other.style.display=isGoodsServices?"none":"grid";
-  if(extra) extra.style.display=isGoodsServices?"none":"block";
-  if(note) note.classList.toggle("hidden",isGoodsServices);
-  if(extra) extra.style.display=(type==="land"||type==="building")?"block":"none";
-}
-function fillSellerDefaults(prefix){
-  const d=currentUserDoc||{};
-  const name=d.businessName||d.fullName||"";
-  const addr=d.address||"";
-  if($(prefix+"SellerName") && !$(prefix+"SellerName").value) $(prefix+"SellerName").value=name;
-  if($(prefix+"SellerAddress") && !$(prefix+"SellerAddress").value) $(prefix+"SellerAddress").value=addr;
-  if($(prefix+"SellerEmail") && !$(prefix+"SellerEmail").value) $(prefix+"SellerEmail").value=d.email||"";
-  if($(prefix+"SellerPhone") && !$(prefix+"SellerPhone").value) $(prefix+"SellerPhone").value=d.phone||"";
-}
-function specialDetails(prefix){
-  const type=$(prefix+"TransactionType")?.value||"goods-service";
-  if(type==="vehicle") return [$(prefix+"VehicleMake")?.value,$(prefix+"VehicleModel")?.value,$(prefix+"VehicleYear")?.value,$(prefix+"VehicleVin")?.value,$(prefix+"VehiclePlate")?.value,$(prefix+"VehicleMileage")?.value].filter(Boolean).join(" · ");
-  if(type==="land"||type==="building") return [$(prefix+"PropertyLocation")?.value,$(prefix+"PropertyDescription")?.value,$(prefix+"PropertyTitle")?.value,$(prefix+"PropertyRef")?.value].filter(Boolean).join(" · ");
-  return "";
-}
 function initInvoiceGenerator(){
   $("invAddItemBtn").onclick = addInvoiceRow;
   $("invNewBtn").onclick = resetInvoiceSession;
   populateCurrencySelect("invCurrency", DEFAULT_CURRENCY);
   $("invCurrency")?.addEventListener("change", updateInvoicePreview);
-  $("invTransactionType")?.addEventListener("change", ()=>{ syncTransactionFields("inv"); syncTransactionSignatureAreas("inv"); updateInvoicePreview(); });
-  $("invSellerRole")?.addEventListener("change", updateInvoicePreview);
 
-  ["invClientName","invClientAddress","invClientPhone","invClientEmail","invSellerName","invSellerAddress","invSellerPhone","invSellerEmail","invAgentName","invAgentContact","invDiscount","invVat","invPaymentTerms","invBankName","invAccountName","invAccountNumber","invVehicleMake","invVehicleModel","invVehicleYear","invVehicleVin","invVehiclePlate","invVehicleMileage","invPropertyLocation","invPropertyDescription","invPropertyTitle","invPropertyRef"].forEach(id=>{
+  ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber"].forEach(id=>{
     $(id).addEventListener("input", updateInvoicePreview);
   });
 
   resetInvoiceSession();
 
   $("invGenerateBtn").onclick = async ()=>{
+    if(!isAuthenticatedBusinessOwner()){
+      setFormMsg($("invGenerateMsg"), "Only the authenticated business owner can generate this invoice.", "error");
+      return;
+    }
     if(invSessionConsumed){
       $("invDownloadPdfBtn").classList.remove("hidden");
       $("invDownloadPngBtn").classList.remove("hidden");
@@ -4993,24 +4860,16 @@ function initInvoiceGenerator(){
 }
 
 function updateInvoicePreview(){
-  syncTransactionFields("inv"); syncTransactionSignatureAreas("inv");
-  fillSellerDefaults("inv");
-  const sellerName=$("invSellerName").value.trim() || "Seller / Provider";
-  const sellerAddress=$("invSellerAddress").value.trim() || "";
-  const sellerPhone=$("invSellerPhone").value.trim();
-  const sellerEmail=$("invSellerEmail").value.trim();
-  $("invBizNameOut").textContent=sellerName;
-  $("invBizAddressOut").textContent=sellerAddress;
-  $("invBizContactOut").textContent=[sellerPhone?sellerPhone:"",sellerEmail?sellerEmail:""].filter(Boolean).join("  ·  ");
-  $("invClientNameOut").textContent = $("invClientName").value || "Client / Buyer";
+  $("invClientNameOut").textContent = $("invClientName").value || "Customer name";
   $("invClientAddressOut").textContent = $("invClientAddress").value || "";
-  $("invClientContactOut").textContent = [$("invClientPhone")?.value.trim(),$("invClientEmail")?.value.trim()].filter(Boolean).join("  ·  ");
-  $("invTxTypeOut").textContent=txTypeLabel($("invTransactionType")?.value);
-  $("invAgentOut").textContent=$("invAgentName")?.value.trim() || "—";
-  const invRole=$("invSellerRole")?.value||"seller";
-  $("invPrimarySignatureLabel").textContent = invRole==="agent" ? "Agent / Witness Signature" : "Seller / Provider Signature";
-  $("invSpecialDetailsOut").textContent=specialDetails("inv");
-  $("invExtraWitnessBox")?.classList.toggle("show", ["land","building"].includes($("invTransactionType")?.value));
+
+  // Business contact line (phone / email), only shown if provided
+  const bizPhone = $("invBizPhone").value.trim();
+  const bizEmail = $("invBizEmail").value.trim();
+  const contactParts = [];
+  if(bizPhone) contactParts.push("Ph: " + bizPhone);
+  if(bizEmail) contactParts.push(bizEmail);
+  $("invBizContactOut").textContent = contactParts.join("  ·  ");
 
   $("invMetaNoOut").textContent = $("invNoOut").textContent;
   $("invMetaDateOut").textContent = $("invDateOut").textContent;
@@ -5075,7 +4934,6 @@ function updateInvoicePreview(){
   } else if(invSigImg){
     invSigImg.classList.add("hidden");
   }
-  if($('invAuthorizedSignatoriesOut')) $('invAuthorizedSignatoriesOut').innerHTML=authorizedSignatoriesHtml();
 }
 
 // ---------- Receipt ----------
@@ -5084,9 +4942,6 @@ let rcpSessionConsumed = false;
 function resetReceiptSession(){
   $("rcpClientName").value = "";
   $("rcpClientAddress").value = "";
-  ["rcpClientPhone","rcpClientEmail","rcpAgentName","rcpAgentContact"].forEach(id=>{ if($(id)) $(id).value=""; });
-  $("rcpTransactionType").value="goods-service"; syncTransactionFields("rcp");
-  fillSellerDefaults("rcp");
   $("rcpPackage").value = "";
   $("rcpTotal").value = "";
   $("rcpPaid").value = "";
@@ -5105,12 +4960,12 @@ function initReceiptGenerator(){
   $("rcpNewBtn").onclick = resetReceiptSession;
   populateCurrencySelect("rcpCurrency", DEFAULT_CURRENCY);
   $("rcpCurrency")?.addEventListener("change", updateReceiptPreview);
-  $("rcpTransactionType")?.addEventListener("change", ()=>{ syncTransactionFields("rcp"); syncTransactionSignatureAreas("rcp"); updateReceiptPreview(); });
-  $("rcpSellerRole")?.addEventListener("change", updateReceiptPreview);
-  $("rcpPaymentMethod")?.addEventListener("change", updateReceiptPreview);
-  ["rcpClientName","rcpClientAddress","rcpClientPhone","rcpClientEmail","rcpSellerName","rcpSellerAddress","rcpSellerPhone","rcpSellerEmail","rcpAgentName","rcpAgentContact","rcpPackage","rcpTotal","rcpPaid","rcpVat","rcpPaymentMethod","rcpVehicleMake","rcpVehicleModel","rcpVehicleYear","rcpVehicleVin","rcpVehiclePlate","rcpVehicleMileage","rcpPropertyLocation","rcpPropertyDescription","rcpPropertyTitle","rcpPropertyRef"].forEach(id=>$(id)?.addEventListener("input",updateReceiptPreview));
 
   $("rcpGenerateBtn").onclick = async ()=>{
+    if(!isAuthenticatedBusinessOwner()){
+      setFormMsg($("rcpGenerateMsg"), "Only the authenticated business owner can generate this receipt.", "error");
+      return;
+    }
     if(rcpSessionConsumed){
       updateReceiptPreview();
       return;
@@ -5152,12 +5007,7 @@ function initReceiptGenerator(){
 }
 
 function updateReceiptPreview(){
-  syncTransactionFields("rcp"); syncTransactionSignatureAreas("rcp");
-  fillSellerDefaults("rcp");
-  const sellerName=$("rcpSellerName")?.value.trim() || "Seller / Provider";
-  const sellerAddress=$("rcpSellerAddress")?.value.trim() || "";
-  const sellerContact=[$("rcpSellerPhone")?.value.trim(),$("rcpSellerEmail")?.value.trim()].filter(Boolean).join("  ·  ");
-  const clientName = $("rcpClientName").value || "Client / Buyer";
+  const clientName = $("rcpClientName").value || "Cash Customer";
   const clientAddress = $("rcpClientAddress").value || "";
   const pkg = $("rcpPackage").value || "";
   const total = Number($("rcpTotal").value) || 0;
@@ -5174,16 +5024,6 @@ function updateReceiptPreview(){
 
   $("rcpClientNameOut").textContent = clientName;
   $("rcpClientAddressOut").textContent = clientAddress;
-  $("rcpBizNameOut").textContent=sellerName;
-  $("rcpBizAddressOut").textContent=sellerAddress;
-  $("rcpSellerContactOut").textContent=sellerContact;
-  $("rcpAgentOut").textContent=$("rcpAgentName")?.value.trim() ? `Agent / Witness: ${$("rcpAgentName").value.trim()}` : "";
-  const rcpRole=$("rcpSellerRole")?.value||"seller";
-  $("rcpPrimarySignatureLabel").textContent = rcpRole==="agent" ? "Agent / Witness Signature" : "Seller / Provider Signature";
-  $("rcpPaymentMethodOut").textContent=$("rcpPaymentMethod")?.value || "Cash";
-  $("rcpSpecialDetailsOut").textContent=specialDetails("rcp");
-  $("rcpExtraWitnessBox")?.classList.toggle("show", ["land","building"].includes($("rcpTransactionType")?.value));
-
   $("rcpPackageOut").textContent = pkg ? `For: ${pkg}` : "";
   $("rcpVatLabelOut").textContent = `VAT (${vatPct}%)`;
   $("rcpSubOut").textContent = formatCurrency(Math.round(subTotal), currency).replace(currencySymbol(currency), "").trim();
@@ -5659,6 +5499,25 @@ function canCreateDocument(docType){
   return (Number(currentUserDoc?.credits) || 0) >= CREDIT_COST_PER_DOC;
 }
 
+function isAuthenticatedBusinessOwner(){
+  // Never trust a typed owner name/photo as proof of ownership.
+  // The authenticated Firebase UID must match the immutable ownerUid on the
+  // user's own profile. Legacy self-created profiles without ownerUid are
+  // treated as the current authenticated owner for backward compatibility.
+  return !!(currentUser && currentUserDoc
+    && currentUserDoc.role === "client"
+    && (!currentUserDoc.ownerUid || currentUserDoc.ownerUid === currentUser.uid));
+}
+
+function requireBusinessOwner(actionLabel){
+  if(!isAuthenticatedBusinessOwner()){
+    setFormMsg($("rcpGenerateMsg"), `Only the authenticated business owner can ${actionLabel}.`, "error");
+    return false;
+  }
+  return true;
+}
+
+
 // Atomically checks-and-deducts so two rapid clicks (or two tabs) can never
 // spend below zero or bypass the expiry check.
 async function consumeDocumentCredit(docType){
@@ -6035,7 +5894,6 @@ let sigUploadDataUrl = null;
 function initSignatureSettings(){
   setupSignatureCanvas();
   renderSavedSignatureUI();
-  if(currentUser) renderOwnerAndSignatories();
 
   document.querySelectorAll("#sigMethodTabs button").forEach(btn=>{
     btn.addEventListener("click", ()=>{
@@ -6245,110 +6103,6 @@ $("sigSaveTypedBtn")?.addEventListener("click", async ()=>{
   await persistSignature("typed", canvas.toDataURL("image/png"), { text, fontFamily: sigSelectedFont });
 });
 
-// ===== OWNER PHOTO + MULTIPLE AUTHORIZED SIGNATORIES =====
-const MAX_AUTHORIZED_SIGNATORIES = 4;
-let authorizedSignatories = [];
-
-function compressPersonImage(file, maxBytes=70000){
-  return new Promise((resolve,reject)=>{
-    const reader=new FileReader();
-    reader.onerror=reject;
-    reader.onload=()=>{
-      const img=new Image();
-      img.onload=()=>{
-        let maxW=700,maxH=700;
-        let w=img.width,h=img.height;
-        const scale=Math.min(1,maxW/w,maxH/h);
-        w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
-        const c=document.createElement('canvas'); c.width=w;c.height=h;
-        const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
-        let q=.72, data=c.toDataURL('image/jpeg',q);
-        while(data.length>maxBytes && q>.28){q-=.08;data=c.toDataURL('image/jpeg',q);}
-        resolve(data);
-      }; img.onerror=reject; img.src=reader.result;
-    }; reader.readAsDataURL(file);
-  });
-}
-
-function renderOwnerAndSignatories(){
-  const owner=currentUserDoc?.ownerProfile||{};
-  const photo=$('ownerPhotoPreview');
-  if(photo) photo.innerHTML=owner.photoData?`<img src="${owner.photoData}" alt="Owner photo">`:'👤';
-  if($('ownerFullNameInput')) $('ownerFullNameInput').value=owner.fullName||currentUserDoc?.ownerName||'';
-  if($('ownerPositionInput')) $('ownerPositionInput').value=owner.position||'Owner';
-  authorizedSignatories=Array.isArray(currentUserDoc?.authorizedSignatories)?currentUserDoc.authorizedSignatories.slice(0,MAX_AUTHORIZED_SIGNATORIES):[];
-  const box=$('signatoriesList'); if(!box)return;
-  box.innerHTML='';
-  authorizedSignatories.forEach((person,i)=>{
-    const card=document.createElement('div'); card.className='person-card';
-    card.innerHTML=`<div class="person-head"><div class="person-avatar">${person.photoData?`<img src="${person.photoData}" alt="">`:'👤'}</div><div><b>${escapeHtml(person.fullName||'Signatory')}</b><div class="hint">${escapeHtml(person.position||'Authorized signatory')}</div></div></div>
-      <div class="person-sign-preview">${person.signatureData?`<img src="${person.signatureData}" alt="Real signature">`:'No signature added'}</div>
-      <div class="person-actions"><button type="button" class="btn-sm confirm" data-person-edit="${i}">Edit</button><button type="button" class="btn-sm reject" data-person-remove="${i}">Remove</button></div>`;
-    box.appendChild(card);
-  });
-  box.querySelectorAll('[data-person-remove]').forEach(b=>b.onclick=async()=>{authorizedSignatories.splice(Number(b.dataset.personRemove),1);await saveAuthorizedSignatories();});
-  box.querySelectorAll('[data-person-edit]').forEach(b=>b.onclick=()=>openSignatoryEditor(Number(b.dataset.personEdit)));
-}
-
-async function saveOwnerProfile(patch){
-  try{
-    const owner={...(currentUserDoc?.ownerProfile||{}),...patch};
-    if(estimateUserDocBytes({ownerProfile:owner,authorizedSignatories})>=FIRESTORE_DOC_BYTE_LIMIT){
-      setFormMsg($('peopleMsg'),'The photo/signature data is too large for this Firestore profile. Please use smaller images.','error');return false;
-    }
-    await updateDoc(doc(db,'users',currentUser.uid),{ownerProfile:owner});
-    currentUserDoc.ownerProfile=owner; renderOwnerAndSignatories(); updateInvoicePreview(); updateReceiptPreview();
-    setFormMsg($('peopleMsg'),'✓ Owner information saved.','success'); return true;
-  }catch(err){console.error(err);setFormMsg($('peopleMsg'),describeSaveError(err,'owner information'),'error');return false;}
-}
-async function saveAuthorizedSignatories(){
-  try{
-    if(estimateUserDocBytes({authorizedSignatories})>=FIRESTORE_DOC_BYTE_LIMIT){
-      setFormMsg($('peopleMsg'),'The signatories are too large to store together. Use smaller signature/photo images.','error');return;
-    }
-    await updateDoc(doc(db,'users',currentUser.uid),{authorizedSignatories});
-    currentUserDoc.authorizedSignatories=authorizedSignatories; renderOwnerAndSignatories(); updateInvoicePreview(); updateReceiptPreview();
-    setFormMsg($('peopleMsg'),'✓ Authorized signatories saved.','success');
-  }catch(err){console.error(err);setFormMsg($('peopleMsg'),describeSaveError(err,'authorized signatories'),'error');}
-}
-
-function openSignatoryEditor(index=null){
-  const existing=index===null?{}:(authorizedSignatories[index]||{});
-  const name=prompt('Full name of the person who will sign:',existing.fullName||''); if(name===null)return;
-  const position=prompt('Position / role:',existing.position||'Authorized Signatory'); if(position===null)return;
-  const photoHint=existing.photoData?'\nCurrent photo exists. Choose OK to keep it, or Cancel to leave it unchanged.':'';
-  const usePhoto=confirm('Do you want to upload a real photo for this signatory?'+photoHint);
-  const fileInput=document.createElement('input');fileInput.type='file';fileInput.accept='image/png,image/jpeg,image/jpg,image/webp';
-  const finish=async(photoData)=>{
-    const old=index===null?{}:(authorizedSignatories[index]||{});
-    const person={...old,fullName:name.trim(),position:position.trim(),photoData:photoData===undefined?old.photoData:(photoData||null)};
-    if(!person.fullName){setFormMsg($('peopleMsg'),'Please enter a name.','error');return;}
-    const sig=confirm('Do you want to upload this person\'s REAL signature now?');
-    if(sig){
-      const sf=document.createElement('input');sf.type='file';sf.accept='image/png,image/jpeg,image/jpg,image/webp';
-      sf.onchange=async()=>{if(sf.files[0]){try{person.signatureData=await compressPersonImage(sf.files[0],70000);commit();}catch(e){setFormMsg($('peopleMsg'),'Could not process the signature image.','error');}}else commit();};sf.click();
-    } else commit();
-    async function commit(){if(index===null) authorizedSignatories.push(person); else authorizedSignatories[index]=person; await saveAuthorizedSignatories();}
-  };
-  if(usePhoto){fileInput.onchange=async()=>{if(fileInput.files[0]){try{finish(await compressPersonImage(fileInput.files[0],70000));}catch(e){setFormMsg($('peopleMsg'),'Could not process the photo.','error');}}};fileInput.click();}else finish(undefined);
-}
-
-$('ownerPhotoBtn')?.addEventListener('click',()=>$('ownerPhotoInput').click());
-$('ownerPhotoInput')?.addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const data=await compressPersonImage(f,70000);await saveOwnerProfile({photoData:data});}catch(err){setFormMsg($('peopleMsg'),'Could not process the owner picture.','error');}});
-$('ownerPhotoRemoveBtn')?.addEventListener('click',()=>saveOwnerProfile({photoData:null}));
-$('ownerFullNameInput')?.addEventListener('change',()=>saveOwnerProfile({fullName:$('ownerFullNameInput').value.trim()}));
-$('ownerPositionInput')?.addEventListener('change',()=>saveOwnerProfile({position:$('ownerPositionInput').value.trim()}));
-$('addSignatoryBtn')?.addEventListener('click',()=>{if(authorizedSignatories.length>=MAX_AUTHORIZED_SIGNATORIES){setFormMsg($('peopleMsg'),`You can add up to ${MAX_AUTHORIZED_SIGNATORIES} additional signatories.`,'error');return;}openSignatoryEditor();});
-
-function authorizedSignatoriesHtml(){
-  const owner=currentUserDoc?.ownerProfile||{};
-  const people=[];
-  if(owner.fullName||owner.photoData){people.push({fullName:owner.fullName||'Business Owner',position:owner.position||'Owner',photoData:owner.photoData,signatureData:currentUserDoc?.signature?.imageData});}
-  (Array.isArray(currentUserDoc?.authorizedSignatories)?currentUserDoc.authorizedSignatories:[]).forEach(p=>people.push(p));
-  return people.filter(p=>p.signatureData).map(p=>`<div class="signatory-output-card">${p.photoData?`<img class="owner-photo-output" src="${p.photoData}" alt="">`:''}<b>${escapeHtml(p.fullName||'Signatory')}</b><div style="font-size:9px;color:#777;">${escapeHtml(p.position||'Authorized Signatory')}</div><img src="${p.signatureData}" alt="Signature"><div style="font-size:8px;color:#888;border-top:1px dashed #ccc;padding-top:3px;">Signature</div></div>`).join('');
-}
-
-
 // Firestore rejects any document over ~1 MiB total. This app stores logoData
 // and signature.imageData as base64 strings directly on the same
 // users/{uid} profile document (by design — no Firebase Storage), so it's
@@ -6410,14 +6164,16 @@ $("rcpPrintBtn")?.addEventListener("click", ()=> window.print());
 
 function renderBusinessLogo(){
   const logoData = currentUserDoc?.logoData || "";
+  const ownerImage = currentUserDoc?.ownerImage || "";
   const name = window.__currentBusinessName || currentUserDoc?.businessName || "Business";
   const initialsText = initials(name);
 
   const targets = [$("invLogoMark"), $("posLogoMark"), $("logoPreviewBox")];
   targets.forEach(el=>{
     if(!el) return;
-    if(logoData){
-      el.innerHTML = `<img src="${logoData}" alt="Business logo" />`;
+    const imageForTarget = (el === $("posLogoMark") && ownerImage) ? ownerImage : logoData;
+    if(imageForTarget){
+      el.innerHTML = `<img src="${imageForTarget}" alt="${el === $("posLogoMark") && ownerImage ? "Business owner" : "Business logo"}" />`;
     } else {
       el.textContent = initialsText;
     }
