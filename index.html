@@ -1726,10 +1726,10 @@
           </select></div>
           <div class="field"><label>Seller role</label><select id="invSellerRole"><option value="seller">I am the seller / provider</option><option value="agent">I am acting as an agent</option><option value="seller-agent">Seller + agent</option></select></div>
         </div>
-        <div class="tx-section">
-          <div class="tx-section-title">🏪 Seller / Provider <span class="tx-badge">actual seller</span></div>
+        <div class="tx-section" id="invSellerDetailsSection">
+          <div class="tx-section-title" id="invSellerDetailsTitle">🏪 Seller / Provider <span class="tx-badge">actual seller</span></div>
           <div class="grid-2">
-            <div class="field"><label>Seller name / business name</label><input type="text" id="invSellerName" /></div>
+            <div class="field"><label id="invSellerNameLabel">Seller name / business name</label><input type="text" id="invSellerName" /></div>
             <div class="field"><label>Seller address</label><input type="text" id="invSellerAddress" /></div>
             <div class="field"><label>Seller phone</label><input type="text" id="invSellerPhone" /></div>
             <div class="field"><label>Seller email</label><input type="email" id="invSellerEmail" /></div>
@@ -1856,10 +1856,10 @@
               <img id="invSignatureImg" class="inv-signature-img hidden" />
               <div class="inv-sign-line" id="invPrimarySignatureLabel">Seller / Provider Signature</div>
               <div class="tx-sign-grid tx-transaction-signatures" id="invOtherPartySignatures" style="grid-template-columns:repeat(2,1fr);margin-top:12px;display:none;">
-                <div class="tx-sign-box"><div class="tx-sign-title">Client / Buyer</div><div class="tx-sign-line">Signature & Date</div></div>
-                <div class="tx-sign-box"><div class="tx-sign-title">Agent / Witness</div><div class="tx-sign-line">Signature & Date</div></div>
+                <div class="tx-sign-box"><div class="tx-sign-title" id="invBuyerSignatureTitle">Client / Buyer</div><div class="tx-sign-line">Signature & Date</div></div>
+                <div class="tx-sign-box"><div class="tx-sign-title" id="invWitness1SignatureTitle">Agent / Witness</div><div class="tx-sign-line">Signature & Date</div></div>
               </div>
-              <div class="tx-sign-box tx-extra-witness" id="invExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title">Additional Property Witness</div><div class="tx-sign-line">Signature & Date</div></div>
+              <div class="tx-sign-box tx-extra-witness" id="invExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title" id="invWitness2SignatureTitle">Witness 2 (Optional)</div><div class="tx-sign-line">Signature & Date</div></div><div class="tx-required-signature-note hidden" id="invRequiredSignatureNote">Non-goods/services: Owner + Buyer + Witness 1 signatures are compulsory. Witness 2 is optional.</div>
             </div>
           </div>
 
@@ -1901,8 +1901,8 @@
           <div class="field"><label>Seller role</label><select id="rcpSellerRole"><option value="seller">I am the seller / provider</option><option value="agent">I am acting as an agent</option><option value="seller-agent">Seller + agent</option></select></div>
           <div class="field"><label>Payment method</label><select id="rcpPaymentMethod"><option>Cash</option><option>Bank Transfer</option><option>Card</option><option>POS</option><option>Mobile Money</option><option>Other</option></select></div>
         </div>
-        <div class="tx-section"><div class="tx-section-title">🏪 Seller / Provider <span class="tx-badge">actual seller</span></div><div class="grid-2">
-          <div class="field"><label>Seller name / business name</label><input type="text" id="rcpSellerName" /></div><div class="field"><label>Seller address</label><input type="text" id="rcpSellerAddress" /></div>
+        <div class="tx-section" id="rcpSellerDetailsSection"><div class="tx-section-title" id="rcpSellerDetailsTitle">🏪 Seller / Provider <span class="tx-badge">actual seller</span></div><div class="grid-2">
+          <div class="field"><label id="rcpSellerNameLabel">Seller name / business name</label><input type="text" id="rcpSellerName" /></div><div class="field"><label>Seller address</label><input type="text" id="rcpSellerAddress" /></div>
           <div class="field"><label>Seller phone</label><input type="text" id="rcpSellerPhone" /></div><div class="field"><label>Seller email</label><input type="email" id="rcpSellerEmail" /></div>
         </div></div>
         <div class="tx-section"><div class="tx-section-title">👤 Client / Buyer <span class="tx-badge">payment received from</span></div><div class="grid-2">
@@ -1964,10 +1964,10 @@
             <img id="rcpSignatureImg" class="pos-signature-img hidden" />
             <div class="pos-sign-line" id="rcpPrimarySignatureLabel">Seller / Provider Signature</div>
             <div class="tx-sign-grid tx-transaction-signatures" id="rcpOtherPartySignatures" style="grid-template-columns:repeat(2,1fr);margin-top:12px;display:none;">
-              <div class="tx-sign-box"><div class="tx-sign-title">Client / Buyer</div><div class="tx-sign-line">Signature & Date</div></div>
-              <div class="tx-sign-box"><div class="tx-sign-title">Agent / Witness</div><div class="tx-sign-line">Signature & Date</div></div>
+              <div class="tx-sign-box"><div class="tx-sign-title" id="rcpBuyerSignatureTitle">Client / Buyer</div><div class="tx-sign-line">Signature & Date</div></div>
+              <div class="tx-sign-box"><div class="tx-sign-title" id="rcpWitness1SignatureTitle">Agent / Witness</div><div class="tx-sign-line">Signature & Date</div></div>
             </div>
-            <div class="tx-sign-box tx-extra-witness" id="rcpExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title">Additional Property Witness</div><div class="tx-sign-line">Signature & Date</div></div>
+            <div class="tx-sign-box tx-extra-witness" id="rcpExtraWitnessBox" style="margin-top:10px;display:none;"><div class="tx-sign-title" id="rcpWitness2SignatureTitle">Witness 2 (Optional)</div><div class="tx-sign-line">Signature & Date</div></div><div class="tx-required-signature-note hidden" id="rcpRequiredSignatureNote">Non-goods/services: Owner + Buyer + Witness 1 signatures are compulsory. Witness 2 is optional.</div>
           </div>
           <div class="pos-thankyou">Thank you for your payment!</div>
           <div class="pos-subthanks">We appreciate your business</div><div style="font-size:8px;color:#777;margin-top:8px;text-align:center;"></div>
@@ -4891,16 +4891,29 @@ function addInvoiceRow(){
 function txTypeLabel(v){return ({"goods-service":"Goods / Services",vehicle:"Vehicle / Car",land:"Land / Property",building:"Building / Property",other:"Other transaction"}[v]||"Other transaction");}
 function syncTransactionFields(prefix){
   const type=$(prefix+"TransactionType")?.value||"goods-service";
+  const nonGoods=type!=="goods-service";
   $(prefix+"VehicleFields")?.classList.toggle("show", type==="vehicle");
   $(prefix+"PropertyFields")?.classList.toggle("show", type==="land"||type==="building");
-  const extra=$(prefix+"ExtraWitnessBox"); if(extra) extra.classList.toggle("show", type==="land"||type==="building");
+  const seller=$(prefix+"SellerDetailsSection"); if(seller) seller.classList.toggle("hidden",nonGoods);
+  const title=$(prefix+"SellerDetailsTitle"); if(title) title.innerHTML=nonGoods?"👤 Owner / Seller":"🏪 Seller / Provider <span class=\"tx-badge\">actual seller</span>";
+  const label=$(prefix+"SellerNameLabel"); if(label) label.textContent=nonGoods?"Owner name":"Seller name / business name";
+  const primary=$(prefix+"PrimarySignatureLabel"); if(primary) primary.textContent=nonGoods?"Owner Signature (Required)":"Seller / Provider Signature";
+  const other=$(prefix+"OtherPartySignatures"); if(other) other.style.display=nonGoods?"grid":"none";
+  const buyer=$(prefix+"BuyerSignatureTitle"); if(buyer) buyer.textContent=nonGoods?"Buyer":"Client / Buyer";
+  const w1=$(prefix+"Witness1SignatureTitle"); if(w1) w1.textContent=nonGoods?"Witness 1 (Required)":"Agent / Witness";
+  const w2=$(prefix+"Witness2SignatureTitle"); if(w2) w2.textContent=nonGoods?"Witness 2 (Optional)":"Additional Property Witness";
+  const extra=$(prefix+"ExtraWitnessBox"); if(extra){extra.style.display=nonGoods?"block":"none";extra.classList.toggle("show",nonGoods);}
+  const note=$(prefix+"RequiredSignatureNote"); if(note) note.classList.toggle("hidden",!nonGoods);
 }
 function syncTransactionSignatureAreas(prefix){
   const type=$(prefix+"TransactionType")?.value||"goods-service";
   const isGoodsServices=type==="goods-service";
   const other=$(prefix+"OtherPartySignatures");
   const extra=$(prefix+"ExtraWitnessBox");
+  const note=$(prefix+"RequiredSignatureNote");
   if(other) other.style.display=isGoodsServices?"none":"grid";
+  if(extra) extra.style.display=isGoodsServices?"none":"block";
+  if(note) note.classList.toggle("hidden",isGoodsServices);
   if(extra) extra.style.display=(type==="land"||type==="building")?"block":"none";
 }
 function fillSellerDefaults(prefix){
@@ -4966,6 +4979,7 @@ function initInvoiceGenerator(){
 }
 
 function updateInvoicePreview(){
+  syncTransactionFields("inv"); syncTransactionSignatureAreas("inv");
   fillSellerDefaults("inv");
   const sellerName=$("invSellerName").value.trim() || "Seller / Provider";
   const sellerAddress=$("invSellerAddress").value.trim() || "";
@@ -5123,6 +5137,7 @@ function initReceiptGenerator(){
 }
 
 function updateReceiptPreview(){
+  syncTransactionFields("rcp"); syncTransactionSignatureAreas("rcp");
   fillSellerDefaults("rcp");
   const sellerName=$("rcpSellerName")?.value.trim() || "Seller / Provider";
   const sellerAddress=$("rcpSellerAddress")?.value.trim() || "";
