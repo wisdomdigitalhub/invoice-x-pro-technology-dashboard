@@ -790,10 +790,11 @@
       <button class="nav-cta" id="signUpNavBtn" style="background:var(--brass); color:#1c1206;">Sign Up</button>
       <button class="nav-cta" id="clientLoginNavBtn" style="background:none; color:var(--ink); border:1.5px solid var(--line);">Client Login</button>
       <button class="nav-cta" id="repLoginNavBtn">Representative Login</button>
+<div id="installFirstNotice" style="display:none; position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:9999; width:min(92vw,520px); background:#071426; color:#fff; border:1px solid rgba(200,155,60,.55); border-radius:16px; padding:14px 16px; box-shadow:0 18px 50px rgba(0,0,0,.28);"><div style="font-weight:800; margin-bottom:5px;">Install Invoice X Pro first</div><div style="font-size:13px; line-height:1.45; opacity:.9;">For the best experience, install the app before completing your client signup.</div><button id="installFirstBtn" style="margin-top:10px; width:100%; border:0; border-radius:10px; padding:11px 14px; font-weight:800; background:#c89b3c; color:#1c1206;">Install App</button></div>
     </div>
   </nav>
 
-  <section class="hero">
+  <div style="margin:0 auto 18px; max-width:1200px; padding:10px 14px; border-radius:12px; background:rgba(200,155,60,.10); border:1px solid rgba(200,155,60,.25); font-size:13px; text-align:center;"><strong>Now available:</strong> professional invoices & receipts, multiple currencies, digital signatures, PDF/PNG downloads, sharing, client change requests, and representative referrals.</div><section class="hero">
     <div>
       <span class="eyebrow">Field sales, ledgered properly</span>
       <h1>Every client, <em>every payment</em>, accounted for.</h1>
@@ -901,7 +902,7 @@
       <button type="button" data-role="rep" id="suRoleRepBtn">I'm a Representative</button>
     </div>
     <h3 id="signUpTitle">Create your business account</h3>
-    <p class="sub" id="signUpSub">Free plan includes 5 invoices/receipts to start — no card required.</p>
+    <p class="sub" id="signUpSub">Free plan includes 20 invoices/receipts to start — no card required.</p>
 
     <form id="signUpForm">
       <div id="suClientFields">
@@ -1002,8 +1003,7 @@
   </div>
 
   <!-- ===== ADMIN DASHBOARD ===== -->
-  <div class="dash hidden" id="adminDash"><div class="panel" id="adminBusinessChangeRequests" style="margin-top:18px;"><div class="panel-head"><h3>Business Information Change Requests</h3><button type="button" class="btn-secondary" id="refreshBusinessChangeRequestsBtn">Refresh</button></div><div id="adminBusinessChangeRequestsList"><div class="sub">No requests loaded.</div></div></div>
-
+  <div class="dash hidden" id="adminDash">
     <div class="dash-head">
       <h2>Admin overview</h2>
       <p>Manage representatives and review client submissions.</p>
@@ -1144,10 +1144,9 @@
         <span class="hint">Posted instantly to every representative's notification bell</span>
       </div>
       <form id="postAnnouncementForm">
-        <div class="field"><label>Send to</label><select id="announceTarget" required><option value="rep">All Representatives</option><option value="client">All Clients</option><option value="both">Representatives &amp; Clients</option></select></div>
         <div class="field"><label>Title</label><input type="text" id="announceTitle" placeholder="e.g. New Premium pricing" required /></div>
         <div class="field"><label>Message</label><textarea id="announceMessage" rows="3" required></textarea></div>
-        <button type="submit" class="btn-primary" id="postAnnouncementBtn" style="max-width:220px;">Send announcement</button>
+        <button type="submit" class="btn-primary" id="postAnnouncementBtn" style="max-width:200px;">Post announcement</button>
         <div class="form-msg" id="postAnnouncementMsg"></div>
       </form>
       <div class="table-wrap" style="margin-top:18px;">
@@ -1162,12 +1161,12 @@
     <div class="panel">
       <div class="panel-head">
         <h3>Marketing materials</h3>
-        <span class="hint">Upload images or videos for representatives and clients — up to 700KB each</span>
+        <span class="hint">Any file, up to 700KB — stored directly in the database, no cloud storage needed</span>
       </div>
       <form id="uploadMaterialForm">
         <div class="upload-row">
           <div class="field"><label>Title</label><input type="text" id="materialTitle" placeholder="e.g. Q3 Flyer" required /></div>
-          <div class="field"><label>Image or video</label><input type="file" id="materialFile" accept="image/*,video/*" required /></div>
+          <div class="field"><label>File</label><input type="file" id="materialFile" required /></div>
           <button type="submit" class="btn-primary" id="uploadMaterialBtn" style="max-width:160px; margin-top:0;">Upload</button>
         </div>
         <div class="progress-bar" id="uploadProgressBar"><div class="progress-bar-fill" id="uploadProgressFill"></div></div>
@@ -1448,8 +1447,7 @@
           <div class="field"><label>Phone</label><input type="tel" id="cPhone" required /></div>
           <div class="field"><label>Email</label><input type="email" id="cEmail" required /></div>
           <div class="field"><label>Package</label><input type="text" id="cPackage" required /></div>
-          <div class="field"><label>Package currency</label><select id="cPackageCurrency" required></select></div>
-          <div class="field"><label>Package amount</label><input type="number" min="1" step="1" id="cPackageAmount" required /></div>
+          <div class="field"><label>Package amount (₦)</label><input type="number" min="1" step="1" id="cPackageAmount" required /></div>
           <div class="field"><label>Your account number</label><input type="text" id="cRepAccountNumber" required /></div>
           <div class="field"><label>Client's chosen password</label><input type="text" id="cClientPassword" required minlength="6" placeholder="Client picks this — for their app login" /></div>
           <div class="field"><label>Document access after approval</label>
@@ -1589,25 +1587,6 @@
     </div>
 
     <div id="planStatusCard"></div>
-    <div class="panel" style="margin-top:16px;">
-      <div class="panel-head"><h3>Need to change your business information?</h3><span class="hint">Changes require admin approval</span></div>
-      <p class="sub">To prevent duplicate businesses, you cannot edit your business profile directly. Tell the administrator exactly what you want changed and the admin will review and update it.</p>
-      <button type="button" class="btn-secondary" id="openBusinessChangeRequestBtn">Request Business Information Change</button>
-    </div>
-
-    <div class="modal hidden" id="businessChangeRequestModal" role="dialog" aria-modal="true">
-      <div class="modal-card" style="max-width:620px;">
-        <div class="modal-header"><div><h3 style="margin:0;">Request Business Information Change</h3><p class="sub" style="margin:5px 0 0;">Send the requested change to the administrator.</p></div><button type="button" class="modal-close" id="closeBusinessChangeRequestBtn">×</button></div>
-        <form id="businessChangeRequestForm">
-          <div class="field"><label>What do you want to change?</label><select id="changeRequestType" required><option value="">Select one</option><option>Business name</option><option>Business address</option><option>Business email</option><option>Business phone number</option><option>Business logo</option><option>Bank/payment information</option><option>Tax/VAT information</option><option>Other business information</option></select></div>
-          <div class="field"><label>What should the new information be?</label><textarea id="changeRequestNewValue" rows="4" required placeholder="Enter the correct new information"></textarea></div>
-          <div class="field"><label>Reason (optional)</label><textarea id="changeRequestReason" rows="3" placeholder="Why does this need to be changed?"></textarea></div>
-          <div id="businessChangeRequestMsg" class="form-msg"></div>
-          <button type="submit" class="btn-primary" id="submitBusinessChangeRequestBtn">Send Request to Admin</button>
-        </form>
-      </div>
-    </div>
-
 
     <!-- Premium upgrade page -->
     <div class="subpanel" data-panel="premiumUpgradeTab" id="premiumUpgradePanel">
@@ -1695,18 +1674,6 @@
       </div>
     </div>
 
-    <div class="panel" style="margin-top:16px;">
-      <div class="panel-head"><h3>Messages from Invoice X Pro</h3><span class="hint">Updates from your office</span></div>
-      <div class="table-wrap"><table><thead><tr><th>Message</th><th>Received</th></tr></thead><tbody id="clientAnnouncementTableBody"></tbody></table></div>
-      <div class="empty-state hidden" id="clientAnnouncementEmptyState">No messages yet.</div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head"><h3>Marketing materials</h3><span class="hint">Images and videos provided by Invoice X Pro</span></div>
-      <div class="materials-grid" id="materialsGridClient"></div>
-      <div class="empty-state hidden" id="materialsEmptyStateClient">No marketing materials have been posted yet.</div>
-    </div>
-
     <div class="subnav" id="clientDocSubnav">
       <button type="button" data-tab="clientInvoiceTab" class="active">Invoice</button>
       <button type="button" data-tab="clientReceiptTab">Receipt</button>
@@ -1723,7 +1690,6 @@
         <div class="grid-2">
           <div class="field"><label>Customer name</label><input type="text" id="invClientName" /></div>
           <div class="field"><label>Customer address</label><input type="text" id="invClientAddress" /></div>
-          <div class="field"><label>Currency</label><select id="invCurrency" aria-label="Invoice currency" title="Choose any ISO 4217 currency supported by your browser"></select></div>
           <div class="field"><label>Discount (%)</label><input type="number" id="invDiscount" value="0" min="0" max="100" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="invVat" value="7.5" min="0" max="100" /></div>
         </div>
@@ -1788,16 +1754,16 @@
           </div>
 
           <table class="inv-table">
-            <thead><tr><th>Sr.</th><th>Description</th><th>Qty</th><th>Rate (<span id="invCurrencyHead">₦</span>)</th><th>Amount (<span id="invCurrencyHead2">₦</span>)</th></tr></thead>
+            <thead><tr><th>Sr.</th><th>Description</th><th>Qty</th><th>Rate (₦)</th><th>Amount (₦)</th></tr></thead>
             <tbody id="invRowsOut"></tbody>
           </table>
 
           <div class="inv-summary-wrap">
             <div class="inv-summary">
-              <div class="inv-sum-row"><span>Sub Total</span><span><span id="invCurrencySym">₦</span><span id="invSubOut">0</span></span></div>
-              <div class="inv-sum-row"><span>Discount</span><span><span class="inv-currency-symbol">₦</span><span id="invDisOut">0</span></span></div>
-              <div class="inv-sum-row" id="invVatRow"><span id="invVatLabelOut">VAT (7.5%)</span><span><span class="inv-currency-symbol">₦</span><span id="invVatOut">0</span></span></div>
-              <div class="inv-sum-row inv-grand"><span>Total</span><span><span class="inv-currency-symbol">₦</span><span id="invGrandOut">0</span></span></div>
+              <div class="inv-sum-row"><span>Sub Total</span><span>₦<span id="invSubOut">0</span></span></div>
+              <div class="inv-sum-row"><span>Discount</span><span>₦<span id="invDisOut">0</span></span></div>
+              <div class="inv-sum-row" id="invVatRow"><span id="invVatLabelOut">VAT (7.5%)</span><span>₦<span id="invVatOut">0</span></span></div>
+              <div class="inv-sum-row inv-grand"><span>Total</span><span>₦<span id="invGrandOut">0</span></span></div>
             </div>
           </div>
 
@@ -1851,9 +1817,8 @@
           <div class="field"><label>Received from (customer)</label><input type="text" id="rcpClientName" /></div>
           <div class="field"><label>Customer address</label><input type="text" id="rcpClientAddress" /></div>
           <div class="field"><label>Package / service</label><input type="text" id="rcpPackage" /></div>
-          <div class="field"><label>Currency</label><select id="rcpCurrency" aria-label="Receipt currency" title="Choose any ISO 4217 currency supported by your browser"></select></div>
-          <div class="field"><label>Total amount</label><input type="number" id="rcpTotal" min="0" /></div>
-          <div class="field"><label>Amount paid</label><input type="number" id="rcpPaid" min="0" /></div>
+          <div class="field"><label>Total amount (₦)</label><input type="number" id="rcpTotal" min="0" /></div>
+          <div class="field"><label>Amount paid (₦)</label><input type="number" id="rcpPaid" min="0" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="rcpVat" value="7.5" min="0" max="100" /></div>
         </div>
         <button type="button" class="btn-primary" id="rcpGenerateBtn" style="max-width:200px;">Generate receipt</button>
@@ -1885,11 +1850,11 @@
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-summary">
-            <div class="pos-row"><span>Sub Total</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpSubOut">0</span></span></div>
-            <div class="pos-row"><span id="rcpVatLabelOut">VAT (7.5%)</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpVatAmtOut">0</span></span></div>
-            <div class="pos-row"><span>Total Amount</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpTotalOut">0</span></span></div>
-            <div class="pos-row"><span>Amount Paid</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpPaidOut">0</span></span></div>
-            <div class="pos-row pos-bold"><span>Balance Due</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpBalanceOut">0</span></span></div>
+            <div class="pos-row"><span>Sub Total</span><span>₦<span id="rcpSubOut">0</span></span></div>
+            <div class="pos-row"><span id="rcpVatLabelOut">VAT (7.5%)</span><span>₦<span id="rcpVatAmtOut">0</span></span></div>
+            <div class="pos-row"><span>Total Amount</span><span>₦<span id="rcpTotalOut">0</span></span></div>
+            <div class="pos-row"><span>Amount Paid</span><span>₦<span id="rcpPaidOut">0</span></span></div>
+            <div class="pos-row pos-bold"><span>Balance Due</span><span>₦<span id="rcpBalanceOut">0</span></span></div>
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-words" id="rcpWordsOut"></div>
@@ -2176,131 +2141,8 @@ function setFormMsg(el, text, type){
   el.textContent = text;
   el.className = "form-msg " + (type || "");
 }
-
-// ---------- Client business information change requests ----------
-async function submitBusinessChangeRequest(){
-  const type=$("changeRequestType")?.value||"", value=$("changeRequestNewValue")?.value.trim()||"", reason=$("changeRequestReason")?.value.trim()||"", msg=$("businessChangeRequestMsg"), btn=$("submitBusinessChangeRequestBtn");
-  if(!type||!value){ msg.textContent="Please select what you want changed and enter the new information."; return; }
-  if(!currentUser){ msg.textContent="Please sign in first."; return; }
-  try{
-    btn.disabled=true; btn.textContent="Sending…";
-    await addDoc(collection(db,"businessChangeRequests"),{clientUid:currentUser.uid,clientEmail:currentUser.email||"",clientName:currentUserDoc?.fullName||currentUserDoc?.businessName||currentUser.email||"Client",changeType:type,newValue:value,reason,status:"pending",createdAt:serverTimestamp()});
-    msg.textContent="Request sent to admin. Your business information will only change after admin review.";
-    $("businessChangeRequestForm").reset();
-    setTimeout(()=>$("businessChangeRequestModal").classList.add("hidden"),1600);
-  }catch(e){console.error(e);msg.textContent="Could not send the request. Please try again.";}
-  finally{btn.disabled=false;btn.textContent="Send Request to Admin";}
-}
-function initBusinessChangeRequests(){
-  $("openBusinessChangeRequestBtn")?.addEventListener("click",()=>$("businessChangeRequestModal")?.classList.remove("hidden"));
-  $("closeBusinessChangeRequestBtn")?.addEventListener("click",()=>$("businessChangeRequestModal")?.classList.add("hidden"));
-  $("businessChangeRequestForm")?.addEventListener("submit",e=>{e.preventDefault();submitBusinessChangeRequest();});
-}
-async function loadBusinessChangeRequests(){
-  const list=$("adminBusinessChangeRequestsList"); if(!list)return;
-  try{
-    const snap=await getDocs(query(collection(db,"businessChangeRequests"),where("status","==","pending")));
-    if(snap.empty){list.innerHTML='<div class="sub">No pending requests.</div>';return;}
-    list.innerHTML="";
-    const requests=[];
-    snap.forEach(d=>requests.push({id:d.id,...d.data()}));
-    requests.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
-    requests.forEach(r=>{const d={id:r.id}; const el=document.createElement("div");el.className="card";el.style.margin="12px 0";el.innerHTML=`<b>${escapeHtml(r.clientName||"Client")}</b><div class="sub">${escapeHtml(r.clientEmail||"")}</div><p><b>Change:</b> ${escapeHtml(r.changeType||"")}<br><b>New information:</b> ${escapeHtml(r.newValue||"")}<br><b>Reason:</b> ${escapeHtml(r.reason||"None")}</p><button class="btn-primary" data-apply-request="${r.id}">Apply Change</button> <button class="btn-secondary" data-reject-request="${r.id}">Reject</button>`;list.appendChild(el);});
-    list.querySelectorAll("[data-apply-request]").forEach(b=>b.onclick=()=>applyBusinessChangeRequest(b.dataset.applyRequest));
-    list.querySelectorAll("[data-reject-request]").forEach(b=>b.onclick=()=>rejectBusinessChangeRequest(b.dataset.rejectRequest));
-  }catch(e){console.error("Business change requests load failed:", e);list.innerHTML='<div class="form-msg">Unable to load requests: '+escapeHtml(e?.message || "Unknown error")+'</div>';}
-}
-function requestField(type){return {"Business name":"businessName","Business address":"address","Business email":"email","Business phone number":"phone","Business logo":"logoUrl","Bank/payment information":"bankPaymentInformation","Tax/VAT information":"taxVatInformation"}[type]||null;}
-async function applyBusinessChangeRequest(id){
-  try{const rr=doc(db,"businessChangeRequests",id), rs=await getDoc(rr); if(!rs.exists())return toast("Request not found."); const r=rs.data(), field=requestField(r.changeType); if(!field){await updateDoc(rr,{status:"needs-manual-review",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""});toast("Marked for manual review.");return loadBusinessChangeRequests();} await updateDoc(doc(db,"users",r.clientUid),{[field]:r.newValue,updatedAt:serverTimestamp()}); await updateDoc(rr,{status:"approved",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""}); toast("Business information updated."); await loadBusinessChangeRequests();}catch(e){
-  console.error("Business change request apply failed:", e);
-  toast("Unable to apply change: " + (e?.code === "permission-denied" ? "permission denied. Check Firestore Rules." : (e?.message || "Unknown error")));
-}
-}
-async function rejectBusinessChangeRequest(id){try{await updateDoc(doc(db,"businessChangeRequests",id),{status:"rejected",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""});toast("Request rejected.");await loadBusinessChangeRequests();}catch(e){console.error(e);toast("Unable to reject request.");}}
-$("refreshBusinessChangeRequestsBtn")?.addEventListener("click",loadBusinessChangeRequests);
-
-// ---------- Global currency support ----------
-const DEFAULT_CURRENCY = "NGN";
-
-// Active ISO 4217 currencies. Modern browsers can supply the complete ICU list;
-// this fallback keeps the selector useful on older browsers too.
-const FALLBACK_CURRENCIES = ["AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BOV", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHE", "CHF", "CHW", "CLF", "CLP", "CNY", "COP", "COU", "CRC", "CUC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", "HNL", "HTG", "HUF", "IDR", "ILS", "INR", "IQD", "IRR", "ISK", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MXV", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "SSP", "STN", "SVC", "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "USN", "UYI", "UYU", "UYW", "UZS", "VED", "VES", "VND", "VUV", "WST", "XAF", "XAG", "XAU", "XBA", "XBB", "XBC", "XBD", "XCD", "XDR", "XOF", "XPD", "XPF", "XPT", "XSU", "XTS", "XUA", "XXX", "YER", "ZAR", "ZMW", "ZWL"];
-
-function getCurrencyCodes(){
-  try{
-    if(typeof Intl.supportedValuesOf === "function"){
-      const values = Intl.supportedValuesOf("currency");
-      if(values && values.length) return Array.from(new Set(values.concat(["NGN"]))).sort();
-    }
-  }catch(err){}
-  return FALLBACK_CURRENCIES.slice().sort();
-}
-
-const CURRENCY_CODES = Array.from(new Set(getCurrencyCodes().concat(["LRD"]))).sort();
-
-function currencyDisplayName(code){
-  try{
-    const names = new Intl.DisplayNames([navigator.language || "en"], {type:"currency"});
-    return names.of(code) || code;
-  }catch(err){
-    return code;
-  }
-}
-
-function currencySymbol(code){
-  try{
-    const parts = new Intl.NumberFormat(navigator.language || "en", {
-      style:"currency", currency:code, currencyDisplay:"symbol"
-    }).formatToParts(0);
-    return parts.find(p => p.type === "currency")?.value || code;
-  }catch(err){
-    return code;
-  }
-}
-
-function formatCurrency(amount, code){
-  const value = Number(amount) || 0;
-  try{
-    return new Intl.NumberFormat(navigator.language || "en", {
-      style:"currency",
-      currency: code,
-      currencyDisplay:"symbol"
-    }).format(value);
-  }catch(err){
-    return `${currencySymbol(code)}${value.toLocaleString()}`;
-  }
-}
-
-function currencyWords(amount, code){
-  const whole = Math.floor(Math.abs(Number(amount) || 0));
-  const name = currencyDisplayName(code);
-  return `${numberToWords(whole)} ${name} Only`;
-}
-
-function populateCurrencySelect(selectId, selectedCode = DEFAULT_CURRENCY){
-  const select = $(selectId);
-  if(!select) return;
-  select.innerHTML = "";
-  CURRENCY_CODES.forEach(code=>{
-    const option = document.createElement("option");
-    option.value = code;
-    option.textContent = `${code} — ${currencyDisplayName(code)} (${currencySymbol(code)})`;
-    select.appendChild(option);
-  });
-  select.value = CURRENCY_CODES.includes(selectedCode) ? selectedCode : DEFAULT_CURRENCY;
-}
-
-function getSelectedCurrency(selectId){
-  return $(selectId)?.value || DEFAULT_CURRENCY;
-}
-
-function setCurrencyText(selector, code){
-  document.querySelectorAll(selector).forEach(el => el.textContent = currencySymbol(code));
-}
-
 function ngn(amount){
-  return formatCurrency(amount, DEFAULT_CURRENCY);
+  return "₦" + Number(amount||0).toLocaleString();
 }
 function fmtDate(ts){
   if(!ts) return "—";
@@ -2318,7 +2160,6 @@ let unsubClients = null;
 let unsubReps = null;
 let unsubMaterials = null;
 let unsubAnnouncements = null;
-let unsubClientBroadcast = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
 let unsubSelfSignupClients = null;
@@ -2424,7 +2265,7 @@ function updateSignUpUI(){
     $("signUpSub").textContent = "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro.";
   } else {
     $("signUpTitle").textContent = "Create your business account";
-    $("signUpSub").textContent = "Free plan includes 5 invoices/receipts to start — no card required.";
+    $("signUpSub").textContent = "Free plan includes 20 invoices/receipts to start — no card required.";
   }
   const banner = $("suReferralBanner");
   if(signUpRole === "client" && pendingReferralRep){
@@ -2434,7 +2275,8 @@ function updateSignUpUI(){
     banner.classList.add("hidden");
   }
 }
-$("signUpNavBtn").addEventListener("click", ()=> openSignUp("client"));
+$("signUpNavBtn").addEventListener("click", ()=>{ const installBtn=$("installAppBtn"); const standalone=window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true; if(!standalone && installBtn && !installBtn.classList.contains("hidden")){ const n=$("installFirstNotice"); if(n)n.style.display="block"; return; } openSignUp("client"); });
+$("installFirstBtn")?.addEventListener("click",()=>{ const b=$("installAppBtn"); if(b && !b.classList.contains("hidden")) b.click(); });
 $("closeSignUpBtn").addEventListener("click", closeSignUp);
 $("signUpOverlay").addEventListener("click", (e)=>{ if(e.target.id === "signUpOverlay") closeSignUp(); });
 $("suRoleClientBtn").addEventListener("click", ()=>{ signUpRole = "client"; updateSignUpUI(); });
@@ -2589,7 +2431,6 @@ function wireLogout(id){
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
     if(unsubAnnouncements){ unsubAnnouncements(); unsubAnnouncements = null; }
-    if(unsubClientBroadcast){ unsubClientBroadcast(); unsubClientBroadcast = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
@@ -2746,7 +2587,6 @@ function initAdminDashboard(){
   loadPremiumPricing();
   loadPremiumRequestsForAdmin();
   initRecognitionModuleAdmin();
-  loadBusinessChangeRequests();
 }
 
 async function loadReps(){
@@ -2906,11 +2746,11 @@ function renderClientTableAdmin(clients){
     tr.innerHTML = `
       <td>${escapeHtml(c.clientName||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45)">${escapeHtml(c.phone||"")}</div></td>
       <td>${escapeHtml(c.repName||"—")}</td>
-      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">${escapeHtml(formatCurrency(Number(c.packageAmount||0), c.packageCurrency||DEFAULT_CURRENCY))}</div></td>
+      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">₦${Number(c.packageAmount||0).toLocaleString()}</div></td>
       <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
-      <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span>${c.paymentReference ? `<div style="font-size:10.5px; color:rgba(15,26,46,.5); margin-top:4px;" class="mono">ref: ${escapeHtml(c.paymentReference)}<br/>${escapeHtml(formatCurrency(Number(c.paidAmount||0), c.paidCurrency||c.packageCurrency||DEFAULT_CURRENCY))} paid</div>` : ""}</td>
+      <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span>${c.paymentReference ? `<div style="font-size:10.5px; color:rgba(15,26,46,.5); margin-top:4px;" class="mono">ref: ${escapeHtml(c.paymentReference)}<br/>₦${Number(c.paidAmount||0).toLocaleString()} paid</div>` : ""}</td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
-      <td class="mono">${c.commissionAmount!=null ? escapeHtml(formatCurrency(Number(c.commissionAmount), c.packageCurrency||DEFAULT_CURRENCY)) : "—"}</td>
+      <td class="mono">${c.commissionAmount!=null ? "₦"+Number(c.commissionAmount).toLocaleString() : "—"}</td>
       <td><input class="note-input" data-id="${c.id}" placeholder="Add note" value="${escapeHtml(c.adminNote||"")}" /></td>
       <td style="white-space:nowrap;">
         <button class="btn-sm confirm" data-id="${c.id}" data-action="confirm-payment" ${paymentConfirmed?"disabled":""}>Confirm payment</button>
@@ -3095,7 +2935,6 @@ function loadReferralEarningsForRep(uid, data){
   }, (err)=> console.error(err));
 }
 
-populateCurrencySelect("cPackageCurrency", DEFAULT_CURRENCY);
 $("submitClientForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   if(!currentUser || !currentUserDoc) return;
@@ -3127,7 +2966,6 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
       address: $("cAddress").value.trim(),
       package: $("cPackage").value.trim(),
       packageAmount: Number($("cPackageAmount").value) || 0,
-      packageCurrency: $("cPackageCurrency").value || DEFAULT_CURRENCY,
       repAccountNumber: $("cRepAccountNumber").value.trim(),
       documentAccess: $("cDocumentAccess").value,
       clientUid,
@@ -3159,10 +2997,9 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
 
     setFormMsg($("submitClientMsg"), "Client submitted, with their app login ready. Awaiting admin payment confirmation.", "success");
     sendNotification("ADMIN_BROADCAST", "New client submitted",
-      `${currentUserDoc.fullName || currentUser.email} submitted ${$("cName").value.trim()} — ${formatCurrency(Number($("cPackageAmount").value)||0, $("cPackageCurrency").value || DEFAULT_CURRENCY)} package.`,
+      `${currentUserDoc.fullName || currentUser.email} submitted ${$("cName").value.trim()} — ₦${(Number($("cPackageAmount").value)||0).toLocaleString()} package.`,
       "client-submitted");
     $("submitClientForm").reset();
-    if($("cPackageCurrency")) $("cPackageCurrency").value = DEFAULT_CURRENCY;
   }catch(err){
     setFormMsg($("submitClientMsg"), err.message || "Could not submit client.", "error");
   }finally{
@@ -3192,7 +3029,7 @@ function renderClientTableRep(clients){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(c.clientName||"—")}</td>
-      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">${escapeHtml(formatCurrency(Number(c.packageAmount||0), c.packageCurrency||DEFAULT_CURRENCY))}</div></td>
+      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">₦${Number(c.packageAmount||0).toLocaleString()}</div></td>
       <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
       <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span></td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
@@ -3231,16 +3068,6 @@ async function loadMaterialsForRep(){
   }, (err)=> console.error(err));
 }
 
-async function loadMaterialsForClient(){
-  if(unsubMaterials) unsubMaterials();
-  const q = query(collection(db, "materials"), orderBy("createdAt","desc"));
-  unsubMaterials = onSnapshot(q, (snap)=>{
-    const materials = [];
-    snap.forEach(d=> materials.push({ id:d.id, ...d.data() }));
-    renderMaterialsGrid(materials, "materialsGridClient", "materialsEmptyStateClient", false);
-  }, (err)=> console.error(err));
-}
-
 function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
   const grid = $(gridId);
   if(!grid) return;
@@ -3249,17 +3076,10 @@ function renderMaterialsGrid(materials, gridId, emptyId, isAdmin){
   for(const m of materials){
     const ext = (m.fileName || "file").split(".").pop().slice(0,4).toUpperCase();
     const sizeKb = m.fileSize ? Math.round(m.fileSize/1024) : null;
-    const type = m.fileType || "";
-    let preview = `<div class="material-icon">${escapeHtml(ext)}</div>`;
-    if(type.startsWith("image/")){
-      preview = `<img src="${m.fileData}" alt="${escapeHtml(m.title || "Marketing image")}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;border:1px solid var(--line);" />`;
-    } else if(type.startsWith("video/")){
-      preview = `<video src="${m.fileData}" controls preload="metadata" style="width:100%;height:150px;object-fit:cover;border-radius:10px;background:#071426;"></video>`;
-    }
     const card = document.createElement("div");
     card.className = "material-card";
     card.innerHTML = `
-      ${preview}
+      <div class="material-icon">${escapeHtml(ext)}</div>
       <div class="material-title">${escapeHtml(m.title || "Untitled")}</div>
       <div class="material-meta">${fmtDate(m.createdAt)}${sizeKb ? ` · ${sizeKb}KB` : ""}</div>
       <div class="material-actions">
@@ -3302,10 +3122,6 @@ $("uploadMaterialForm").addEventListener("submit", async (e)=>{
   const file = $("materialFile").files[0];
   const title = $("materialTitle").value.trim();
   if(!file) return;
-  if(!file.type.startsWith("image/") && !file.type.startsWith("video/")){
-    setFormMsg($("uploadMaterialMsg"), "Please choose an image or video.", "error");
-    return;
-  }
   const btn = $("uploadMaterialBtn");
   btn.disabled = true; btn.textContent = "Processing…";
   setFormMsg($("uploadMaterialMsg"), "", "");
@@ -3402,25 +3218,6 @@ function loadAnnouncementsForRep(){
   }, (err)=> console.error(err));
 }
 
-async function loadClientBroadcastMessages(){
-  if(!currentUser || currentUserDoc?.role !== "client") return;
-  if(unsubClientBroadcast) unsubClientBroadcast();
-  const q = query(collection(db, "notifications"), where("userId", "in", [currentUser.uid, "CLIENT_BROADCAST"]), orderBy("createdAt","desc"), limit(50));
-  unsubClientBroadcast = onSnapshot(q, (snap)=>{
-    const tbody = $("clientAnnouncementTableBody");
-    if(!tbody) return;
-    const items = [];
-    snap.forEach(d=> items.push({ id:d.id, ...d.data() }));
-    tbody.innerHTML = "";
-    $("clientAnnouncementEmptyState").classList.toggle("hidden", items.length > 0);
-    for(const n of items){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td><b>${escapeHtml(n.title || "Message")}</b><div style="white-space:pre-wrap;margin-top:4px;">${escapeHtml(n.body || "")}</div></td><td>${fmtDate(n.createdAt)}</td>`;
-      tbody.appendChild(tr);
-    }
-  }, (err)=> console.error(err));
-}
-
 $("postAnnouncementForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const title = $("announceTitle").value.trim();
@@ -3429,20 +3226,13 @@ $("postAnnouncementForm").addEventListener("submit", async (e)=>{
   btn.disabled = true; btn.textContent = "Posting…";
   setFormMsg($("postAnnouncementMsg"), "", "");
   try{
-    const target = $("announceTarget").value;
-    if(target === "rep" || target === "both"){
-      await addDoc(collection(db, "announcements"), {
-        title, message,
-        createdBy: currentUser?.uid || "admin",
-        createdAt: serverTimestamp()
-      });
-      await sendNotification("REP_BROADCAST", title, message, "announcement");
-    }
-    if(target === "client" || target === "both"){
-      await sendNotification("CLIENT_BROADCAST", title, message, "announcement");
-    }
-    const label = target === "rep" ? "every representative" : (target === "client" ? "every client" : "every representative and client");
-    setFormMsg($("postAnnouncementMsg"), `Sent — ${label} has been notified.`, "success");
+    await addDoc(collection(db, "announcements"), {
+      title, message,
+      createdBy: currentUser?.uid || "admin",
+      createdAt: serverTimestamp()
+    });
+    sendNotification("REP_BROADCAST", title, message, "announcement");
+    setFormMsg($("postAnnouncementMsg"), "Posted — every representative has been notified.", "success");
     $("postAnnouncementForm").reset();
   }catch(err){
     setFormMsg($("postAnnouncementMsg"), err.message || "Could not post announcement.", "error");
@@ -4649,18 +4439,10 @@ async function loadPaymentClient(clientId){
       return;
     }
     summary.innerHTML = `<b>${escapeHtml(client.clientName||"")}</b> — ${escapeHtml(client.package||"package")}`;
-    const paymentCurrency = client.packageCurrency || DEFAULT_CURRENCY;
-    $("payAmountBlock").innerHTML = `<div style="font-family:'Fraunces',serif; font-size:32px; margin:14px 0; color:var(--ink);">${escapeHtml(formatCurrency(Number(client.packageAmount||0), paymentCurrency))}</div>`;
+    $("payAmountBlock").innerHTML = `<div style="font-family:'Fraunces',serif; font-size:32px; margin:14px 0; color:var(--ink);">₦${Number(client.packageAmount||0).toLocaleString()}</div>`;
     const payBtn = $("payNowBtn");
-    const paystackSupportedCurrencies = ["NGN","USD","GHS","KES","ZAR","XOF","EGP"];
-    if(paystackSupportedCurrencies.includes(paymentCurrency)){
-      payBtn.classList.remove("hidden");
-      payBtn.textContent = `Pay with Paystack (${paymentCurrency})`;
-      payBtn.onclick = ()=> startPaystackPayment(clientId, client);
-    }else{
-      payBtn.classList.add("hidden");
-      $("payResultMsg").innerHTML = `<div class="verify-result invalid">The invoice is in ${escapeHtml(paymentCurrency)}, but Paystack checkout is not enabled for that currency on this account. The amount can still be shown and recorded in ${escapeHtml(paymentCurrency)}; use the invoice bank/payment terms for settlement.</div>`;
-    }
+    payBtn.classList.remove("hidden");
+    payBtn.onclick = ()=> startPaystackPayment(clientId, client);
   }catch(err){
     console.error(err);
     summary.textContent = "Something went wrong loading this payment request.";
@@ -4683,12 +4465,12 @@ function startPaystackPayment(clientId, client){
   const handler = window.PaystackPop.setup({
     key: PAYSTACK_PUBLIC_KEY,
     email: client.email,
-    amount: Math.round(Number(client.packageAmount||0) * 100), // Paystack expects the selected currency's minor unit
-    currency: client.packageCurrency || DEFAULT_CURRENCY,
+    amount: Math.round(Number(client.packageAmount||0) * 100), // Paystack expects kobo
+    currency: "NGN",
     ref: `IXP-PAY-${clientId}-${Date.now()}`,
     metadata: { clientId, clientName: client.clientName || "", package: client.package || "" },
     callback: function(response){
-      recordClientPayment(clientId, response.reference, client.packageAmount, client.packageCurrency || DEFAULT_CURRENCY);
+      recordClientPayment(clientId, response.reference, client.packageAmount);
     },
     onClose: function(){
       toast("Payment window closed.");
@@ -4697,12 +4479,11 @@ function startPaystackPayment(clientId, client){
   handler.openIframe();
 }
 
-async function recordClientPayment(clientId, reference, amount, currency = DEFAULT_CURRENCY){
+async function recordClientPayment(clientId, reference, amount){
   try{
     await updateDoc(doc(db, "clients", clientId), {
       paymentReference: reference,
       paidAmount: Number(amount) || 0,
-      paidCurrency: currency,
       paidAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -4772,8 +4553,6 @@ function numberToWords(num){
 }
 
 function initClientDashboard(clientRecordId, clientRecord){
-  loadMaterialsForClient();
-  loadClientBroadcastMessages();
   // Self-signed-up clients have no linked rep-submission record — fall back
   // to their own profile doc for business name/address/document access.
   const source = clientRecord || currentUserDoc || {};
@@ -4826,7 +4605,6 @@ function initClientDashboard(clientRecordId, clientRecord){
 
 // ---------- Invoice ----------
 let invNo = "";
-
 let invSessionConsumed = false;
 
 function resetInvoiceSession(){
@@ -4835,7 +4613,6 @@ function resetInvoiceSession(){
   $("invDateOut").textContent = new Date().toLocaleDateString('en-NG', {year:'numeric', month:'short', day:'numeric'});
   $("invClientName").value = "";
   $("invClientAddress").value = "";
-  if($("invCurrency")) $("invCurrency").value = DEFAULT_CURRENCY;
   $("invDiscount").value = 0;
   $("invVat").value = 7.5;
   $("invItemRows").innerHTML = "";
@@ -4866,8 +4643,6 @@ function addInvoiceRow(){
 function initInvoiceGenerator(){
   $("invAddItemBtn").onclick = addInvoiceRow;
   $("invNewBtn").onclick = resetInvoiceSession;
-  populateCurrencySelect("invCurrency", DEFAULT_CURRENCY);
-  $("invCurrency")?.addEventListener("change", updateInvoicePreview);
 
   ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber"].forEach(id=>{
     $(id).addEventListener("input", updateInvoicePreview);
@@ -4941,13 +4716,7 @@ function updateInvoicePreview(){
 
   const discountPct = Number($("invDiscount").value) || 0;
   const vatPct = Number($("invVat").value) || 0;
-  const currency = getSelectedCurrency("invCurrency");
-  const symbol = currencySymbol(currency);
   $("invVatLabelOut").textContent = `VAT (${vatPct}%)`;
-  setCurrencyText(".inv-currency-symbol", currency);
-  $("invCurrencySym").textContent = symbol;
-  $("invCurrencyHead").textContent = symbol;
-  $("invCurrencyHead2").textContent = symbol;
 
   let sub = 0;
   let rowsHtml = "";
@@ -4958,7 +4727,7 @@ function updateInvoicePreview(){
     const price = Number(row.querySelector(".inv-price").value) || 0;
     const total = qty * price;
     sub += total;
-    rowsHtml += `<tr><td>${sr}</td><td>${escapeHtml(desc)}</td><td>${qty}</td><td>${formatCurrency(price, currency)}</td><td>${formatCurrency(total, currency)}</td></tr>`;
+    rowsHtml += `<tr><td>${sr}</td><td>${escapeHtml(desc)}</td><td>${qty}</td><td>${price.toLocaleString()}</td><td>${total.toLocaleString()}</td></tr>`;
     sr++;
   });
   $("invRowsOut").innerHTML = rowsHtml;
@@ -4968,11 +4737,11 @@ function updateInvoicePreview(){
   const vat = afterDiscount * (vatPct/100);
   const grand = afterDiscount + vat;
 
-  $("invSubOut").textContent = formatCurrency(sub, currency).replace(currencySymbol(currency), "").trim();
-  $("invDisOut").textContent = formatCurrency(dis, currency).replace(currencySymbol(currency), "").trim();
-  $("invVatOut").textContent = formatCurrency(vat, currency).replace(currencySymbol(currency), "").trim();
-  $("invGrandOut").textContent = formatCurrency(grand, currency).replace(currencySymbol(currency), "").trim();
-  $("invWordsOut").innerHTML = "Amount in words: <b>" + currencyWords(grand, currency) + "</b>";
+  $("invSubOut").textContent = sub.toLocaleString();
+  $("invDisOut").textContent = dis.toLocaleString();
+  $("invVatOut").textContent = vat.toLocaleString();
+  $("invGrandOut").textContent = grand.toLocaleString();
+  $("invWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(grand) + " Naira Only</b>";
 
   const sig = currentUserDoc?.signature;
   const wantSig = $("invShowSignature") ? $("invShowSignature").checked : true;
@@ -4994,7 +4763,6 @@ function resetReceiptSession(){
   $("rcpPackage").value = "";
   $("rcpTotal").value = "";
   $("rcpPaid").value = "";
-  if($("rcpCurrency")) $("rcpCurrency").value = DEFAULT_CURRENCY;
   $("rcpNoOut").textContent = "";
   rcpSessionConsumed = false;
   $("rcpDownloadPdfBtn").classList.add("hidden");
@@ -5007,8 +4775,6 @@ function resetReceiptSession(){
 
 function initReceiptGenerator(){
   $("rcpNewBtn").onclick = resetReceiptSession;
-  populateCurrencySelect("rcpCurrency", DEFAULT_CURRENCY);
-  $("rcpCurrency")?.addEventListener("change", updateReceiptPreview);
 
   $("rcpGenerateBtn").onclick = async ()=>{
     if(rcpSessionConsumed){
@@ -5059,8 +4825,6 @@ function updateReceiptPreview(){
   const paid = Number($("rcpPaid").value) || 0;
   const vatPct = Number($("rcpVat").value) || 0;
   const balance = total - paid;
-  const currency = getSelectedCurrency("rcpCurrency");
-  setCurrencyText(".rcp-currency-symbol", currency);
 
   // Treat the entered total as VAT-inclusive, and break it down —
   // matches how a real POS receipt shows Sub Total + VAT = Total.
@@ -5071,12 +4835,12 @@ function updateReceiptPreview(){
   $("rcpClientAddressOut").textContent = clientAddress;
   $("rcpPackageOut").textContent = pkg ? `For: ${pkg}` : "";
   $("rcpVatLabelOut").textContent = `VAT (${vatPct}%)`;
-  $("rcpSubOut").textContent = formatCurrency(Math.round(subTotal), currency).replace(currencySymbol(currency), "").trim();
-  $("rcpVatAmtOut").textContent = formatCurrency(Math.round(vatAmount), currency).replace(currencySymbol(currency), "").trim();
-  $("rcpTotalOut").textContent = formatCurrency(total, currency).replace(currencySymbol(currency), "").trim();
-  $("rcpPaidOut").textContent = formatCurrency(paid, currency).replace(currencySymbol(currency), "").trim();
-  $("rcpBalanceOut").textContent = formatCurrency(balance, currency).replace(currencySymbol(currency), "").trim();
-  $("rcpWordsOut").innerHTML = "Amount in words: <b>" + currencyWords(paid, currency) + "</b>";
+  $("rcpSubOut").textContent = Math.round(subTotal).toLocaleString();
+  $("rcpVatAmtOut").textContent = Math.round(vatAmount).toLocaleString();
+  $("rcpTotalOut").textContent = total.toLocaleString();
+  $("rcpPaidOut").textContent = paid.toLocaleString();
+  $("rcpBalanceOut").textContent = balance.toLocaleString();
+  $("rcpWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(paid) + " Naira Only</b>";
 
   const rcpSig = currentUserDoc?.signature;
   const rcpWantSig = $("rcpShowSignature") ? $("rcpShowSignature").checked : true;
@@ -5300,7 +5064,7 @@ function initNotifications(uid, role){
   notifFirstLoad = true;
 
   if(unsubNotifications) unsubNotifications();
-  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : (role === "rep" ? [uid, "REP_BROADCAST"] : [uid, "CLIENT_BROADCAST"]);
+  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : (role === "rep" ? [uid, "REP_BROADCAST"] : [uid]);
   const q = query(collection(db, "notifications"), where("userId", "in", targets), orderBy("createdAt", "desc"), limit(40));
   unsubNotifications = onSnapshot(q, (snap)=>{
     const items = [];
@@ -5371,7 +5135,7 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
   // Re-query current items from the last render via list DOM is unreliable for IDs,
   // so mark-all re-reads the live query once and updates every unread doc.
   try{
-    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : (currentUserDoc?.role === "rep" ? [currentUser.uid, "REP_BROADCAST"] : [currentUser.uid, "CLIENT_BROADCAST"]);
+    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : (currentUserDoc?.role === "rep" ? [currentUser.uid, "REP_BROADCAST"] : [currentUser.uid]);
     const snap = await getDocs(query(collection(db, "notifications"), where("userId", "in", targets), where("read", "==", false)));
     const updates = [];
     snap.forEach(d => updates.push(updateDoc(doc(db, "notifications", d.id), { read: true })));
@@ -6472,8 +6236,6 @@ $("screenshotLightbox").addEventListener("click", (e)=>{
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
-
-initBusinessChangeRequests();
 </script>
 </body>
 </html>
