@@ -634,23 +634,6 @@
   }
   @keyframes authSlide{ 0%{ transform:translateX(-100%); } 100%{ transform:translateX(340%); } }
 
-  /* ===== Seller / buyer transaction proof ===== */
-  .proof-card{margin-top:16px;padding:18px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(135deg,#fffdf8,#f8f5ee);box-shadow:0 8px 24px rgba(15,26,46,.05)}
-  .proof-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px}
-  .proof-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:#eef6f0;color:#24613c;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-  .proof-note{font-size:11px;line-height:1.45;color:rgba(15,26,46,.58);margin:0 0 12px}
-  .proof-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-  .proof-photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:10px}
-  .proof-photo-preview{width:76px;height:76px;border-radius:50%;border:2px solid var(--brass);background:#f1eee7;display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:800;color:rgba(15,26,46,.45);font-size:11px;text-align:center}
-  .proof-photo-preview img{width:100%;height:100%;object-fit:cover}
-  .proof-check{display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:11px;color:rgba(15,26,46,.7)}
-  .proof-check input{margin-top:2px}
-  .proof-document-box{margin-top:14px;padding:12px;border:1px dashed #cdbb98;border-radius:10px;background:#fff}
-  .proof-document-box .proof-mini-title{font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:900;color:#8a6931;margin-bottom:7px}
-  .proof-doc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px;font-size:10px;color:#333}
-  .proof-doc-grid div{padding-bottom:4px;border-bottom:1px dotted #ddd}
-  .proof-doc-grid b{color:#111}
-  @media(max-width:620px){.proof-grid,.proof-doc-grid{grid-template-columns:1fr}}
   /* ===== Client invoice/receipt documents ===== */
   .doc-item-row{ display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-bottom:10px; }
   .doc-item-row input{ padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:13.5px; font-family:inherit; }
@@ -1019,7 +1002,8 @@
   </div>
 
   <!-- ===== ADMIN DASHBOARD ===== -->
-  <div class="dash hidden" id="adminDash">
+  <div class="dash hidden" id="adminDash"><div class="panel" id="adminBusinessChangeRequests" style="margin-top:18px;"><div class="panel-head"><h3>Business Information Change Requests</h3><button type="button" class="btn-secondary" id="refreshBusinessChangeRequestsBtn">Refresh</button></div><div id="adminBusinessChangeRequestsList"><div class="sub">No requests loaded.</div></div></div>
+
     <div class="dash-head">
       <h2>Admin overview</h2>
       <p>Manage representatives and review client submissions.</p>
@@ -1463,7 +1447,8 @@
           <div class="field"><label>Phone</label><input type="tel" id="cPhone" required /></div>
           <div class="field"><label>Email</label><input type="email" id="cEmail" required /></div>
           <div class="field"><label>Package</label><input type="text" id="cPackage" required /></div>
-          <div class="field"><label>Package amount (₦)</label><input type="number" min="1" step="1" id="cPackageAmount" required /></div>
+          <div class="field"><label>Package currency</label><select id="cPackageCurrency" required></select></div>
+          <div class="field"><label>Package amount</label><input type="number" min="1" step="1" id="cPackageAmount" required /></div>
           <div class="field"><label>Your account number</label><input type="text" id="cRepAccountNumber" required /></div>
           <div class="field"><label>Client's chosen password</label><input type="text" id="cClientPassword" required minlength="6" placeholder="Client picks this — for their app login" /></div>
           <div class="field"><label>Document access after approval</label>
@@ -1603,6 +1588,25 @@
     </div>
 
     <div id="planStatusCard"></div>
+    <div class="panel" style="margin-top:16px;">
+      <div class="panel-head"><h3>Need to change your business information?</h3><span class="hint">Changes require admin approval</span></div>
+      <p class="sub">To prevent duplicate businesses, you cannot edit your business profile directly. Tell the administrator exactly what you want changed and the admin will review and update it.</p>
+      <button type="button" class="btn-secondary" id="openBusinessChangeRequestBtn">Request Business Information Change</button>
+    </div>
+
+    <div class="modal hidden" id="businessChangeRequestModal" role="dialog" aria-modal="true">
+      <div class="modal-card" style="max-width:620px;">
+        <div class="modal-header"><div><h3 style="margin:0;">Request Business Information Change</h3><p class="sub" style="margin:5px 0 0;">Send the requested change to the administrator.</p></div><button type="button" class="modal-close" id="closeBusinessChangeRequestBtn">×</button></div>
+        <form id="businessChangeRequestForm">
+          <div class="field"><label>What do you want to change?</label><select id="changeRequestType" required><option value="">Select one</option><option>Business name</option><option>Business address</option><option>Business email</option><option>Business phone number</option><option>Business logo</option><option>Bank/payment information</option><option>Tax/VAT information</option><option>Other business information</option></select></div>
+          <div class="field"><label>What should the new information be?</label><textarea id="changeRequestNewValue" rows="4" required placeholder="Enter the correct new information"></textarea></div>
+          <div class="field"><label>Reason (optional)</label><textarea id="changeRequestReason" rows="3" placeholder="Why does this need to be changed?"></textarea></div>
+          <div id="businessChangeRequestMsg" class="form-msg"></div>
+          <button type="submit" class="btn-primary" id="submitBusinessChangeRequestBtn">Send Request to Admin</button>
+        </form>
+      </div>
+    </div>
+
 
     <!-- Premium upgrade page -->
     <div class="subpanel" data-panel="premiumUpgradeTab" id="premiumUpgradePanel">
@@ -1706,11 +1710,40 @@
         <div class="grid-2">
           <div class="field"><label>Customer name</label><input type="text" id="invClientName" /></div>
           <div class="field"><label>Customer address</label><input type="text" id="invClientAddress" /></div>
+          <div class="field"><label>Document type</label><select id="invDocumentType"><option value="invoice">Invoice</option><option value="proforma">Proforma Invoice</option></select></div>
+          <div class="field"><label>Currency</label><select id="invCurrency" aria-label="Invoice currency" title="Choose any ISO 4217 currency supported by your browser"></select></div>
           <div class="field"><label>Discount (%)</label><input type="number" id="invDiscount" value="0" min="0" max="100" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="invVat" value="7.5" min="0" max="100" /></div>
         </div>
+        <div class="panel" style="margin-top:12px; padding:14px; background:#f7f9fc;">
+          <div class="panel-head" style="margin-top:0;"><h3 style="font-size:15px;">Ownership / Seller role</h3></div>
+          <p class="hint">Choose whether you own the goods or asset. If you are acting for someone else, the actual owner/seller is shown instead of your business information.</p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; margin:10px 0;">
+            <label class="pkg-option" style="cursor:pointer; padding:10px 14px;"><input type="radio" name="invOwnerRole" value="owner" checked /> I am the owner / seller</label>
+            <label class="pkg-option" style="cursor:pointer; padding:10px 14px;"><input type="radio" name="invOwnerRole" value="representative" /> I am acting for the owner / seller</label>
+          </div>
+          <div id="invOwnerFields"><div class="grid-2">
+            <div class="field"><label>Owner / Seller full name</label><input id="invOwnerName" type="text" /></div>
+            <div class="field"><label>Owner / Seller phone</label><input id="invOwnerPhone" type="text" /></div>
+            <div class="field"><label>Owner / Seller email</label><input id="invOwnerEmail" type="email" /></div>
+            <div class="field"><label>Owner / Seller address</label><input id="invOwnerAddress" type="text" /></div>
+          </div></div>
+          <div id="invRepresentativeFields" class="hidden"><div class="grid-2">
+            <div class="field"><label>Actual owner / seller full name</label><input id="invActualOwnerName" type="text" /></div>
+            <div class="field"><label>Actual owner / seller phone</label><input id="invActualOwnerPhone" type="text" /></div>
+            <div class="field"><label>Actual owner / seller email</label><input id="invActualOwnerEmail" type="email" /></div>
+            <div class="field"><label>Actual owner / seller address</label><input id="invActualOwnerAddress" type="text" /></div>
+            <div class="field"><label>Representative name</label><input id="invRepName" type="text" /></div>
+            <div class="field"><label>Representative phone</label><input id="invRepPhone" type="text" /></div>
+          </div></div>
+        </div>
+        <div class="panel-head" style="margin-top:12px;"><h3 style="font-size:15px;">Asset / transaction details (optional)</h3></div>
+        <div class="grid-2">
+          <div class="field"><label>Asset type</label><input id="invAssetType" type="text" placeholder="Land, vehicle, equipment, goods…" /></div>
+          <div class="field"><label>Asset location / reference</label><input id="invAssetLocation" type="text" /></div>
+        </div>
         <div class="panel-head" style="margin-top:6px;">
-          <h3 style="font-size:15px;">Business details (optional, shown on the invoice)</h3>
+          <h3 style="font-size:15px;">Business details (used only when you are the owner / seller)</h3>
         </div>
         <div class="logo-uploader">
           <div class="logo-uploader-preview" id="logoPreviewBox">?</div>
@@ -1736,40 +1769,6 @@
           <button type="button" class="btn-sm approve" id="invAddItemBtn">+ Add item</button>
         </div>
         <div id="invItemRows"></div>
-
-        <div class="proof-card">
-          <div class="proof-head">
-            <div>
-              <div class="proof-badge">🛡 Transaction proof</div>
-              <h3 style="font-size:16px;margin:8px 0 4px;">Seller & buyer proof</h3>
-            </div>
-            <span style="font-size:10px;color:rgba(15,26,46,.45);">Optional but recommended</span>
-          </div>
-          <p class="proof-note">Use this section when a product, vehicle, land, equipment or other valuable asset is being sold or transferred. It creates a stronger transaction record. It does not by itself prove legal ownership or replace government verification.</p>
-          <div class="proof-grid">
-            <div class="field"><label>Asset / transaction type</label><select id="invProofType"><option value="goods">Goods / Product</option><option value="vehicle">Vehicle / Car</option><option value="land">Land / Property</option><option value="equipment">Equipment / Machinery</option><option value="service">Service</option><option value="other">Other</option></select></div>
-            <div class="field"><label>Seller / current owner full name</label><input type="text" id="invSellerName" /></div>
-            <div class="field"><label>Seller phone</label><input type="text" id="invSellerPhone" /></div>
-            <div class="field"><label>Seller address</label><input type="text" id="invSellerAddress" /></div>
-            <div class="field"><label>Buyer ID / reference number</label><input type="text" id="invBuyerId" placeholder="Optional buyer ID / reference" /></div>
-            <div class="field"><label>Seller ID / reference number</label><input type="text" id="invSellerId" placeholder="ID / passport / driver's licence ref." /></div>
-            <div class="field"><label>Asset ID / serial / VIN / plot number</label><input type="text" id="invAssetId" /></div>
-            <div class="field"><label>Ownership / source details</label><input type="text" id="invOwnershipDetails" placeholder="Title, receipt, serial, source, etc." /></div>
-            <div class="field"><label>Witness / additional reference</label><input type="text" id="invWitness" /></div>
-          </div>
-          <div class="proof-photo-row">
-            <div class="proof-photo-preview" id="invSellerPhotoPreview">Seller<br>photo</div>
-            <div>
-              <button type="button" class="btn-sm approve" id="invSellerPhotoBtn">Add seller face photo</button>
-              <button type="button" class="btn-sm reject hidden" id="invSellerPhotoRemove">Remove</button>
-              <input type="file" id="invSellerPhotoInput" accept="image/png,image/jpeg,image/jpg" class="hidden" capture="user" />
-              <div style="font-size:10px;color:rgba(15,26,46,.5);margin-top:5px;">Clear face photo. The image is compressed in the browser and embedded only in the generated document; this feature does not use Firebase Storage.</div>
-            </div>
-          </div>
-          <label class="proof-check"><input type="checkbox" id="invSellerPhotoConsent" /> Seller confirms consent for this facial image to appear on this transaction document.</label>
-          <label class="proof-check"><input type="checkbox" id="invBuyerAcknowledgement" /> Buyer confirms receipt/acceptance of the goods, asset or service described on this document and acknowledges the transaction details.</label>
-          <div class="field" style="margin-top:10px;"><label>Seller declaration</label><textarea id="invSellerDeclaration" rows="2" placeholder="Example: I confirm that I am the seller/current owner and the information supplied above is accurate to the best of my knowledge."></textarea></div>
-        </div>
       </div>
 
       <div class="doc-preview-wrap">
@@ -1784,7 +1783,7 @@
               </div>
             </div>
             <div class="inv-doc-label">
-              <div class="inv-doc-title">TAX INVOICE</div>
+              <div class="inv-doc-title" id="invDocTitleOut">TAX INVOICE</div>
               <div class="inv-doc-no">No. <span id="invNoOut"></span></div>
               <div class="inv-doc-date">Date: <span id="invDateOut"></span></div>
             </div>
@@ -1804,21 +1803,22 @@
           </div>
 
           <table class="inv-table">
-            <thead><tr><th>Sr.</th><th>Description</th><th>Qty</th><th>Rate (₦)</th><th>Amount (₦)</th></tr></thead>
+            <thead><tr><th>Sr.</th><th>Description</th><th>Qty</th><th>Rate (<span id="invCurrencyHead">₦</span>)</th><th>Amount (<span id="invCurrencyHead2">₦</span>)</th></tr></thead>
             <tbody id="invRowsOut"></tbody>
           </table>
 
           <div class="inv-summary-wrap">
             <div class="inv-summary">
-              <div class="inv-sum-row"><span>Sub Total</span><span>₦<span id="invSubOut">0</span></span></div>
-              <div class="inv-sum-row"><span>Discount</span><span>₦<span id="invDisOut">0</span></span></div>
-              <div class="inv-sum-row" id="invVatRow"><span id="invVatLabelOut">VAT (7.5%)</span><span>₦<span id="invVatOut">0</span></span></div>
-              <div class="inv-sum-row inv-grand"><span>Total</span><span>₦<span id="invGrandOut">0</span></span></div>
+              <div class="inv-sum-row"><span>Sub Total</span><span><span id="invCurrencySym">₦</span><span id="invSubOut">0</span></span></div>
+              <div class="inv-sum-row"><span>Discount</span><span><span class="inv-currency-symbol">₦</span><span id="invDisOut">0</span></span></div>
+              <div class="inv-sum-row" id="invVatRow"><span id="invVatLabelOut">VAT (7.5%)</span><span><span class="inv-currency-symbol">₦</span><span id="invVatOut">0</span></span></div>
+              <div class="inv-sum-row inv-grand"><span>Total</span><span><span class="inv-currency-symbol">₦</span><span id="invGrandOut">0</span></span></div>
             </div>
           </div>
 
           <div class="inv-words" id="invWordsOut">Amount in words: Zero Naira Only</div>
 
+          <div id="invRoleInfoOut" style="margin-top:12px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:11px;"></div>
           <div class="inv-bottom-grid">
             <div class="inv-bank-box" id="invBankBox">
               <div class="inv-box-label">Payment Details</div>
@@ -1830,32 +1830,25 @@
             </div>
           </div>
 
-          <div class="proof-document-box" id="invProofOutBox">
-            <div class="proof-mini-title">Transaction & ownership record</div>
-            <div class="proof-doc-grid">
-              <div>Type: <b id="invProofTypeOut">—</b></div>
-              <div>Seller: <b id="invSellerNameOut">—</b></div>
-              <div>Seller address: <b id="invSellerAddressOut">—</b></div>
-              <div>Buyer ID/ref: <b id="invBuyerIdOut">—</b></div>
-              <div>Seller phone: <b id="invSellerPhoneOut">—</b></div>
-              <div>Seller ID/ref: <b id="invSellerIdOut">—</b></div>
-              <div>Asset ID: <b id="invAssetIdOut">—</b></div>
-              <div>Witness/ref: <b id="invWitnessOut">—</b></div>
-              <div style="grid-column:1/-1">Ownership/source: <b id="invOwnershipOut">—</b></div>
-              <div style="grid-column:1/-1">Seller declaration: <b id="invDeclarationOut">—</b></div>
-              <div style="grid-column:1/-1">Buyer acknowledgement: <b id="invBuyerAckOut">—</b></div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
-              <img id="invSellerPhotoOut" class="proof-photo-preview hidden" alt="Seller face" />
-              <span style="font-size:9px;color:rgba(15,26,46,.48);">Seller facial image shown only where consent was provided.</span>
-            </div>
+          <div style="margin-top:14px;border-top:1px solid #e5e7eb;padding-top:12px;">
+            <div style="font-weight:700;font-size:11px;margin-bottom:7px;">Buyer / Client acknowledgement</div>
+            <img id="invBuyerSignatureImg" class="inv-signature-img hidden" style="max-height:55px;" />
+            <div class="inv-sign-line">Buyer / Client Signature</div>
+            <div id="invBuyerSignatureDateOut" style="font-size:9px;color:#666;margin-top:4px;"></div>
           </div>
-          <div class="inv-footer-note">Goods once sold will not be taken back · This is a computer-generated invoice · Transaction proof is a record, not independent legal verification.</div>
+          <div class="inv-footer-note">Goods once sold will not be taken back · This is a computer-generated document.</div>
         </div>
       </div>
       <label class="sig-toggle-row hidden" id="invSigToggleRow">
-        <input type="checkbox" id="invShowSignature" checked /> Show signature on this invoice
+        <input type="checkbox" id="invShowSignature" checked /> Show my saved signature on this document
       </label>
+      <div class="panel" style="margin-top:12px;">
+        <div class="panel-head"><h3 style="font-size:15px;">Buyer / Client Signature</h3></div>
+        <p class="hint">Useful for land, vehicles, property, equipment, goods, or any transaction where buyer acknowledgement is required.</p>
+        <canvas id="invBuyerSigCanvas" style="width:100%;height:130px;border:1px dashed #aab4c3;border-radius:10px;background:#fff;touch-action:none;"></canvas>
+        <div class="doc-actions"><button type="button" class="btn-sm reject" id="invBuyerSigClearBtn">Clear signature</button><button type="button" class="btn-sm confirm" id="invBuyerSigUseBtn">Use signature</button></div>
+        <div class="form-msg" id="invBuyerSigMsg"></div>
+      </div>
       <div class="doc-actions">
         <button type="button" class="btn-primary" id="invGenerateBtn" style="max-width:200px;">Generate invoice</button>
         <button type="button" class="btn-sm approve hidden" id="invDownloadPdfBtn">Download PDF</button>
@@ -1887,39 +1880,10 @@
           <div class="field"><label>Received from (customer)</label><input type="text" id="rcpClientName" /></div>
           <div class="field"><label>Customer address</label><input type="text" id="rcpClientAddress" /></div>
           <div class="field"><label>Package / service</label><input type="text" id="rcpPackage" /></div>
-          <div class="field"><label>Total amount (₦)</label><input type="number" id="rcpTotal" min="0" /></div>
-          <div class="field"><label>Amount paid (₦)</label><input type="number" id="rcpPaid" min="0" /></div>
+          <div class="field"><label>Currency</label><select id="rcpCurrency" aria-label="Receipt currency" title="Choose any ISO 4217 currency supported by your browser"></select></div>
+          <div class="field"><label>Total amount</label><input type="number" id="rcpTotal" min="0" /></div>
+          <div class="field"><label>Amount paid</label><input type="number" id="rcpPaid" min="0" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="rcpVat" value="7.5" min="0" max="100" /></div>
-        </div>
-        <div class="proof-card">
-          <div class="proof-head">
-            <div><div class="proof-badge">🛡 Transaction proof</div><h3 style="font-size:16px;margin:8px 0 4px;">Seller & buyer proof</h3></div>
-            <span style="font-size:10px;color:rgba(15,26,46,.45);">Optional but recommended</span>
-          </div>
-          <p class="proof-note">For high-value sales such as vehicles, land, equipment and goods, record the seller's identity and asset details alongside the payment receipt. This is supporting evidence only and does not replace government/title verification.</p>
-          <div class="proof-grid">
-            <div class="field"><label>Asset / transaction type</label><select id="rcpProofType"><option value="goods">Goods / Product</option><option value="vehicle">Vehicle / Car</option><option value="land">Land / Property</option><option value="equipment">Equipment / Machinery</option><option value="service">Service</option><option value="other">Other</option></select></div>
-            <div class="field"><label>Seller / current owner full name</label><input type="text" id="rcpSellerName" /></div>
-            <div class="field"><label>Seller phone</label><input type="text" id="rcpSellerPhone" /></div>
-            <div class="field"><label>Seller address</label><input type="text" id="rcpSellerAddress" /></div>
-            <div class="field"><label>Buyer ID / reference number</label><input type="text" id="rcpBuyerId" placeholder="Optional buyer ID / reference" /></div>
-            <div class="field"><label>Seller ID / reference number</label><input type="text" id="rcpSellerId" /></div>
-            <div class="field"><label>Asset ID / serial / VIN / plot number</label><input type="text" id="rcpAssetId" /></div>
-            <div class="field"><label>Ownership / source details</label><input type="text" id="rcpOwnershipDetails" /></div>
-            <div class="field"><label>Witness / additional reference</label><input type="text" id="rcpWitness" /></div>
-          </div>
-          <div class="proof-photo-row">
-            <div class="proof-photo-preview" id="rcpSellerPhotoPreview">Seller<br>photo</div>
-            <div>
-              <button type="button" class="btn-sm approve" id="rcpSellerPhotoBtn">Add seller face photo</button>
-              <button type="button" class="btn-sm reject hidden" id="rcpSellerPhotoRemove">Remove</button>
-              <input type="file" id="rcpSellerPhotoInput" accept="image/png,image/jpeg,image/jpg" class="hidden" capture="user" />
-              <div style="font-size:10px;color:rgba(15,26,46,.5);margin-top:5px;">Compressed in the browser and embedded only in the generated receipt. No Firebase Storage is used.</div>
-            </div>
-          </div>
-          <label class="proof-check"><input type="checkbox" id="rcpSellerPhotoConsent" /> Seller confirms consent for this facial image to appear on this transaction document.</label>
-          <label class="proof-check"><input type="checkbox" id="rcpBuyerAcknowledgement" /> Buyer confirms receipt/acceptance of the goods, asset or service described on this document and acknowledges the transaction details.</label>
-          <div class="field" style="margin-top:10px;"><label>Seller declaration</label><textarea id="rcpSellerDeclaration" rows="2" placeholder="I confirm that I am the seller/current owner and the information supplied above is accurate to the best of my knowledge."></textarea></div>
         </div>
         <button type="button" class="btn-primary" id="rcpGenerateBtn" style="max-width:200px;">Generate receipt</button>
         <div class="form-msg" id="rcpGenerateMsg"></div>
@@ -1950,37 +1914,17 @@
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-summary">
-            <div class="pos-row"><span>Sub Total</span><span>₦<span id="rcpSubOut">0</span></span></div>
-            <div class="pos-row"><span id="rcpVatLabelOut">VAT (7.5%)</span><span>₦<span id="rcpVatAmtOut">0</span></span></div>
-            <div class="pos-row"><span>Total Amount</span><span>₦<span id="rcpTotalOut">0</span></span></div>
-            <div class="pos-row"><span>Amount Paid</span><span>₦<span id="rcpPaidOut">0</span></span></div>
-            <div class="pos-row pos-bold"><span>Balance Due</span><span>₦<span id="rcpBalanceOut">0</span></span></div>
+            <div class="pos-row"><span>Sub Total</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpSubOut">0</span></span></div>
+            <div class="pos-row"><span id="rcpVatLabelOut">VAT (7.5%)</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpVatAmtOut">0</span></span></div>
+            <div class="pos-row"><span>Total Amount</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpTotalOut">0</span></span></div>
+            <div class="pos-row"><span>Amount Paid</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpPaidOut">0</span></span></div>
+            <div class="pos-row pos-bold"><span>Balance Due</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpBalanceOut">0</span></span></div>
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-words" id="rcpWordsOut"></div>
           <div class="pos-sign-area">
             <img id="rcpSignatureImg" class="pos-signature-img hidden" />
             <div class="pos-sign-line">Authorised Signature</div>
-          </div>
-          <div class="proof-document-box" id="rcpProofOutBox">
-            <div class="proof-mini-title">Transaction & ownership record</div>
-            <div class="proof-doc-grid">
-              <div>Type: <b id="rcpProofTypeOut">—</b></div>
-              <div>Seller: <b id="rcpSellerNameOut">—</b></div>
-              <div>Seller address: <b id="rcpSellerAddressOut">—</b></div>
-              <div>Buyer ID/ref: <b id="rcpBuyerIdOut">—</b></div>
-              <div>Seller phone: <b id="rcpSellerPhoneOut">—</b></div>
-              <div>Seller ID/ref: <b id="rcpSellerIdOut">—</b></div>
-              <div>Asset ID: <b id="rcpAssetIdOut">—</b></div>
-              <div>Witness/ref: <b id="rcpWitnessOut">—</b></div>
-              <div style="grid-column:1/-1">Ownership/source: <b id="rcpOwnershipOut">—</b></div>
-              <div style="grid-column:1/-1">Seller declaration: <b id="rcpDeclarationOut">—</b></div>
-              <div style="grid-column:1/-1">Buyer acknowledgement: <b id="rcpBuyerAckOut">—</b></div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
-              <img id="rcpSellerPhotoOut" class="proof-photo-preview hidden" alt="Seller face" />
-              <span style="font-size:9px;color:rgba(15,26,46,.48);">Seller facial image shown only where consent was provided.</span>
-            </div>
           </div>
           <div class="pos-thankyou">Thank you for your payment!</div>
           <div class="pos-subthanks">We appreciate your business</div>
@@ -2261,8 +2205,131 @@ function setFormMsg(el, text, type){
   el.textContent = text;
   el.className = "form-msg " + (type || "");
 }
+
+// ---------- Client business information change requests ----------
+async function submitBusinessChangeRequest(){
+  const type=$("changeRequestType")?.value||"", value=$("changeRequestNewValue")?.value.trim()||"", reason=$("changeRequestReason")?.value.trim()||"", msg=$("businessChangeRequestMsg"), btn=$("submitBusinessChangeRequestBtn");
+  if(!type||!value){ msg.textContent="Please select what you want changed and enter the new information."; return; }
+  if(!currentUser){ msg.textContent="Please sign in first."; return; }
+  try{
+    btn.disabled=true; btn.textContent="Sending…";
+    await addDoc(collection(db,"businessChangeRequests"),{clientUid:currentUser.uid,clientEmail:currentUser.email||"",clientName:currentUserDoc?.fullName||currentUserDoc?.businessName||currentUser.email||"Client",changeType:type,newValue:value,reason,status:"pending",createdAt:serverTimestamp()});
+    msg.textContent="Request sent to admin. Your business information will only change after admin review.";
+    $("businessChangeRequestForm").reset();
+    setTimeout(()=>$("businessChangeRequestModal").classList.add("hidden"),1600);
+  }catch(e){console.error(e);msg.textContent="Could not send the request. Please try again.";}
+  finally{btn.disabled=false;btn.textContent="Send Request to Admin";}
+}
+function initBusinessChangeRequests(){
+  $("openBusinessChangeRequestBtn")?.addEventListener("click",()=>$("businessChangeRequestModal")?.classList.remove("hidden"));
+  $("closeBusinessChangeRequestBtn")?.addEventListener("click",()=>$("businessChangeRequestModal")?.classList.add("hidden"));
+  $("businessChangeRequestForm")?.addEventListener("submit",e=>{e.preventDefault();submitBusinessChangeRequest();});
+}
+async function loadBusinessChangeRequests(){
+  const list=$("adminBusinessChangeRequestsList"); if(!list)return;
+  try{
+    const snap=await getDocs(query(collection(db,"businessChangeRequests"),where("status","==","pending")));
+    if(snap.empty){list.innerHTML='<div class="sub">No pending requests.</div>';return;}
+    list.innerHTML="";
+    const requests=[];
+    snap.forEach(d=>requests.push({id:d.id,...d.data()}));
+    requests.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+    requests.forEach(r=>{const d={id:r.id}; const el=document.createElement("div");el.className="card";el.style.margin="12px 0";el.innerHTML=`<b>${escapeHtml(r.clientName||"Client")}</b><div class="sub">${escapeHtml(r.clientEmail||"")}</div><p><b>Change:</b> ${escapeHtml(r.changeType||"")}<br><b>New information:</b> ${escapeHtml(r.newValue||"")}<br><b>Reason:</b> ${escapeHtml(r.reason||"None")}</p><button class="btn-primary" data-apply-request="${r.id}">Apply Change</button> <button class="btn-secondary" data-reject-request="${r.id}">Reject</button>`;list.appendChild(el);});
+    list.querySelectorAll("[data-apply-request]").forEach(b=>b.onclick=()=>applyBusinessChangeRequest(b.dataset.applyRequest));
+    list.querySelectorAll("[data-reject-request]").forEach(b=>b.onclick=()=>rejectBusinessChangeRequest(b.dataset.rejectRequest));
+  }catch(e){console.error("Business change requests load failed:", e);list.innerHTML='<div class="form-msg">Unable to load requests: '+escapeHtml(e?.message || "Unknown error")+'</div>';}
+}
+function requestField(type){return {"Business name":"businessName","Business address":"address","Business email":"email","Business phone number":"phone","Business logo":"logoUrl","Bank/payment information":"bankPaymentInformation","Tax/VAT information":"taxVatInformation"}[type]||null;}
+async function applyBusinessChangeRequest(id){
+  try{const rr=doc(db,"businessChangeRequests",id), rs=await getDoc(rr); if(!rs.exists())return toast("Request not found."); const r=rs.data(), field=requestField(r.changeType); if(!field){await updateDoc(rr,{status:"needs-manual-review",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""});toast("Marked for manual review.");return loadBusinessChangeRequests();} await updateDoc(doc(db,"users",r.clientUid),{[field]:r.newValue,updatedAt:serverTimestamp()}); await updateDoc(rr,{status:"approved",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""}); toast("Business information updated."); await loadBusinessChangeRequests();}catch(e){
+  console.error("Business change request apply failed:", e);
+  toast("Unable to apply change: " + (e?.code === "permission-denied" ? "permission denied. Check Firestore Rules." : (e?.message || "Unknown error")));
+}
+}
+async function rejectBusinessChangeRequest(id){try{await updateDoc(doc(db,"businessChangeRequests",id),{status:"rejected",reviewedAt:serverTimestamp(),reviewedBy:currentUser?.uid||""});toast("Request rejected.");await loadBusinessChangeRequests();}catch(e){console.error(e);toast("Unable to reject request.");}}
+$("refreshBusinessChangeRequestsBtn")?.addEventListener("click",loadBusinessChangeRequests);
+
+// ---------- Global currency support ----------
+const DEFAULT_CURRENCY = "NGN";
+
+// Active ISO 4217 currencies. Modern browsers can supply the complete ICU list;
+// this fallback keeps the selector useful on older browsers too.
+const FALLBACK_CURRENCIES = ["AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB", "BOV", "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHE", "CHF", "CHW", "CLF", "CLP", "CNY", "COP", "COU", "CRC", "CUC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP", "DZD", "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", "HNL", "HTG", "HUF", "IDR", "ILS", "INR", "IQD", "IRR", "ISK", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT", "LAK", "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MXV", "MYR", "MZN", "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF", "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SLL", "SOS", "SRD", "SSP", "STN", "SVC", "SYP", "SZL", "THB", "TJS", "TMT", "TND", "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "USN", "UYI", "UYU", "UYW", "UZS", "VED", "VES", "VND", "VUV", "WST", "XAF", "XAG", "XAU", "XBA", "XBB", "XBC", "XBD", "XCD", "XDR", "XOF", "XPD", "XPF", "XPT", "XSU", "XTS", "XUA", "XXX", "YER", "ZAR", "ZMW", "ZWL"];
+
+function getCurrencyCodes(){
+  try{
+    if(typeof Intl.supportedValuesOf === "function"){
+      const values = Intl.supportedValuesOf("currency");
+      if(values && values.length) return Array.from(new Set(values.concat(["NGN"]))).sort();
+    }
+  }catch(err){}
+  return FALLBACK_CURRENCIES.slice().sort();
+}
+
+const CURRENCY_CODES = Array.from(new Set(getCurrencyCodes().concat(["LRD"]))).sort();
+
+function currencyDisplayName(code){
+  try{
+    const names = new Intl.DisplayNames([navigator.language || "en"], {type:"currency"});
+    return names.of(code) || code;
+  }catch(err){
+    return code;
+  }
+}
+
+function currencySymbol(code){
+  try{
+    const parts = new Intl.NumberFormat(navigator.language || "en", {
+      style:"currency", currency:code, currencyDisplay:"symbol"
+    }).formatToParts(0);
+    return parts.find(p => p.type === "currency")?.value || code;
+  }catch(err){
+    return code;
+  }
+}
+
+function formatCurrency(amount, code){
+  const value = Number(amount) || 0;
+  try{
+    return new Intl.NumberFormat(navigator.language || "en", {
+      style:"currency",
+      currency: code,
+      currencyDisplay:"symbol"
+    }).format(value);
+  }catch(err){
+    return `${currencySymbol(code)}${value.toLocaleString()}`;
+  }
+}
+
+function currencyWords(amount, code){
+  const whole = Math.floor(Math.abs(Number(amount) || 0));
+  const name = currencyDisplayName(code);
+  return `${numberToWords(whole)} ${name} Only`;
+}
+
+function populateCurrencySelect(selectId, selectedCode = DEFAULT_CURRENCY){
+  const select = $(selectId);
+  if(!select) return;
+  select.innerHTML = "";
+  CURRENCY_CODES.forEach(code=>{
+    const option = document.createElement("option");
+    option.value = code;
+    option.textContent = `${code} — ${currencyDisplayName(code)} (${currencySymbol(code)})`;
+    select.appendChild(option);
+  });
+  select.value = CURRENCY_CODES.includes(selectedCode) ? selectedCode : DEFAULT_CURRENCY;
+}
+
+function getSelectedCurrency(selectId){
+  return $(selectId)?.value || DEFAULT_CURRENCY;
+}
+
+function setCurrencyText(selector, code){
+  document.querySelectorAll(selector).forEach(el => el.textContent = currencySymbol(code));
+}
+
 function ngn(amount){
-  return "₦" + Number(amount||0).toLocaleString();
+  return formatCurrency(amount, DEFAULT_CURRENCY);
 }
 function fmtDate(ts){
   if(!ts) return "—";
@@ -2706,6 +2773,7 @@ function initAdminDashboard(){
   loadPremiumPricing();
   loadPremiumRequestsForAdmin();
   initRecognitionModuleAdmin();
+  loadBusinessChangeRequests();
 }
 
 async function loadReps(){
@@ -2865,11 +2933,11 @@ function renderClientTableAdmin(clients){
     tr.innerHTML = `
       <td>${escapeHtml(c.clientName||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45)">${escapeHtml(c.phone||"")}</div></td>
       <td>${escapeHtml(c.repName||"—")}</td>
-      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">₦${Number(c.packageAmount||0).toLocaleString()}</div></td>
+      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">${escapeHtml(formatCurrency(Number(c.packageAmount||0), c.packageCurrency||DEFAULT_CURRENCY))}</div></td>
       <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
-      <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span>${c.paymentReference ? `<div style="font-size:10.5px; color:rgba(15,26,46,.5); margin-top:4px;" class="mono">ref: ${escapeHtml(c.paymentReference)}<br/>₦${Number(c.paidAmount||0).toLocaleString()} paid</div>` : ""}</td>
+      <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span>${c.paymentReference ? `<div style="font-size:10.5px; color:rgba(15,26,46,.5); margin-top:4px;" class="mono">ref: ${escapeHtml(c.paymentReference)}<br/>${escapeHtml(formatCurrency(Number(c.paidAmount||0), c.paidCurrency||c.packageCurrency||DEFAULT_CURRENCY))} paid</div>` : ""}</td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
-      <td class="mono">${c.commissionAmount!=null ? "₦"+Number(c.commissionAmount).toLocaleString() : "—"}</td>
+      <td class="mono">${c.commissionAmount!=null ? escapeHtml(formatCurrency(Number(c.commissionAmount), c.packageCurrency||DEFAULT_CURRENCY)) : "—"}</td>
       <td><input class="note-input" data-id="${c.id}" placeholder="Add note" value="${escapeHtml(c.adminNote||"")}" /></td>
       <td style="white-space:nowrap;">
         <button class="btn-sm confirm" data-id="${c.id}" data-action="confirm-payment" ${paymentConfirmed?"disabled":""}>Confirm payment</button>
@@ -3054,6 +3122,7 @@ function loadReferralEarningsForRep(uid, data){
   }, (err)=> console.error(err));
 }
 
+populateCurrencySelect("cPackageCurrency", DEFAULT_CURRENCY);
 $("submitClientForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   if(!currentUser || !currentUserDoc) return;
@@ -3085,6 +3154,7 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
       address: $("cAddress").value.trim(),
       package: $("cPackage").value.trim(),
       packageAmount: Number($("cPackageAmount").value) || 0,
+      packageCurrency: $("cPackageCurrency").value || DEFAULT_CURRENCY,
       repAccountNumber: $("cRepAccountNumber").value.trim(),
       documentAccess: $("cDocumentAccess").value,
       clientUid,
@@ -3116,9 +3186,10 @@ $("submitClientForm").addEventListener("submit", async (e)=>{
 
     setFormMsg($("submitClientMsg"), "Client submitted, with their app login ready. Awaiting admin payment confirmation.", "success");
     sendNotification("ADMIN_BROADCAST", "New client submitted",
-      `${currentUserDoc.fullName || currentUser.email} submitted ${$("cName").value.trim()} — ₦${(Number($("cPackageAmount").value)||0).toLocaleString()} package.`,
+      `${currentUserDoc.fullName || currentUser.email} submitted ${$("cName").value.trim()} — ${formatCurrency(Number($("cPackageAmount").value)||0, $("cPackageCurrency").value || DEFAULT_CURRENCY)} package.`,
       "client-submitted");
     $("submitClientForm").reset();
+    if($("cPackageCurrency")) $("cPackageCurrency").value = DEFAULT_CURRENCY;
   }catch(err){
     setFormMsg($("submitClientMsg"), err.message || "Could not submit client.", "error");
   }finally{
@@ -3148,7 +3219,7 @@ function renderClientTableRep(clients){
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(c.clientName||"—")}</td>
-      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">₦${Number(c.packageAmount||0).toLocaleString()}</div></td>
+      <td>${escapeHtml(c.package||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45);">${escapeHtml(formatCurrency(Number(c.packageAmount||0), c.packageCurrency||DEFAULT_CURRENCY))}</div></td>
       <td class="mono">${escapeHtml(c.repAccountNumber||"—")}</td>
       <td><span class="status-chip ${c.paymentStatus==="confirmed"?"confirmed":(c.paymentStatus==="rejected"?"rejected":"pending")}">${c.paymentStatus||"pending"}</span></td>
       <td><span class="status-chip ${approved?"approved":(rejected?"rejected":"pending")}">${c.approvalStatus||"pending"}</span></td>
@@ -4558,10 +4629,18 @@ async function loadPaymentClient(clientId){
       return;
     }
     summary.innerHTML = `<b>${escapeHtml(client.clientName||"")}</b> — ${escapeHtml(client.package||"package")}`;
-    $("payAmountBlock").innerHTML = `<div style="font-family:'Fraunces',serif; font-size:32px; margin:14px 0; color:var(--ink);">₦${Number(client.packageAmount||0).toLocaleString()}</div>`;
+    const paymentCurrency = client.packageCurrency || DEFAULT_CURRENCY;
+    $("payAmountBlock").innerHTML = `<div style="font-family:'Fraunces',serif; font-size:32px; margin:14px 0; color:var(--ink);">${escapeHtml(formatCurrency(Number(client.packageAmount||0), paymentCurrency))}</div>`;
     const payBtn = $("payNowBtn");
-    payBtn.classList.remove("hidden");
-    payBtn.onclick = ()=> startPaystackPayment(clientId, client);
+    const paystackSupportedCurrencies = ["NGN","USD","GHS","KES","ZAR","XOF","EGP"];
+    if(paystackSupportedCurrencies.includes(paymentCurrency)){
+      payBtn.classList.remove("hidden");
+      payBtn.textContent = `Pay with Paystack (${paymentCurrency})`;
+      payBtn.onclick = ()=> startPaystackPayment(clientId, client);
+    }else{
+      payBtn.classList.add("hidden");
+      $("payResultMsg").innerHTML = `<div class="verify-result invalid">The invoice is in ${escapeHtml(paymentCurrency)}, but Paystack checkout is not enabled for that currency on this account. The amount can still be shown and recorded in ${escapeHtml(paymentCurrency)}; use the invoice bank/payment terms for settlement.</div>`;
+    }
   }catch(err){
     console.error(err);
     summary.textContent = "Something went wrong loading this payment request.";
@@ -4584,12 +4663,12 @@ function startPaystackPayment(clientId, client){
   const handler = window.PaystackPop.setup({
     key: PAYSTACK_PUBLIC_KEY,
     email: client.email,
-    amount: Math.round(Number(client.packageAmount||0) * 100), // Paystack expects kobo
-    currency: "NGN",
+    amount: Math.round(Number(client.packageAmount||0) * 100), // Paystack expects the selected currency's minor unit
+    currency: client.packageCurrency || DEFAULT_CURRENCY,
     ref: `IXP-PAY-${clientId}-${Date.now()}`,
     metadata: { clientId, clientName: client.clientName || "", package: client.package || "" },
     callback: function(response){
-      recordClientPayment(clientId, response.reference, client.packageAmount);
+      recordClientPayment(clientId, response.reference, client.packageAmount, client.packageCurrency || DEFAULT_CURRENCY);
     },
     onClose: function(){
       toast("Payment window closed.");
@@ -4598,11 +4677,12 @@ function startPaystackPayment(clientId, client){
   handler.openIframe();
 }
 
-async function recordClientPayment(clientId, reference, amount){
+async function recordClientPayment(clientId, reference, amount, currency = DEFAULT_CURRENCY){
   try{
     await updateDoc(doc(db, "clients", clientId), {
       paymentReference: reference,
       paidAmount: Number(amount) || 0,
+      paidCurrency: currency,
       paidAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
@@ -4722,75 +4802,10 @@ function initClientDashboard(clientRecordId, clientRecord){
   $("rcpShowSignature")?.addEventListener("change", updateReceiptPreview);
 }
 
-// ---------- Seller / buyer transaction-proof helpers ----------
-const PROOF_TYPE_LABELS = {goods:"Goods / Product",vehicle:"Vehicle / Car",land:"Land / Property",equipment:"Equipment / Machinery",service:"Service",other:"Other"};
-function proofValue(id){ const el=$(id); return el ? el.value.trim() : ""; }
-function proofTypeLabel(id){ return PROOF_TYPE_LABELS[($(id)?.value || "goods")] || "Other"; }
-function compressSellerPhoto(file, maxSize=480, quality=.78){
-  return new Promise((resolve,reject)=>{
-    if(!file){ resolve(""); return; }
-    if(!/^image\/(png|jpeg|jpg)$/.test(file.type)){ reject(new Error("Please select a JPG or PNG image.")); return; }
-    const reader=new FileReader();
-    reader.onerror=()=>reject(new Error("Could not read the image."));
-    reader.onload=()=>{
-      const img=new Image();
-      img.onerror=()=>reject(new Error("Could not process the image."));
-      img.onload=()=>{
-        const scale=Math.min(1,maxSize/Math.max(img.width,img.height));
-        const c=document.createElement("canvas");
-        c.width=Math.max(1,Math.round(img.width*scale)); c.height=Math.max(1,Math.round(img.height*scale));
-        const ctx=c.getContext("2d"); ctx.drawImage(img,0,0,c.width,c.height);
-        resolve(c.toDataURL("image/jpeg",quality));
-      };
-      img.src=reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-function wireSellerPhoto(inputId, previewId, removeId, consentId, stateObj, msgId){
-  const input=$(inputId), preview=$(previewId), remove=$(removeId), btn=$(inputId.replace("Input","Btn"));
-  if(!input||!preview||!remove||!btn) return;
-  btn.onclick=()=>input.click();
-  input.onchange=async()=>{
-    try{
-      const data=await compressSellerPhoto(input.files?.[0]);
-      stateObj.data=data;
-      if(data){ preview.innerHTML=`<img src="${data}" alt="Seller face preview">`; remove.classList.remove("hidden"); }
-      setFormMsg($(msgId), data ? "Seller photo added to this document." : "", data ? "success" : "");
-    }catch(err){ stateObj.data=""; setFormMsg($(msgId), err.message || "Could not add photo.", "error"); }
-  };
-  remove.onclick=()=>{ stateObj.data=""; input.value=""; preview.textContent="Seller\nphoto"; remove.classList.add("hidden"); updateInvoicePreview(); updateReceiptPreview(); };
-}
-function setProofOutput(prefix, stateObj){
-  const type=proofTypeLabel(prefix+"ProofType");
-  const map={
-    ProofTypeOut:type,
-    SellerNameOut:proofValue(prefix+"SellerName")||"—",
-    SellerAddressOut:proofValue(prefix+"SellerAddress")||"—",
-    BuyerIdOut:proofValue(prefix+"BuyerId")||"—",
-    SellerPhoneOut:proofValue(prefix+"SellerPhone")||"—",
-    SellerIdOut:proofValue(prefix+"SellerId")||"—",
-    AssetIdOut:proofValue(prefix+"AssetId")||"—",
-    WitnessOut:proofValue(prefix+"Witness")||"—",
-    OwnershipOut:proofValue(prefix+"OwnershipDetails")||"—",
-    DeclarationOut:proofValue(prefix+"SellerDeclaration")||"—",
-    BuyerAckOut:$(prefix+"BuyerAcknowledgement")?.checked ? "Acknowledged by buyer" : "Not recorded"
-  };
-  Object.entries(map).forEach(([suffix,val])=>{ const el=$(prefix+suffix); if(el) el.textContent=val; });
-  const consent=$(prefix+"SellerPhotoConsent")?.checked;
-  const photo=$(prefix+"SellerPhotoOut");
-  if(photo){
-    if(consent && stateObj.data){ photo.src=stateObj.data; photo.classList.remove("hidden"); }
-    else { photo.classList.add("hidden"); photo.removeAttribute("src"); }
-  }
-  const box=$(prefix+"ProofOutBox");
-  if(box){ const meaningful=[proofValue(prefix+"SellerName"),proofValue(prefix+"SellerId"),proofValue(prefix+"BuyerId"),proofValue(prefix+"AssetId"),proofValue(prefix+"OwnershipDetails"),stateObj.data,$(prefix+"BuyerAcknowledgement")?.checked].some(Boolean); box.classList.toggle("hidden",!meaningful); }
-}
-
 // ---------- Invoice ----------
 let invNo = "";
+
 let invSessionConsumed = false;
-let invSellerProofState = {data:""};
 
 function resetInvoiceSession(){
   invNo = "INV-" + (Math.floor(Math.random()*900000)+100000);
@@ -4798,19 +4813,22 @@ function resetInvoiceSession(){
   $("invDateOut").textContent = new Date().toLocaleDateString('en-NG', {year:'numeric', month:'short', day:'numeric'});
   $("invClientName").value = "";
   $("invClientAddress").value = "";
+  $("invDocumentType").value = "invoice";
+  document.querySelector('input[name="invOwnerRole"][value="owner"]').checked = true;
+  ["invOwnerName","invOwnerPhone","invOwnerEmail","invOwnerAddress","invActualOwnerName","invActualOwnerPhone","invActualOwnerEmail","invActualOwnerAddress","invRepName","invRepPhone","invAssetType","invAssetLocation"].forEach(id=>{ if($(id)) $(id).value=""; });
+  if($("invOwnerName")) $("invOwnerName").value=window.__currentBusinessName || "";
+  if($("invOwnerAddress")) $("invOwnerAddress").value=$("clientBizAddressHead")?.textContent || "";
+  $("invOwnerFields").classList.remove("hidden");
+  $("invRepresentativeFields").classList.add("hidden");
+  invBuyerSignatureData="";
+  $("invBuyerSignatureImg")?.classList.add("hidden");
+  if($("invBuyerSignatureDateOut")) $("invBuyerSignatureDateOut").textContent="";
+  if($("invCurrency")) $("invCurrency").value = DEFAULT_CURRENCY;
   $("invDiscount").value = 0;
   $("invVat").value = 7.5;
   $("invItemRows").innerHTML = "";
   addInvoiceRow();
   invSessionConsumed = false;
-  invSellerProofState.data = "";
-  ["invSellerName","invSellerPhone","invSellerAddress","invSellerId","invBuyerId","invAssetId","invOwnershipDetails","invWitness","invSellerDeclaration"].forEach(id=>{ if($(id)) $(id).value=""; });
-  if($("invProofType")) $("invProofType").value="goods";
-  if($("invSellerPhotoConsent")) $("invSellerPhotoConsent").checked=false;
-  if($("invBuyerAcknowledgement")) $("invBuyerAcknowledgement").checked=false;
-  if($("invSellerPhotoInput")) $("invSellerPhotoInput").value="";
-  if($("invSellerPhotoPreview")) $("invSellerPhotoPreview").innerHTML="Seller<br>photo";
-  $("invSellerPhotoRemove")?.classList.add("hidden");
   $("invDownloadPdfBtn").classList.add("hidden");
   $("invPrintBtn").classList.add("hidden");
   $("invDownloadPngBtn").classList.add("hidden");
@@ -4833,17 +4851,33 @@ function addInvoiceRow(){
   $("invItemRows").appendChild(row);
 }
 
+let invBuyerSignatureData = "";
+let invBuyerSigDrawing = false;
+function setupBuyerSignaturePad(){
+  const c=$("invBuyerSigCanvas"); if(!c || c.dataset.ready==="1") return; c.dataset.ready="1";
+  const ctx=c.getContext("2d"); const resize=()=>{const r=c.getBoundingClientRect(),d=Math.max(1,devicePixelRatio||1);c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);ctx.setTransform(d,0,0,d,0,0);ctx.lineWidth=2;ctx.lineCap="round";ctx.strokeStyle="#111827";}; resize(); window.addEventListener("resize",resize);
+  const pos=e=>{const r=c.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
+  c.addEventListener("pointerdown",e=>{invBuyerSigDrawing=true;c.setPointerCapture(e.pointerId);const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+  c.addEventListener("pointermove",e=>{if(!invBuyerSigDrawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
+  c.addEventListener("pointerup",()=>invBuyerSigDrawing=false); c.addEventListener("pointercancel",()=>invBuyerSigDrawing=false);
+}
+function clearBuyerSignature(){const c=$("invBuyerSigCanvas");if(!c)return;c.getContext("2d").clearRect(0,0,c.width,c.height);invBuyerSignatureData="";$("invBuyerSignatureImg")?.classList.add("hidden");if($("invBuyerSignatureDateOut"))$("invBuyerSignatureDateOut").textContent="";updateInvoicePreview();}
+function useBuyerSignature(){const c=$("invBuyerSigCanvas");if(!c)return;const blank=document.createElement("canvas");blank.width=c.width;blank.height=c.height;if(c.toDataURL()===blank.toDataURL()){setFormMsg($("invBuyerSigMsg"),"Please sign in the box first.","error");return;}invBuyerSignatureData=c.toDataURL("image/png");setFormMsg($("invBuyerSigMsg"),"Buyer signature added to the document.","success");updateInvoicePreview();}
+function getInvoiceOwnerRole(){return document.querySelector('input[name="invOwnerRole"]:checked')?.value||"owner";}
+function syncInvoiceOwnerMode(){const role=getInvoiceOwnerRole();$("invOwnerFields")?.classList.toggle("hidden",role!=="owner");$("invRepresentativeFields")?.classList.toggle("hidden",role!=="representative");updateInvoicePreview();}
+
 function initInvoiceGenerator(){
   $("invAddItemBtn").onclick = addInvoiceRow;
   $("invNewBtn").onclick = resetInvoiceSession;
+  setupBuyerSignaturePad();
+  $("invBuyerSigClearBtn")?.addEventListener("click",clearBuyerSignature);
+  $("invBuyerSigUseBtn")?.addEventListener("click",useBuyerSignature);
+  document.querySelectorAll('input[name="invOwnerRole"]').forEach(r=>r.addEventListener("change",syncInvoiceOwnerMode));
+  $("invDocumentType")?.addEventListener("change",updateInvoicePreview);
+  populateCurrencySelect("invCurrency", DEFAULT_CURRENCY);
+  $("invCurrency")?.addEventListener("change", updateInvoicePreview);
 
-  ["invProofType","invSellerName","invSellerPhone","invSellerAddress","invSellerId","invBuyerId","invAssetId","invOwnershipDetails","invWitness","invSellerDeclaration","invSellerPhotoConsent","invBuyerAcknowledgement"].forEach(id=>{
-    $(id)?.addEventListener("input", updateInvoicePreview);
-    $(id)?.addEventListener("change", updateInvoicePreview);
-  });
-  wireSellerPhoto("invSellerPhotoInput","invSellerPhotoPreview","invSellerPhotoRemove","invSellerPhotoConsent",invSellerProofState,"invGenerateMsg");
-
-  ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber"].forEach(id=>{
+  ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber","invOwnerName","invOwnerPhone","invOwnerEmail","invOwnerAddress","invActualOwnerName","invActualOwnerPhone","invActualOwnerEmail","invActualOwnerAddress","invRepName","invRepPhone","invAssetType","invAssetLocation"].forEach(id=>{
     $(id).addEventListener("input", updateInvoicePreview);
   });
 
@@ -4877,18 +4911,34 @@ function initInvoiceGenerator(){
     setFormMsg($("invGenerateMsg"), "Invoice generated — download below.", "success");
   };
 
-  $("invDownloadPdfBtn").onclick = ()=> downloadDoc("invoicePreview", `Proforma-${invNo}`, "pdf", "portrait-a4");
-  $("invDownloadPngBtn").onclick = ()=> downloadDoc("invoicePreview", `Proforma-${invNo}`, "png");
-  wireShareRow("invShare", "invoicePreview", ()=> `Proforma-${invNo}`, ()=> `Invoice ${invNo}`);
+  $("invDownloadPdfBtn").onclick = ()=> { const label=$("invDocumentType").value==="proforma"?"Proforma":"Invoice"; downloadDoc("invoicePreview",`${label}-${invNo}`,"pdf","portrait-a4"); };
+  $("invDownloadPngBtn").onclick = ()=> { const label=$("invDocumentType").value==="proforma"?"Proforma":"Invoice"; downloadDoc("invoicePreview",`${label}-${invNo}`,"png"); };
+  wireShareRow("invShare","invoicePreview",()=>`${$("invDocumentType").value==="proforma"?"Proforma":"Invoice"}-${invNo}`,()=>`${$("invDocumentType").value==="proforma"?"Proforma Invoice":"Invoice"} ${invNo}`);
 }
 
 function updateInvoicePreview(){
-  $("invClientNameOut").textContent = $("invClientName").value || "Customer name";
-  $("invClientAddressOut").textContent = $("invClientAddress").value || "";
+  const role=getInvoiceOwnerRole();
+  const type=$("invDocumentType")?.value||"invoice";
+  $("invDocTitleOut").textContent=type==="proforma"?"PROFORMA INVOICE":"TAX INVOICE";
+  $("invClientNameOut").textContent=$("invClientName").value||"Customer / Buyer";
+  $("invClientAddressOut").textContent=$("invClientAddress").value||"";
+  let sellerName,sellerAddress,sellerPhone,sellerEmail,roleHtml;
+  if(role==="representative"){
+    sellerName=$("invActualOwnerName").value.trim()||"Actual owner / seller"; sellerAddress=$("invActualOwnerAddress").value.trim(); sellerPhone=$("invActualOwnerPhone").value.trim(); sellerEmail=$("invActualOwnerEmail").value.trim();
+    const rn=$("invRepName").value.trim()||"Representative", rp=$("invRepPhone").value.trim();
+    const asset=$("invAssetType").value.trim(), loc=$("invAssetLocation").value.trim();
+    roleHtml=`<b>Actual Owner / Seller:</b> ${escapeHtml(sellerName)}${sellerAddress?" · "+escapeHtml(sellerAddress):""}<br><b>Prepared / Represented By:</b> ${escapeHtml(rn)}${rp?" · "+escapeHtml(rp):""}${asset?`<br><b>Asset:</b> ${escapeHtml(asset)}`:""}${loc?` · ${escapeHtml(loc)}`:""}`;
+  } else {
+    sellerName=$("invOwnerName").value.trim()||window.__currentBusinessName||"Owner / Seller"; sellerAddress=$("invOwnerAddress").value.trim(); sellerPhone=$("invOwnerPhone").value.trim()||$("invBizPhone").value.trim(); sellerEmail=$("invOwnerEmail").value.trim()||$("invBizEmail").value.trim();
+    const asset=$("invAssetType").value.trim(), loc=$("invAssetLocation").value.trim();
+    roleHtml=`<b>Owner / Seller:</b> ${escapeHtml(sellerName)}${sellerAddress?" · "+escapeHtml(sellerAddress):""}${asset?`<br><b>Asset:</b> ${escapeHtml(asset)}`:""}${loc?` · ${escapeHtml(loc)}`:""}`;
+  }
+  $("invBizNameOut").textContent=sellerName; $("invBizAddressOut").textContent=sellerAddress; $("invRoleInfoOut").innerHTML=roleHtml;
+  $("invLogoMark")?.classList.toggle("hidden", role === "representative");
 
   // Business contact line (phone / email), only shown if provided
-  const bizPhone = $("invBizPhone").value.trim();
-  const bizEmail = $("invBizEmail").value.trim();
+  const bizPhone=role==="representative"?sellerPhone:($("invBizPhone").value.trim()||sellerPhone);
+  const bizEmail = role === "representative" ? sellerEmail : ($("invBizEmail").value.trim() || sellerEmail);
   const contactParts = [];
   if(bizPhone) contactParts.push("Ph: " + bizPhone);
   if(bizEmail) contactParts.push(bizEmail);
@@ -4915,7 +4965,13 @@ function updateInvoicePreview(){
 
   const discountPct = Number($("invDiscount").value) || 0;
   const vatPct = Number($("invVat").value) || 0;
+  const currency = getSelectedCurrency("invCurrency");
+  const symbol = currencySymbol(currency);
   $("invVatLabelOut").textContent = `VAT (${vatPct}%)`;
+  setCurrencyText(".inv-currency-symbol", currency);
+  $("invCurrencySym").textContent = symbol;
+  $("invCurrencyHead").textContent = symbol;
+  $("invCurrencyHead2").textContent = symbol;
 
   let sub = 0;
   let rowsHtml = "";
@@ -4926,7 +4982,7 @@ function updateInvoicePreview(){
     const price = Number(row.querySelector(".inv-price").value) || 0;
     const total = qty * price;
     sub += total;
-    rowsHtml += `<tr><td>${sr}</td><td>${escapeHtml(desc)}</td><td>${qty}</td><td>${price.toLocaleString()}</td><td>${total.toLocaleString()}</td></tr>`;
+    rowsHtml += `<tr><td>${sr}</td><td>${escapeHtml(desc)}</td><td>${qty}</td><td>${formatCurrency(price, currency)}</td><td>${formatCurrency(total, currency)}</td></tr>`;
     sr++;
   });
   $("invRowsOut").innerHTML = rowsHtml;
@@ -4936,13 +4992,11 @@ function updateInvoicePreview(){
   const vat = afterDiscount * (vatPct/100);
   const grand = afterDiscount + vat;
 
-  $("invSubOut").textContent = sub.toLocaleString();
-  $("invDisOut").textContent = dis.toLocaleString();
-  $("invVatOut").textContent = vat.toLocaleString();
-  $("invGrandOut").textContent = grand.toLocaleString();
-  $("invWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(grand) + " Naira Only</b>";
-
-  setProofOutput("inv", invSellerProofState);
+  $("invSubOut").textContent = formatCurrency(sub, currency).replace(currencySymbol(currency), "").trim();
+  $("invDisOut").textContent = formatCurrency(dis, currency).replace(currencySymbol(currency), "").trim();
+  $("invVatOut").textContent = formatCurrency(vat, currency).replace(currencySymbol(currency), "").trim();
+  $("invGrandOut").textContent = formatCurrency(grand, currency).replace(currencySymbol(currency), "").trim();
+  $("invWordsOut").innerHTML = "Amount in words: <b>" + currencyWords(grand, currency) + "</b>";
 
   const sig = currentUserDoc?.signature;
   const wantSig = $("invShowSignature") ? $("invShowSignature").checked : true;
@@ -4953,11 +5007,12 @@ function updateInvoicePreview(){
   } else if(invSigImg){
     invSigImg.classList.add("hidden");
   }
+  const buyerImg=$("invBuyerSignatureImg");
+  if(buyerImg){if(invBuyerSignatureData){buyerImg.src=invBuyerSignatureData;buyerImg.classList.remove("hidden");if($("invBuyerSignatureDateOut"))$("invBuyerSignatureDateOut").textContent="Signed on "+new Date().toLocaleString("en-NG");}else buyerImg.classList.add("hidden");}
 }
 
 // ---------- Receipt ----------
 let rcpSessionConsumed = false;
-let rcpSellerProofState = {data:""};
 
 function resetReceiptSession(){
   $("rcpClientName").value = "";
@@ -4965,16 +5020,9 @@ function resetReceiptSession(){
   $("rcpPackage").value = "";
   $("rcpTotal").value = "";
   $("rcpPaid").value = "";
+  if($("rcpCurrency")) $("rcpCurrency").value = DEFAULT_CURRENCY;
   $("rcpNoOut").textContent = "";
   rcpSessionConsumed = false;
-  rcpSellerProofState.data = "";
-  ["rcpSellerName","rcpSellerPhone","rcpSellerAddress","rcpSellerId","rcpBuyerId","rcpAssetId","rcpOwnershipDetails","rcpWitness","rcpSellerDeclaration"].forEach(id=>{ if($(id)) $(id).value=""; });
-  if($("rcpProofType")) $("rcpProofType").value="goods";
-  if($("rcpSellerPhotoConsent")) $("rcpSellerPhotoConsent").checked=false;
-  if($("rcpBuyerAcknowledgement")) $("rcpBuyerAcknowledgement").checked=false;
-  if($("rcpSellerPhotoInput")) $("rcpSellerPhotoInput").value="";
-  if($("rcpSellerPhotoPreview")) $("rcpSellerPhotoPreview").innerHTML="Seller<br>photo";
-  $("rcpSellerPhotoRemove")?.classList.add("hidden");
   $("rcpDownloadPdfBtn").classList.add("hidden");
   $("rcpPrintBtn").classList.add("hidden");
   $("rcpDownloadPngBtn").classList.add("hidden");
@@ -4985,11 +5033,8 @@ function resetReceiptSession(){
 
 function initReceiptGenerator(){
   $("rcpNewBtn").onclick = resetReceiptSession;
-  ["rcpClientName","rcpClientAddress","rcpPackage","rcpTotal","rcpPaid","rcpVat","rcpProofType","rcpSellerName","rcpSellerPhone","rcpSellerAddress","rcpSellerId","rcpBuyerId","rcpAssetId","rcpOwnershipDetails","rcpWitness","rcpSellerDeclaration","rcpSellerPhotoConsent","rcpBuyerAcknowledgement"].forEach(id=>{
-    $(id)?.addEventListener("input", updateReceiptPreview);
-    $(id)?.addEventListener("change", updateReceiptPreview);
-  });
-  wireSellerPhoto("rcpSellerPhotoInput","rcpSellerPhotoPreview","rcpSellerPhotoRemove","rcpSellerPhotoConsent",rcpSellerProofState,"rcpGenerateMsg");
+  populateCurrencySelect("rcpCurrency", DEFAULT_CURRENCY);
+  $("rcpCurrency")?.addEventListener("change", updateReceiptPreview);
 
   $("rcpGenerateBtn").onclick = async ()=>{
     if(rcpSessionConsumed){
@@ -5040,6 +5085,8 @@ function updateReceiptPreview(){
   const paid = Number($("rcpPaid").value) || 0;
   const vatPct = Number($("rcpVat").value) || 0;
   const balance = total - paid;
+  const currency = getSelectedCurrency("rcpCurrency");
+  setCurrencyText(".rcp-currency-symbol", currency);
 
   // Treat the entered total as VAT-inclusive, and break it down —
   // matches how a real POS receipt shows Sub Total + VAT = Total.
@@ -5050,14 +5097,12 @@ function updateReceiptPreview(){
   $("rcpClientAddressOut").textContent = clientAddress;
   $("rcpPackageOut").textContent = pkg ? `For: ${pkg}` : "";
   $("rcpVatLabelOut").textContent = `VAT (${vatPct}%)`;
-  $("rcpSubOut").textContent = Math.round(subTotal).toLocaleString();
-  $("rcpVatAmtOut").textContent = Math.round(vatAmount).toLocaleString();
-  $("rcpTotalOut").textContent = total.toLocaleString();
-  $("rcpPaidOut").textContent = paid.toLocaleString();
-  $("rcpBalanceOut").textContent = balance.toLocaleString();
-  $("rcpWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(paid) + " Naira Only</b>";
-
-  setProofOutput("rcp", rcpSellerProofState);
+  $("rcpSubOut").textContent = formatCurrency(Math.round(subTotal), currency).replace(currencySymbol(currency), "").trim();
+  $("rcpVatAmtOut").textContent = formatCurrency(Math.round(vatAmount), currency).replace(currencySymbol(currency), "").trim();
+  $("rcpTotalOut").textContent = formatCurrency(total, currency).replace(currencySymbol(currency), "").trim();
+  $("rcpPaidOut").textContent = formatCurrency(paid, currency).replace(currencySymbol(currency), "").trim();
+  $("rcpBalanceOut").textContent = formatCurrency(balance, currency).replace(currencySymbol(currency), "").trim();
+  $("rcpWordsOut").innerHTML = "Amount in words: <b>" + currencyWords(paid, currency) + "</b>";
 
   const rcpSig = currentUserDoc?.signature;
   const rcpWantSig = $("rcpShowSignature") ? $("rcpShowSignature").checked : true;
@@ -6453,6 +6498,8 @@ $("screenshotLightbox").addEventListener("click", (e)=>{
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
+
+initBusinessChangeRequests();
 </script>
 </body>
 </html>
