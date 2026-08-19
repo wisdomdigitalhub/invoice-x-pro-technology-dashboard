@@ -737,6 +737,13 @@
   .pos-barcode{ display:flex; align-items:flex-end; justify-content:center; gap:1px; height:40px; margin:10px auto 6px; }
   .pos-barcode div{ background:#1a1a1a; width:2px; }
   .pos-barcode-text{ text-align:center; font-size:10px; letter-spacing:2px; color:#555; }
+  .receipt-party-card{margin:10px 0 12px;padding:10px 12px;border:1px solid #d8d8d2;border-radius:10px;background:linear-gradient(135deg,#fafaf7,#f3f3ee);text-align:left;font-family:'Inter',sans-serif;}
+  .receipt-party-title{font-size:8.5px;text-transform:uppercase;letter-spacing:1.1px;color:#8a8a84;font-weight:800;margin-bottom:4px;}
+  .receipt-party-name{font-size:12.5px;font-weight:800;color:#171717;}
+  .receipt-party-meta{font-size:9.5px;color:#666;margin-top:2px;line-height:1.45;}
+  .receipt-owner-note{margin-top:7px;padding-top:7px;border-top:1px dashed #c7c7c0;font-size:9px;color:#666;line-height:1.45;}
+  .receipt-ref-chip{display:inline-block;margin-top:5px;padding:3px 7px;border-radius:999px;background:#1a1a1a;color:#fff;font-size:8px;letter-spacing:.5px;}
+  .receipt-status-pill{display:inline-block;margin-top:4px;padding:3px 7px;border-radius:999px;font-size:8px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;}
 
   .doc-stamp-circle{
     position:absolute; right:26px; top:100px; border:3px solid; padding:10px; border-radius:50%; width:110px; height:110px;
@@ -1842,13 +1849,19 @@
           <button type="button" class="btn-sm reject" id="rcpNewBtn">New receipt</button>
         </div>
         <div class="grid-2">
-          <div class="field"><label>Received from (customer)</label><input type="text" id="rcpClientName" /></div>
-          <div class="field"><label>Customer address</label><input type="text" id="rcpClientAddress" /></div>
+          <div class="field"><label>Buyer / Recipient name</label><input type="text" id="rcpClientName" placeholder="Full name" /></div>
+          <div class="field"><label>Buyer / Recipient address</label><input type="text" id="rcpClientAddress" placeholder="Address" /></div>
+          <div class="field"><label>Buyer status</label><select id="rcpBuyerType"><option value="owner">Owner</option><option value="authorized-representative">Authorized Representative</option><option value="employee">Employee</option><option value="agent">Agent</option><option value="customer">Customer / Recipient</option><option value="other">Other</option></select></div>
+          <div class="field"><label>Owner / Business name <span class="hint">if different</span></label><input type="text" id="rcpOwnerName" placeholder="Actual owner or business" /></div>
+          <div class="field"><label>Owner contact <span class="hint">optional</span></label><input type="text" id="rcpOwnerContact" placeholder="Phone or email" /></div>
+          <div class="field"><label>Authorization reference <span class="hint">optional</span></label><input type="text" id="rcpAuthRef" placeholder="e.g. AUTH-10245" /></div>
           <div class="field"><label>Package / service</label><input type="text" id="rcpPackage" /></div>
           <div class="field"><label>Currency</label><select id="rcpCurrency" aria-label="Receipt currency" title="Choose any ISO 4217 currency supported by your browser"></select></div>
           <div class="field"><label>Total amount</label><input type="number" id="rcpTotal" min="0" /></div>
           <div class="field"><label>Amount paid</label><input type="number" id="rcpPaid" min="0" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="rcpVat" value="7.5" min="0" max="100" /></div>
+          <div class="field"><label>Payment method</label><select id="rcpPaymentMethod"><option>Cash</option><option>Bank Transfer</option><option>POS</option><option>Card</option><option>Mobile Money</option><option>Cheque</option><option>Other</option></select></div>
+          <div class="field"><label>Transaction reference <span class="hint">optional</span></label><input type="text" id="rcpTransactionRef" placeholder="Bank / POS / payment reference" /></div>
         </div>
         <button type="button" class="btn-primary" id="rcpGenerateBtn" style="max-width:200px;">Generate receipt</button>
         <div class="form-msg" id="rcpGenerateMsg"></div>
@@ -1872,10 +1885,18 @@
           <div class="pos-meta-row"><span>Time:</span><span id="rcpTimeOut"></span></div>
           <div class="pos-divider dashed"></div>
           <div class="pos-bill-to">
-            <div class="pos-label">Received From</div>
+            <div class="pos-label">Buyer / Recipient</div>
             <div class="pos-client-name" id="rcpClientNameOut"></div>
             <div id="rcpClientAddressOut"></div>
             <div id="rcpPackageOut" style="margin-top:4px;"></div>
+          </div>
+          <div class="receipt-party-card" id="rcpPartyCard">
+            <div class="receipt-party-title">Buyer status</div>
+            <div class="receipt-party-name" id="rcpBuyerTypeOut">Owner</div>
+            <div class="receipt-party-meta" id="rcpOwnerOut"></div>
+            <div class="receipt-party-meta" id="rcpPaymentMethodOut"></div>
+            <div class="receipt-party-meta" id="rcpTransactionRefOut"></div>
+            <div class="receipt-owner-note" id="rcpOwnershipNoteOut"></div>
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-summary">
@@ -1884,6 +1905,7 @@
             <div class="pos-row"><span>Total Amount</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpTotalOut">0</span></span></div>
             <div class="pos-row"><span>Amount Paid</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpPaidOut">0</span></span></div>
             <div class="pos-row pos-bold"><span>Balance Due</span><span><span class="rcp-currency-symbol">₦</span><span id="rcpBalanceOut">0</span></span></div>
+          <div class="pos-row"><span>Payment Status</span><span id="rcpPaymentStatusOut">PENDING</span></div>
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-words" id="rcpWordsOut"></div>
@@ -5032,9 +5054,15 @@ let rcpSessionConsumed = false;
 function resetReceiptSession(){
   $("rcpClientName").value = "";
   $("rcpClientAddress").value = "";
+  $("rcpBuyerType").value = "owner";
+  $("rcpOwnerName").value = "";
+  $("rcpOwnerContact").value = "";
+  $("rcpAuthRef").value = "";
   $("rcpPackage").value = "";
   $("rcpTotal").value = "";
   $("rcpPaid").value = "";
+  $("rcpPaymentMethod").value = "Cash";
+  $("rcpTransactionRef").value = "";
   if($("rcpCurrency")) $("rcpCurrency").value = DEFAULT_CURRENCY;
   $("rcpNoOut").textContent = "";
   rcpSessionConsumed = false;
@@ -5050,6 +5078,19 @@ function initReceiptGenerator(){
   $("rcpNewBtn").onclick = resetReceiptSession;
   populateCurrencySelect("rcpCurrency", DEFAULT_CURRENCY);
   $("rcpCurrency")?.addEventListener("change", updateReceiptPreview);
+  $("rcpBuyerType")?.addEventListener("change", ()=>{
+    const type = $("rcpBuyerType").value;
+    const needsOwner = type !== "owner";
+    ["rcpOwnerName","rcpOwnerContact","rcpAuthRef"].forEach(id=>{
+      const el = $(id);
+      if(el) el.closest(".field")?.classList.toggle("hidden", !needsOwner);
+    });
+    updateReceiptPreview();
+  });
+  ["rcpClientName","rcpClientAddress","rcpOwnerName","rcpOwnerContact","rcpAuthRef","rcpPackage","rcpTotal","rcpPaid","rcpVat","rcpPaymentMethod","rcpTransactionRef"].forEach(id=>{
+    $(id)?.addEventListener("input", updateReceiptPreview);
+    $(id)?.addEventListener("change", updateReceiptPreview);
+  });
 
   $("rcpGenerateBtn").onclick = async ()=>{
     if(rcpSessionConsumed){
@@ -5078,6 +5119,7 @@ function initReceiptGenerator(){
   };
 
   resetReceiptSession();
+  $("rcpBuyerType")?.dispatchEvent(new Event("change"));
 
   $("rcpDownloadPdfBtn").onclick = ()=>{
     const receiptNo = $("rcpNoOut").textContent || "receipt";
@@ -5093,13 +5135,21 @@ function initReceiptGenerator(){
 }
 
 function updateReceiptPreview(){
-  const clientName = $("rcpClientName").value || "Cash Customer";
-  const clientAddress = $("rcpClientAddress").value || "";
-  const pkg = $("rcpPackage").value || "";
+  const clientName = $("rcpClientName").value.trim() || "Cash Customer";
+  const clientAddress = $("rcpClientAddress").value.trim() || "";
+  const buyerType = $("rcpBuyerType").value || "owner";
+  const buyerTypeLabels = {owner:"Owner", "authorized-representative":"Authorized Representative", employee:"Employee", agent:"Agent", customer:"Customer / Recipient", other:"Other"};
+  const buyerTypeLabel = buyerTypeLabels[buyerType] || "Other";
+  const ownerName = $("rcpOwnerName").value.trim();
+  const ownerContact = $("rcpOwnerContact").value.trim();
+  const authRef = $("rcpAuthRef").value.trim();
+  const pkg = $("rcpPackage").value.trim() || "";
   const total = Number($("rcpTotal").value) || 0;
   const paid = Number($("rcpPaid").value) || 0;
   const vatPct = Number($("rcpVat").value) || 0;
-  const balance = total - paid;
+  const balance = Math.max(0, total - paid);
+  const paymentMethod = $("rcpPaymentMethod").value || "Cash";
+  const transactionRef = $("rcpTransactionRef").value.trim();
   const currency = getSelectedCurrency("rcpCurrency");
   setCurrencyText(".rcp-currency-symbol", currency);
 
@@ -5111,12 +5161,24 @@ function updateReceiptPreview(){
   $("rcpClientNameOut").textContent = clientName;
   $("rcpClientAddressOut").textContent = clientAddress;
   $("rcpPackageOut").textContent = pkg ? `For: ${pkg}` : "";
+  $("rcpBuyerTypeOut").textContent = buyerTypeLabel;
+  const ownerLine = buyerType === "owner"
+    ? "Buyer is the declared owner."
+    : `Owner / Business: ${ownerName || "Not supplied"}${ownerContact ? ` • ${ownerContact}` : ""}`;
+  $("rcpOwnerOut").textContent = ownerLine;
+  $("rcpPaymentMethodOut").textContent = `Payment method: ${paymentMethod}`;
+  $("rcpTransactionRefOut").textContent = transactionRef ? `Transaction ref: ${transactionRef}` : "";
+  $("rcpOwnershipNoteOut").textContent = buyerType === "owner"
+    ? "Buyer/recipient is recorded as the owner for this transaction."
+    : `Buyer/recipient is recorded as ${buyerTypeLabel.toLowerCase()}, not as the owner. ${authRef ? `Authorization reference: ${authRef}.` : "If authorization is required, retain the relevant authorization or proof separately."}`;
   $("rcpVatLabelOut").textContent = `VAT (${vatPct}%)`;
   $("rcpSubOut").textContent = formatCurrency(Math.round(subTotal), currency).replace(currencySymbol(currency), "").trim();
   $("rcpVatAmtOut").textContent = formatCurrency(Math.round(vatAmount), currency).replace(currencySymbol(currency), "").trim();
   $("rcpTotalOut").textContent = formatCurrency(total, currency).replace(currencySymbol(currency), "").trim();
   $("rcpPaidOut").textContent = formatCurrency(paid, currency).replace(currencySymbol(currency), "").trim();
   $("rcpBalanceOut").textContent = formatCurrency(balance, currency).replace(currencySymbol(currency), "").trim();
+  const paymentStatus = paid <= 0 ? "PENDING" : (balance <= 0 ? "FULLY PAID" : "PARTIAL");
+  $("rcpPaymentStatusOut").textContent = paymentStatus;
   $("rcpWordsOut").innerHTML = "Amount in words: <b>" + currencyWords(paid, currency) + "</b>";
 
   const rcpSig = currentUserDoc?.signature;
