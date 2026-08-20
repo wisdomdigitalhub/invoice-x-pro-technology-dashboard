@@ -599,6 +599,9 @@
   .sig-current-preview{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:20px; text-align:center; margin-bottom:12px; }
   .sig-current-preview img{ max-height:80px; max-width:100%; }
   .sig-current-actions{ display:flex; gap:10px; margin-bottom:22px; flex-wrap:wrap; }
+  .biz-info-row{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .biz-info-row:last-of-type{ border-bottom:none; }
+  .biz-info-actions{ margin-top:14px; padding:14px; border:1px solid var(--line); border-radius:10px; background:rgba(15,26,46,.02); }
 
   .sig-toggle-row{ display:flex; align-items:center; gap:8px; font-size:13px; color:rgba(15,26,46,0.7); margin-top:12px; }
   .sig-toggle-row input{ width:16px; height:16px; }
@@ -1116,13 +1119,31 @@
         <h3>Self-signup clients</h3>
         <span class="hint">Businesses who signed up directly (with or without a referral link)</span>
       </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <span class="hint" id="installStatsHint">—</span>
+        <button type="button" class="btn-sm confirm" id="notifyNotInstalledBtn">Notify everyone who hasn't installed</button>
+      </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Business</th><th>Email</th><th>Referred by</th><th>Premium</th><th>Joined</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Business</th><th>Email</th><th>Referred by</th><th>Premium</th><th>App</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody id="selfSignupClientTableBody"></tbody>
         </table>
       </div>
       <div class="empty-state hidden" id="selfSignupClientEmptyState">No self-signup clients yet.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h3>Business info change requests</h3>
+        <span class="hint">Clients apply here to change their business name, address, or email</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Client</th><th>Field</th><th>Current</th><th>Requested</th><th>Reason</th><th>Date</th><th>Actions</th></tr></thead>
+          <tbody id="bizChangeReqTableBodyAdmin"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="bizChangeReqEmptyStateAdmin">No pending change requests.</div>
     </div>
 
     <div class="panel">
@@ -1994,6 +2015,39 @@
     <!-- Settings -->
     <div class="subpanel" data-panel="clientSettingsTab" id="clientSettingsPanel">
       <div class="panel">
+        <div class="panel-head"><h3>Business Information</h3></div>
+        <p class="hint" style="margin-bottom:16px;">These appear on your invoices and receipts, and your email is also what you sign in with. For security, changes here go to the admin team for approval rather than applying instantly.</p>
+
+        <div class="biz-info-row">
+          <div><div class="hint">Business name</div><div id="bizInfoNameOut" style="font-weight:600;">—</div></div>
+          <button type="button" class="btn-sm confirm" data-field="businessName" data-label="business name">Request change</button>
+        </div>
+        <div class="biz-info-row">
+          <div><div class="hint">Address</div><div id="bizInfoAddressOut" style="font-weight:600;">—</div></div>
+          <button type="button" class="btn-sm confirm" data-field="address" data-label="address">Request change</button>
+        </div>
+        <div class="biz-info-row">
+          <div><div class="hint">Login email</div><div id="bizInfoEmailOut" style="font-weight:600;">—</div></div>
+          <button type="button" class="btn-sm confirm" data-field="email" data-label="login email">Request change</button>
+        </div>
+        <div class="biz-info-actions hidden" id="bizChangeFormBox">
+          <div class="field"><label id="bizChangeFieldLabel">New value</label><input type="text" id="bizChangeNewValue" required /></div>
+          <div class="field"><label>Reason (optional)</label><input type="text" id="bizChangeReason" placeholder="Why are you requesting this?" /></div>
+          <button type="button" class="btn-primary" id="bizChangeSubmitBtn" style="max-width:200px;">Submit request</button>
+          <button type="button" class="btn-sm reject" id="bizChangeCancelBtn">Cancel</button>
+          <div class="form-msg" id="bizChangeMsg"></div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:18px;">
+          <table>
+            <thead><tr><th>Field</th><th>Requested value</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody id="myBizChangeReqTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state hidden" id="myBizChangeReqEmptyState">No change requests yet.</div>
+      </div>
+
+      <div class="panel">
         <div class="panel-head"><h3>Business Information → Signature</h3></div>
         <p class="hint" style="margin-bottom:16px;">Your signature will appear automatically on your invoices and receipts.</p>
 
@@ -2048,6 +2102,24 @@
         <div class="form-msg" id="sigMsg"></div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN: EDIT CLIENT BUSINESS INFO ============ -->
+<div class="overlay hidden" id="editClientBizOverlay">
+  <div class="modal">
+    <button class="modal-close" id="closeEditClientBizBtn">&times;</button>
+    <h3>Edit client business info</h3>
+    <p class="sub">Changes apply immediately — the client is not asked to approve this.</p>
+    <form id="editClientBizForm">
+      <input type="hidden" id="editClientBizUid" />
+      <div class="field"><label>Business name</label><input type="text" id="editClientBizName" required /></div>
+      <div class="field"><label>Address</label><input type="text" id="editClientBizAddress" /></div>
+      <div class="field"><label>Login email</label><input type="email" id="editClientBizEmail" required /></div>
+      <p class="hint" style="margin:6px 0 14px;">Note: this only updates the email shown on this business's profile, invoices and receipts. It does not change the email/password they actually sign in with (that's a separate Firebase Auth credential) — use "Forgot password" from the login screen, or the Firebase console, if they also need their sign-in email changed.</p>
+      <button type="submit" class="btn-primary" id="saveEditClientBizBtn">Save changes</button>
+      <div class="form-msg" id="editClientBizMsg"></div>
+    </form>
   </div>
 </div>
 
@@ -2148,6 +2220,11 @@ if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
   const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.matchMedia("(display-mode: standalone)").matches
     || window.navigator.standalone === true;
+  // Exposed so the auth/login flow (below, in the main module script) can
+  // record install status on the user's own profile without this IIFE
+  // needing to know anything about Firebase/auth.
+  window.__ixpInstalled = isStandalone;
+  window.__ixpInstallPlatform = isIos ? "ios" : (navigator.userAgentData?.platform || navigator.platform || "web");
 
   let deferredInstallPrompt = null;
   const installBtn = document.getElementById("installAppBtn");
@@ -2187,6 +2264,10 @@ if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
   window.addEventListener("appinstalled", () => {
     installBtn.classList.add("hidden");
     deferredInstallPrompt = null;
+    window.__ixpInstalled = true;
+    // Fires the moment install completes, even mid-session — sync right
+    // away instead of waiting for the next login.
+    window.__ixpSyncInstallStatus?.();
   });
 
   // Register the service worker and wire up the "update available" banner.
@@ -2265,6 +2346,8 @@ let unsubAnnouncements = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
 let unsubSelfSignupClients = null;
+let unsubBizChangeReqAdmin = null;
+let unsubMyBizChangeReqs = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -2538,6 +2621,8 @@ function wireLogout(id){
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
+    if(unsubBizChangeReqAdmin){ unsubBizChangeReqAdmin(); unsubBizChangeReqAdmin = null; }
+    if(unsubMyBizChangeReqs){ unsubMyBizChangeReqs(); unsubMyBizChangeReqs = null; }
     $("notifPanel").classList.add("hidden");
     await signOut(auth);
   });
@@ -2607,6 +2692,8 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
+    if(unsubBizChangeReqAdmin){ unsubBizChangeReqAdmin(); unsubBizChangeReqAdmin = null; }
+    if(unsubMyBizChangeReqs){ unsubMyBizChangeReqs(); unsubMyBizChangeReqs = null; }
     showLanding();
     return;
   }
@@ -2620,6 +2707,7 @@ onAuthStateChanged(auth, async (user)=>{
     }
     const data = userSnap.data();
     currentUserDoc = data;
+    syncInstallStatus(user.uid, data); // fire-and-forget, records PWA install status
 
     $("whoName").textContent = data.fullName || user.email;
     $("whoRole").textContent = data.role === "admin" ? "Administrator" : (data.role === "client" ? "Client" : "Representative");
@@ -2682,6 +2770,7 @@ function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
   loadSelfSignupClientsForAdmin();
+  loadBusinessChangeRequestsForAdmin();
   loadMaterialsForAdmin();
   loadAnnouncementsForAdmin();
   loadCommissionRates();
@@ -2945,31 +3034,174 @@ async function loadSelfSignupClientsForAdmin(){
   }, (err)=> console.error(err));
 }
 
+let selfSignupClientsCache = [];
+
 function renderSelfSignupClientsAdmin(items){
+  selfSignupClientsCache = items;
   const tbody = $("selfSignupClientTableBody");
   tbody.innerHTML = "";
   $("selfSignupClientEmptyState").classList.toggle("hidden", items.length > 0);
   items.sort((a,b)=> (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+
+  const installedCount = items.filter(c=>c.installedApp === true).length;
+  $("installStatsHint").textContent = `${installedCount} of ${items.length} have installed the app`;
+
   for(const c of items){
     const tr = document.createElement("tr");
     const premium = (c.premiumPlan && c.premiumPlan !== "none") ? c.premiumPlan : "Free";
+    const installed = c.installedApp === true;
     tr.innerHTML = `
       <td>${escapeHtml(c.businessName || c.fullName || "—")}</td>
       <td>${escapeHtml(c.email || "—")}</td>
       <td>${escapeHtml(c.referredByRepName || "—")}</td>
       <td><span class="status-chip ${premium==="Free"?"pending":"approved"}">${escapeHtml(premium)}</span></td>
+      <td><span class="status-chip ${installed?"approved":"pending"}">${installed?"Installed":"Not installed"}</span></td>
       <td>${fmtDate(c.createdAt)}</td>
-      <td><button class="btn-sm reject" data-id="${c.id}">Delete</button></td>`;
+      <td style="white-space:nowrap;">
+        <button class="btn-sm confirm" data-action="edit" data-id="${c.id}">Edit</button>
+        ${!installed ? `<button class="btn-sm confirm" data-action="notify" data-id="${c.id}">Notify</button>` : ""}
+        <button class="btn-sm reject" data-action="delete" data-id="${c.id}">Delete</button>
+      </td>`;
     tbody.appendChild(tr);
   }
-  tbody.querySelectorAll("button[data-id]").forEach(btn=>{
+  tbody.querySelectorAll("button[data-action]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
-      const client = items.find(c=>c.id===btn.dataset.id);
-      if(!confirm(`Delete ${client?.businessName || client?.email || "this client"}? This removes their login access immediately and can't be undone. Note: this only removes their Invoice X Pro profile — the underlying sign-in email/password (Firebase Auth account) can't be deleted from this app and would need to be removed from the Firebase console if you want it fully gone.`)) return;
-      try{
-        await deleteDoc(doc(db, "users", btn.dataset.id));
-        toast("Client deleted.");
-      }catch(err){ toast("Could not delete client."); }
+      const id = btn.dataset.id;
+      const client = items.find(c=>c.id===id);
+      if(btn.dataset.action === "delete"){
+        if(!confirm(`Delete ${client?.businessName || client?.email || "this client"}? This removes their login access immediately and can't be undone. Note: this only removes their Invoice X Pro profile — the underlying sign-in email/password (Firebase Auth account) can't be deleted from this app and would need to be removed from the Firebase console if you want it fully gone.`)) return;
+        try{
+          await deleteDoc(doc(db, "users", id));
+          toast("Client deleted.");
+        }catch(err){ toast("Could not delete client."); }
+        return;
+      }
+      if(btn.dataset.action === "edit"){
+        openEditClientBizModal(client);
+        return;
+      }
+      if(btn.dataset.action === "notify"){
+        await sendNotification(id, "Install the app 📲",
+          "Get the full experience — install Invoice X Pro to your home screen for faster access and offline use. Open the app and tap \"Install\" in the menu.",
+          "install-nudge");
+        toast(`Install reminder sent to ${client?.businessName || client?.email || "client"}.`);
+      }
+    });
+  });
+}
+
+$("notifyNotInstalledBtn").addEventListener("click", async ()=>{
+  const targets = selfSignupClientsCache.filter(c=>c.installedApp !== true);
+  if(targets.length === 0){ toast("Everyone has already installed the app."); return; }
+  if(!confirm(`Send an install reminder to ${targets.length} client${targets.length===1?"":"s"} who haven't installed the app yet?`)) return;
+  const btn = $("notifyNotInstalledBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try{
+    await Promise.all(targets.map(c=> sendNotification(c.id, "Install the app 📲",
+      "Get the full experience — install Invoice X Pro to your home screen for faster access and offline use. Open the app and tap \"Install\" in the menu.",
+      "install-nudge")));
+    toast(`Install reminder sent to ${targets.length} client${targets.length===1?"":"s"}.`);
+  }catch(err){
+    toast("Some reminders could not be sent.");
+  }finally{
+    btn.disabled = false; btn.textContent = "Notify everyone who hasn't installed";
+  }
+});
+
+// ---- Admin: direct edit of a client's business info (no approval needed) ----
+function openEditClientBizModal(client){
+  if(!client) return;
+  $("editClientBizUid").value = client.id;
+  $("editClientBizName").value = client.businessName || "";
+  $("editClientBizAddress").value = client.address || "";
+  $("editClientBizEmail").value = client.email || "";
+  setFormMsg($("editClientBizMsg"), "", "");
+  $("editClientBizOverlay").classList.remove("hidden");
+}
+$("closeEditClientBizBtn").addEventListener("click", ()=> $("editClientBizOverlay").classList.add("hidden"));
+$("editClientBizForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const uid = $("editClientBizUid").value;
+  const businessName = $("editClientBizName").value.trim();
+  const address = $("editClientBizAddress").value.trim();
+  const email = $("editClientBizEmail").value.trim();
+  const btn = $("saveEditClientBizBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  try{
+    await updateDoc(doc(db, "users", uid), {
+      businessName, address, email,
+      fullName: businessName, // keep display name in sync, same as the signup flow does
+      updatedAt: serverTimestamp()
+    });
+    setFormMsg($("editClientBizMsg"), "Saved.", "success");
+    sendNotification(uid, "Business info updated",
+      "Your business information was updated by the admin team. If this wasn't expected, please get in touch.", "biz-info-updated");
+    toast("Client business info updated.");
+    setTimeout(()=> $("editClientBizOverlay").classList.add("hidden"), 600);
+  }catch(err){
+    setFormMsg($("editClientBizMsg"), err.message || "Could not save changes.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Save changes";
+  }
+});
+
+// ---- Admin: review client-submitted business info change requests ----
+async function loadBusinessChangeRequestsForAdmin(){
+  if(unsubBizChangeReqAdmin) unsubBizChangeReqAdmin();
+  const q = query(collection(db, "businessChangeRequests"), where("status","==","pending"), orderBy("createdAt","desc"));
+  unsubBizChangeReqAdmin = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+    renderBusinessChangeRequestsAdmin(items);
+  }, (err)=> console.error(err));
+}
+
+const BIZ_FIELD_LABELS = { businessName: "Business name", address: "Address", email: "Login email" };
+
+function renderBusinessChangeRequestsAdmin(items){
+  const tbody = $("bizChangeReqTableBodyAdmin");
+  tbody.innerHTML = "";
+  $("bizChangeReqEmptyStateAdmin").classList.toggle("hidden", items.length > 0);
+  for(const r of items){
+    const client = (window.__repsById && window.__repsById[r.clientUid]) || selfSignupClientsCache.find(c=>c.id===r.clientUid);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.clientName || client?.businessName || client?.email || r.clientUid)}</td>
+      <td>${escapeHtml(BIZ_FIELD_LABELS[r.changeType] || r.changeType)}</td>
+      <td>${escapeHtml(client?.[r.changeType] || "—")}</td>
+      <td>${escapeHtml(r.newValue)}</td>
+      <td>${escapeHtml(r.reason || "—")}</td>
+      <td>${fmtDate(r.createdAt)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-sm confirm" data-action="approve" data-id="${r.id}">Approve</button>
+        <button class="btn-sm reject" data-action="reject" data-id="${r.id}">Reject</button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const req = items.find(r=>r.id===btn.dataset.id);
+      if(!req) return;
+      if(btn.dataset.action === "approve"){
+        try{
+          await updateDoc(doc(db, "users", req.clientUid), {
+            [req.changeType]: req.newValue,
+            ...(req.changeType === "businessName" ? { fullName: req.newValue } : {}),
+            updatedAt: serverTimestamp()
+          });
+          await updateDoc(doc(db, "businessChangeRequests", req.id), { status: "approved", reviewedAt: serverTimestamp() });
+          sendNotification(req.clientUid, "Change request approved",
+            `Your request to update ${BIZ_FIELD_LABELS[req.changeType] || req.changeType} was approved.`, "biz-change-approved");
+          toast("Change approved and applied.");
+        }catch(err){ toast(err.message || "Could not approve request."); }
+      } else {
+        try{
+          await updateDoc(doc(db, "businessChangeRequests", req.id), { status: "rejected", reviewedAt: serverTimestamp() });
+          sendNotification(req.clientUid, "Change request rejected",
+            `Your request to update ${BIZ_FIELD_LABELS[req.changeType] || req.changeType} was rejected.`, "biz-change-rejected");
+          toast("Change request rejected.");
+        }catch(err){ toast(err.message || "Could not reject request."); }
+      }
     });
   });
 }
@@ -4700,6 +4932,7 @@ function initClientDashboard(clientRecordId, clientRecord){
   initReceiptGenerator();
   initPremiumSystem(currentUser.uid);
   initSignatureSettings();
+  initBusinessInfoRequests(currentUser.uid, source);
   $("invShowSignature")?.addEventListener("change", updateInvoicePreview);
   $("rcpShowSignature")?.addEventListener("change", updateReceiptPreview);
 }
@@ -5107,6 +5340,99 @@ async function sendNotification(userId, title, body, type){
       userId, title, body, type: type || "info", read: false, createdAt: serverTimestamp()
     });
   }catch(err){ console.error("Notification send failed:", err); }
+}
+
+// ---- PWA install-status tracking ----
+// Records whether the currently signed-in user has the app installed
+// (standalone/home-screen mode) on their own /users/{uid} doc, so the admin
+// dashboard can see who has and hasn't installed it. Only writes when the
+// value actually changed, to avoid a write on every single login.
+async function syncInstallStatus(uid, existingDoc){
+  if(!uid) return;
+  const installedNow = !!window.__ixpInstalled;
+  const alreadyRecorded = existingDoc?.installedApp === true;
+  if(!installedNow && existingDoc?.installedApp === false) return; // nothing changed
+  if(installedNow && alreadyRecorded) return; // nothing changed
+  try{
+    const payload = { installedApp: installedNow, installPlatform: window.__ixpInstallPlatform || "web" };
+    if(installedNow) payload.installedAt = serverTimestamp();
+    await updateDoc(doc(db, "users", uid), payload);
+  }catch(err){ console.error("Install status sync failed:", err); }
+}
+window.__ixpSyncInstallStatus = () => { if(currentUser) syncInstallStatus(currentUser.uid, currentUserDoc); };
+
+// ---- Client: request a change to business name / address / login email ----
+const BIZ_CHANGE_FIELD_LABELS = { businessName: "Business name", address: "Address", email: "Login email" };
+
+function initBusinessInfoRequests(uid, source){
+  $("bizInfoNameOut").textContent = source.businessName || "—";
+  $("bizInfoAddressOut").textContent = source.address || "—";
+  $("bizInfoEmailOut").textContent = source.email || currentUser?.email || "—";
+
+  let activeField = null;
+  document.querySelectorAll('#clientSettingsPanel button[data-field]').forEach(btn=>{
+    btn.onclick = ()=>{
+      activeField = btn.dataset.field;
+      $("bizChangeFieldLabel").textContent = `New ${btn.dataset.label}`;
+      $("bizChangeNewValue").value = "";
+      $("bizChangeReason").value = "";
+      setFormMsg($("bizChangeMsg"), "", "");
+      $("bizChangeFormBox").classList.remove("hidden");
+      $("bizChangeNewValue").focus();
+    };
+  });
+  $("bizChangeCancelBtn").onclick = ()=> $("bizChangeFormBox").classList.add("hidden");
+  $("bizChangeSubmitBtn").onclick = async ()=>{
+    const newValue = $("bizChangeNewValue").value.trim();
+    if(!newValue || !activeField){ setFormMsg($("bizChangeMsg"), "Enter a value first.", "error"); return; }
+    const btn = $("bizChangeSubmitBtn");
+    btn.disabled = true; btn.textContent = "Submitting…";
+    try{
+      await addDoc(collection(db, "businessChangeRequests"), {
+        clientUid: uid,
+        clientName: source.businessName || source.email || "",
+        changeType: activeField,
+        newValue,
+        reason: $("bizChangeReason").value.trim(),
+        status: "pending",
+        createdAt: serverTimestamp()
+      });
+      sendNotification("ADMIN_BROADCAST",
+        `${source.businessName || source.email || "A client"} requested a ${BIZ_CHANGE_FIELD_LABELS[activeField]} change`,
+        `Requested new value: ${newValue}`, "biz-change-request");
+      setFormMsg($("bizChangeMsg"), "Request submitted — an admin will review it.", "success");
+      toast("Change request submitted.");
+      setTimeout(()=> $("bizChangeFormBox").classList.add("hidden"), 900);
+    }catch(err){
+      setFormMsg($("bizChangeMsg"), err.message || "Could not submit request.", "error");
+    }finally{
+      btn.disabled = false; btn.textContent = "Submit request";
+    }
+  };
+
+  if(unsubMyBizChangeReqs) unsubMyBizChangeReqs();
+  const q = query(collection(db, "businessChangeRequests"), where("clientUid","==",uid), orderBy("createdAt","desc"), limit(20));
+  unsubMyBizChangeReqs = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+    renderMyBusinessChangeRequests(items);
+  }, (err)=> console.error(err));
+}
+
+function renderMyBusinessChangeRequests(items){
+  const tbody = $("myBizChangeReqTableBody");
+  tbody.innerHTML = "";
+  $("myBizChangeReqEmptyState").classList.toggle("hidden", items.length > 0);
+  for(const r of items){
+    const tr = document.createElement("tr");
+    const statusClass = r.status === "approved" ? "approved" : (r.status === "rejected" ? "rejected" : "pending");
+    tr.innerHTML = `
+      <td>${escapeHtml(BIZ_CHANGE_FIELD_LABELS[r.changeType] || r.changeType)}</td>
+      <td>${escapeHtml(r.newValue)}</td>
+      <td><span class="status-chip ${statusClass}">${escapeHtml(r.status)}</span></td>
+      <td>${fmtDate(r.createdAt)}</td>`;
+    tbody.appendChild(tr);
+  }
 }
 
 async function requestNotificationPermission(){
