@@ -2464,11 +2464,12 @@ let pendingReferralRep = null;
     const params = new URLSearchParams(window.location.search);
     const refCode = params.get("ref");
     if(!refCode) return;
-    const q = query(collection(db, "users"), where("role","==","rep"), where("accountCode","==",refCode), limit(1));
-    const snap = await getDocs(q);
-    if(!snap.empty){
-      const d = snap.docs[0];
-      pendingReferralRep = { id: d.id, fullName: d.data().fullName || d.data().email || "your representative", accountCode: refCode };
+    // Looked up from the public repProfiles collection (readable while
+    // signed out) rather than /users, which requires auth — see rules.
+    const repSnap = await getDoc(doc(db, "repProfiles", refCode));
+    if(repSnap.exists()){
+      const d = repSnap.data();
+      pendingReferralRep = { id: d.uid, fullName: d.fullName || "your representative", accountCode: refCode };
       openSignUp("client");
     }
   }catch(err){ console.error("Referral lookup failed:", err); }
@@ -2524,6 +2525,7 @@ $("signUpForm").addEventListener("submit", async (e)=>{
       // no admin approval gate. Admin can still see and, if needed, later
       // place a representative "on hold" from the admin dashboard, but that
       // is no longer a precondition for a brand-new self-signup to log in.
+      const repAccountCode = genCode("REP");
       await setDoc(doc(db, "users", uid), {
         role: "rep",
         fullName: $("suFullName").value.trim(),
@@ -2531,9 +2533,16 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         phone: $("suPhone").value.trim(),
         branch: $("suBranch").value.trim(),
         status: "accepted",
-        accountCode: genCode("REP"),
+        accountCode: repAccountCode,
         createdBy: "self-signup",
         createdAt: serverTimestamp()
+      });
+      // Public mirror doc so an unauthenticated visitor's ?ref= link can be
+      // resolved before login — see captureReferralParam() below.
+      await setDoc(doc(db, "repProfiles", repAccountCode), {
+        uid,
+        fullName: $("suFullName").value.trim() || email,
+        accountCode: repAccountCode
       });
       sendNotification("ADMIN_BROADCAST", "New representative sign-up",
         `${$("suFullName").value.trim() || email} signed up and is already active.`, "rep-signup");
