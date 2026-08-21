@@ -538,6 +538,23 @@
   .whatsapp-banner .wa-text{ font-weight:600; font-size:15px; }
   .whatsapp-banner .wa-sub{ font-weight:400; font-size:13px; opacity:.9; margin-top:2px; }
 
+  /* ===== Contact us banner (admin contact info) ===== */
+  .contact-us-banner{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:16px; padding:18px 22px; margin-bottom:20px;
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  }
+  .contact-us-banner .cu-text{ font-weight:600; font-size:15px; color:var(--ink); }
+  .contact-us-banner .cu-sub{ font-weight:400; font-size:13px; color:rgba(15,26,46,0.6); margin-top:2px; }
+  .contact-us-banner .cu-links{ display:flex; gap:10px; flex-wrap:wrap; }
+  .contact-us-banner .cu-btn{
+    display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:10px; font-weight:600; font-size:13.5px;
+    text-decoration:none; color:#fff;
+  }
+  .contact-us-banner .cu-btn.cu-wa{ background:#25D366; }
+  .contact-us-banner .cu-btn.cu-wa:hover{ background:#1ebe5a; }
+  .contact-us-banner .cu-btn.cu-mail{ background:#c9302c; }
+  .contact-us-banner .cu-btn.cu-mail:hover{ background:#a8261f; }
+
 
   .bank-card{
     background:var(--paper-2); border:1px solid var(--line); border-radius:16px; padding:24px; margin-bottom:22px;
@@ -1440,6 +1457,18 @@
       <a class="share-btn share-whatsapp" style="padding:10px 16px; border-radius:10px; font-weight:600;" href="https://chat.whatsapp.com/EA14qtVbhT13384bZ4aUAh" target="_blank" rel="noopener">Join Group</a>
     </div>
 
+    <div class="contact-us-banner">
+      <div>
+        <div class="cu-text">Need help? Contact us directly</div>
+        <div class="cu-sub">We're available on WhatsApp and email</div>
+      </div>
+      <div class="cu-links">
+        <a class="cu-btn cu-wa" href="https://wa.me/2349041498427" target="_blank" rel="noopener">🟢 WhatsApp (Nigeria)</a>
+        <a class="cu-btn cu-wa" href="https://wa.me/231771652394" target="_blank" rel="noopener">🟢 WhatsApp (Liberia)</a>
+        <a class="cu-btn cu-mail" href="mailto:invoicexpro3@gmail.com">✉️ invoicexpro3@gmail.com</a>
+      </div>
+    </div>
+
     <div class="cards-row">
       <div class="stat-card"><div class="label">My clients</div><div class="value" id="repStatClientCount">0</div></div>
       <div class="stat-card"><div class="label">Commissions</div><div class="value brass" id="repStatCommissions">$0</div></div>
@@ -1633,6 +1662,18 @@
     <div class="dash-head">
       <h2 id="clientBizNameHead">Business</h2>
       <p id="clientBizAddressHead">Address</p>
+    </div>
+
+    <div class="contact-us-banner">
+      <div>
+        <div class="cu-text">Need help? Contact us directly</div>
+        <div class="cu-sub">We're available on WhatsApp and email</div>
+      </div>
+      <div class="cu-links">
+        <a class="cu-btn cu-wa" href="https://wa.me/2349041498427" target="_blank" rel="noopener">🟢 WhatsApp (Nigeria)</a>
+        <a class="cu-btn cu-wa" href="https://wa.me/231771652394" target="_blank" rel="noopener">🟢 WhatsApp (Liberia)</a>
+        <a class="cu-btn cu-mail" href="mailto:invoicexpro3@gmail.com">✉️ invoicexpro3@gmail.com</a>
+      </div>
     </div>
 
     <div id="planStatusCard"></div>
