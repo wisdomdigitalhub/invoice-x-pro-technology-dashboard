@@ -1144,7 +1144,7 @@
       </div>
       <form id="clientPromotionForm">
         <div class="grid-2">
-          <div class="field"><label>Client</label><select id="promotionClientSelect" required><option value="">Loading clients…</option></select></div>
+          <div class="field"><label>Client</label><select id="promotionClientSelect" required><option value="">Loading clients…</option></select><label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:600;cursor:pointer;"><input type="checkbox" id="promotionSelectAllClients" style="width:auto;"> Select all clients</label><div id="promotionSelectedClientsHint" class="hint" style="margin-top:5px;">No clients selected.</div></div>
           <div class="field"><label>Promotion name</label><input type="text" id="promotionName" placeholder="e.g. Welcome Free Month" required /></div>
           <div class="field"><label>Access</label>
             <select id="promotionPackage" required>
@@ -3245,7 +3245,8 @@ function loadClientPromotionClients(){
 }
 
 function updatePromotionScheduleHint(){
-  const client = adminPromotionClientsCache.find(c=>c.id === $("promotionClientSelect")?.value);
+  const selectedValue=$("promotionClientSelect")?.value;
+  const client = selectedValue === "__ALL_CLIENTS__" ? null : adminPromotionClientsCache.find(c=>c.id === selectedValue);
   const hint = $("promotionScheduleHint");
   if(!hint) return;
   if(!client){ hint.textContent = "Select a client to see when the promotion will start."; return; }
@@ -3259,7 +3260,26 @@ function updatePromotionScheduleHint(){
   }
 }
 
-$("promotionClientSelect")?.addEventListener("change", updatePromotionScheduleHint);
+$("promotionClientSelect")?.addEventListener("change", ()=>{
+  const selectAll=$("promotionSelectAllClients");
+  if(selectAll) selectAll.checked=false;
+  updatePromotionScheduleHint();
+  const hint=$("promotionSelectedClientsHint");
+  if(hint) hint.textContent=$("promotionClientSelect").value ? "1 client selected." : "No clients selected.";
+});
+$("promotionSelectAllClients")?.addEventListener("change", (e)=>{
+  const sel=$("promotionClientSelect");
+  const hint=$("promotionSelectedClientsHint");
+  if(e.target.checked){
+    sel.value="__ALL_CLIENTS__";
+    if(hint) hint.textContent=`All ${adminPromotionClientsCache.length} clients selected.`;
+    updatePromotionScheduleHint();
+  }else{
+    sel.value="";
+    if(hint) hint.textContent="No clients selected.";
+    updatePromotionScheduleHint();
+  }
+});
 $("promotionDurationPreset")?.addEventListener("change", ()=>{
   const custom = $("promotionDurationPreset").value === "custom";
   $("promotionCustomDaysWrap")?.classList.toggle("hidden", !custom);
@@ -3318,37 +3338,44 @@ function renderClientPromotionsAdmin(rows){
 
 $("clientPromotionForm")?.addEventListener("submit", async(e)=>{
   e.preventDefault();
-  const uid=$("promotionClientSelect").value;
-  const client=adminPromotionClientsCache.find(c=>c.id===uid);
+  const selectAll=$("promotionSelectAllClients")?.checked;
+  const selectedIds=selectAll ? adminPromotionClientsCache.map(c=>c.id) : [$("promotionClientSelect").value].filter(Boolean);
+  const client=adminPromotionClientsCache.find(c=>c.id===selectedIds[0]);
   const name=$("promotionName").value.trim();
   const pkg=$("promotionPackage").value;
   const preset=$("promotionDurationPreset").value;
   const days=preset === "custom" ? Number($("promotionCustomDays").value) : Number(preset);
   const btn=$("createPromotionBtn");
-  if(!client){ setFormMsg($("clientPromotionMsg"),"Select a client.","error"); return; }
+  if(!selectedIds.length){ setFormMsg($("clientPromotionMsg"),"Select a client or choose Select all clients.","error"); return; }
   if(!name){ setFormMsg($("clientPromotionMsg"),"Enter a promotion name.","error"); return; }
   if(!Number.isInteger(days) || days<1 || days>3650){ setFormMsg($("clientPromotionMsg"),"Promotion duration must be between 1 and 3650 days.","error"); return; }
   btn.disabled=true; btn.textContent="Creating…";
   setFormMsg($("clientPromotionMsg"),"","");
   try{
-    const premiumExpiry=promotionDate(client.premiumExpiresAt);
-    const premiumActive=client.premiumPlan && client.premiumPlan !== "none" && premiumExpiry && Date.now() < premiumExpiry.getTime();
-    const startsAt = premiumActive ? premiumExpiry : new Date();
-    const expiresAt = new Date(startsAt.getTime() + days*24*60*60*1000);
-    await updateDoc(doc(db,"users",uid),{
-      promotionName:name, promotionPackage:pkg, promotionDurationDays:days,
-      promotionStartsAt:startsAt, promotionExpiresAt:expiresAt,
-      promotionCreatedAt:serverTimestamp(), promotionCreatedBy:currentUser?.uid||"admin"
-    });
-    const startText=startsAt.toLocaleDateString('en-NG');
-    const endText=expiresAt.toLocaleDateString('en-NG');
-    const scheduled=premiumActive;
-    sendNotification(uid, scheduled ? "🎁 Promotion scheduled" : "🎁 Free promotion activated",
-      scheduled ? `${name} has been scheduled for ${days} days and will start after your current Premium subscription expires on ${startText}.` : `${name} is now active for ${days} days, until ${endText}.`,
-      "client-promotion");
-    setFormMsg($("clientPromotionMsg"), scheduled ? `Promotion created. It will start after the current subscription expires on ${startText}.` : `Promotion activated until ${endText}.`, "success");
+    const selectedClients=selectedIds.map(id=>adminPromotionClientsCache.find(c=>c.id===id)).filter(Boolean);
+    let scheduledCount=0;
+    let activeCount=0;
+    for(const selectedClient of selectedClients){
+      const premiumExpiry=promotionDate(selectedClient.premiumExpiresAt);
+      const premiumActive=selectedClient.premiumPlan && selectedClient.premiumPlan !== "none" && premiumExpiry && Date.now() < premiumExpiry.getTime();
+      const startsAt = premiumActive ? premiumExpiry : new Date();
+      const expiresAt = new Date(startsAt.getTime() + days*24*60*60*1000);
+      await updateDoc(doc(db,"users",selectedClient.id),{
+        promotionName:name, promotionPackage:pkg, promotionDurationDays:days,
+        promotionStartsAt:startsAt, promotionExpiresAt:expiresAt,
+        promotionCreatedAt:serverTimestamp(), promotionCreatedBy:currentUser?.uid||"admin"
+      });
+      const startText=startsAt.toLocaleDateString('en-NG');
+      const endText=expiresAt.toLocaleDateString('en-NG');
+      if(premiumActive) scheduledCount++; else activeCount++;
+      sendNotification(selectedClient.id, premiumActive ? "🎁 Promotion scheduled" : "🎁 Free promotion activated",
+        premiumActive ? `${name} has been scheduled for ${days} days and will start after your current Premium subscription expires on ${startText}.` : `${name} is now active for ${days} days, until ${endText}.`,
+        "client-promotion");
+    }
+    setFormMsg($("clientPromotionMsg"), `${selectedClients.length} client${selectedClients.length===1?"":"s"} updated. ${activeCount} active now${scheduledCount ? `, ${scheduledCount} scheduled after Premium expires` : ""}.`, "success");
     $("clientPromotionForm").reset();
     $("promotionCustomDaysWrap")?.classList.add("hidden");
+    if($("promotionSelectedClientsHint")) $("promotionSelectedClientsHint").textContent="No clients selected.";
     updatePromotionScheduleHint();
   }catch(err){
     console.error(err);
