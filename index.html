@@ -1096,6 +1096,43 @@
       <div class="empty-state hidden" id="selfSignupClientEmptyState">No self-signup clients yet.</div>
     </div>
 
+    <div class="panel" id="clientDirectoryAdminPanel">
+      <div class="panel-head">
+        <h3>Client Directory &amp; Business Details</h3>
+        <span class="hint">Edit a client's business name, business Gmail/email and address directly from Admin.</span>
+      </div>
+      <div class="grid-2" style="margin-bottom:14px;">
+        <div class="field"><label>Search clients</label><input type="search" id="adminClientSearch" placeholder="Business name, email or address" /></div>
+        <div class="field"><label>Showing</label><div class="cred-box" id="adminClientDirectoryCount" style="padding:11px 13px;">0 clients</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Business</th><th>Gmail / Email</th><th>Address</th><th>Subscription</th><th>Actions</th></tr></thead>
+          <tbody id="adminClientDirectoryBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="adminClientDirectoryEmpty">No matching clients.</div>
+    </div>
+
+    <div class="panel" id="appInstallationsAdminPanel">
+      <div class="panel-head">
+        <h3>App Installations &amp; Activity</h3>
+        <span class="hint">See clients who have installed the PWA, when they installed it, and their platform.</span>
+      </div>
+      <div class="cards-row">
+        <div class="stat-card"><div class="label">Registered clients</div><div class="value" id="installRegisteredClients">0</div></div>
+        <div class="stat-card"><div class="label">Installed</div><div class="value brass" id="installCountClients">0</div></div>
+        <div class="stat-card"><div class="label">Not installed</div><div class="value" id="installNotCountClients">0</div></div>
+      </div>
+      <div class="table-wrap" style="margin-top:16px;">
+        <table>
+          <thead><tr><th>Business</th><th>Email</th><th>Installed</th><th>Platform</th><th>Last seen</th></tr></thead>
+          <tbody id="appInstallationsTableBody"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="appInstallationsEmpty">No client installations recorded yet.</div>
+    </div>
+
     <div class="panel">
       <div class="panel-head">
         <h3>Premium pricing</h3>
@@ -1175,26 +1212,6 @@
         </table>
       </div>
       <div class="empty-state hidden" id="clientPromotionEmptyState">No client promotions created yet.</div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
-        <h3>Announcements</h3>
-        <span class="hint">Posted instantly to every representative's notification bell</span>
-      </div>
-      <form id="postAnnouncementForm">
-        <div class="field"><label>Title</label><input type="text" id="announceTitle" placeholder="e.g. New Premium pricing" required /></div>
-        <div class="field"><label>Message</label><textarea id="announceMessage" rows="3" required></textarea></div>
-        <button type="submit" class="btn-primary" id="postAnnouncementBtn" style="max-width:200px;">Post announcement</button>
-        <div class="form-msg" id="postAnnouncementMsg"></div>
-      </form>
-      <div class="table-wrap" style="margin-top:18px;">
-        <table>
-          <thead><tr><th>Title</th><th>Message</th><th>Posted</th><th>Actions</th></tr></thead>
-          <tbody id="announcementTableBodyAdmin"></tbody>
-        </table>
-      </div>
-      <div class="empty-state hidden" id="announcementEmptyStateAdmin">No announcements posted yet.</div>
     </div>
 
     <div class="panel">
@@ -1520,20 +1537,6 @@
 
     <div class="panel">
       <div class="panel-head">
-        <h3>Announcements</h3>
-        <span class="hint">From your office</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Title</th><th>Message</th><th>Posted</th></tr></thead>
-          <tbody id="announcementTableBodyRep"></tbody>
-        </table>
-      </div>
-      <div class="empty-state hidden" id="announcementEmptyStateRep">No announcements yet.</div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">
         <h3>Marketing materials</h3>
         <span class="hint">Provided by your office — download and use freely</span>
       </div>
@@ -1731,6 +1734,7 @@
           <div class="field"><label>Customer address</label><input type="text" id="invClientAddress" /></div>
           <div class="field"><label>Discount (%)</label><input type="number" id="invDiscount" value="0" min="0" max="100" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="invVat" value="7.5" min="0" max="100" /></div>
+          <div class="field"><label>Invoice currency</label><select id="invCurrency" aria-label="Invoice currency"></select><div class="hint" style="margin-top:6px;">Choose from all currently active world currencies, including NGN and Liberian Dollar (LRD).</div></div>
         </div>
         <div class="panel-head" style="margin-top:6px;">
           <h3 style="font-size:15px;">Business details (optional, shown on the invoice)</h3>
@@ -1793,20 +1797,20 @@
           </div>
 
           <table class="inv-table">
-            <thead><tr><th>Sr.</th><th>Description</th><th>Qty</th><th>Rate (₦)</th><th>Amount (₦)</th></tr></thead>
+            <thead><tr><th>Sr.</th><th>Description</th><th>Qty</th><th>Rate (<span id="invCurrencyHead">₦</span>)</th><th>Amount (<span id="invCurrencyHead2">₦</span>)</th></tr></thead>
             <tbody id="invRowsOut"></tbody>
           </table>
 
           <div class="inv-summary-wrap">
             <div class="inv-summary">
-              <div class="inv-sum-row"><span>Sub Total</span><span>₦<span id="invSubOut">0</span></span></div>
-              <div class="inv-sum-row"><span>Discount</span><span>₦<span id="invDisOut">0</span></span></div>
-              <div class="inv-sum-row" id="invVatRow"><span id="invVatLabelOut">VAT (7.5%)</span><span>₦<span id="invVatOut">0</span></span></div>
-              <div class="inv-sum-row inv-grand"><span>Total</span><span>₦<span id="invGrandOut">0</span></span></div>
+              <div class="inv-sum-row"><span>Sub Total</span><span id="invSubMoney">₦0</span></div>
+              <div class="inv-sum-row"><span>Discount</span><span id="invDisMoney">₦0</span></div>
+              <div class="inv-sum-row" id="invVatRow"><span id="invVatLabelOut">VAT (7.5%)</span><span id="invVatMoney">₦0</span></div>
+              <div class="inv-sum-row inv-grand"><span>Total</span><span id="invGrandMoney">₦0</span></div>
             </div>
           </div>
 
-          <div class="inv-words" id="invWordsOut">Amount in words: Zero Naira Only</div>
+          <div class="inv-words" id="invWordsOut">Amount in words: Zero Nigerian Naira Only</div>
 
           <div class="inv-bottom-grid">
             <div class="inv-bank-box" id="invBankBox">
@@ -1856,8 +1860,9 @@
           <div class="field"><label>Received from (customer)</label><input type="text" id="rcpClientName" /></div>
           <div class="field"><label>Customer address</label><input type="text" id="rcpClientAddress" /></div>
           <div class="field"><label>Package / service</label><input type="text" id="rcpPackage" /></div>
-          <div class="field"><label>Total amount (₦)</label><input type="number" id="rcpTotal" min="0" /></div>
-          <div class="field"><label>Amount paid (₦)</label><input type="number" id="rcpPaid" min="0" /></div>
+          <div class="field"><label>Receipt currency</label><select id="rcpCurrency" aria-label="Receipt currency"></select><div class="hint" style="margin-top:6px;">Choose from all currently active world currencies, including NGN and Liberian Dollar (LRD).</div></div>
+          <div class="field"><label>Total amount</label><input type="number" id="rcpTotal" min="0" /></div>
+          <div class="field"><label>Amount paid</label><input type="number" id="rcpPaid" min="0" /></div>
           <div class="field"><label>VAT (%)</label><input type="number" id="rcpVat" value="7.5" min="0" max="100" /></div>
         </div>
         <button type="button" class="btn-primary" id="rcpGenerateBtn" style="max-width:200px;">Generate receipt</button>
@@ -1889,11 +1894,11 @@
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-summary">
-            <div class="pos-row"><span>Sub Total</span><span>₦<span id="rcpSubOut">0</span></span></div>
-            <div class="pos-row"><span id="rcpVatLabelOut">VAT (7.5%)</span><span>₦<span id="rcpVatAmtOut">0</span></span></div>
-            <div class="pos-row"><span>Total Amount</span><span>₦<span id="rcpTotalOut">0</span></span></div>
-            <div class="pos-row"><span>Amount Paid</span><span>₦<span id="rcpPaidOut">0</span></span></div>
-            <div class="pos-row pos-bold"><span>Balance Due</span><span>₦<span id="rcpBalanceOut">0</span></span></div>
+            <div class="pos-row"><span>Sub Total</span><span id="rcpSubMoney">₦0</span></div>
+            <div class="pos-row"><span id="rcpVatLabelOut">VAT (7.5%)</span><span id="rcpVatMoney">₦0</span></div>
+            <div class="pos-row"><span>Total Amount</span><span id="rcpTotalMoney">₦0</span></div>
+            <div class="pos-row"><span>Amount Paid</span><span id="rcpPaidMoney">₦0</span></div>
+            <div class="pos-row pos-bold"><span>Balance Due</span><span id="rcpBalanceMoney">₦0</span></div>
           </div>
           <div class="pos-divider dashed"></div>
           <div class="pos-words" id="rcpWordsOut"></div>
@@ -2024,8 +2029,6 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <!-- Payment: Paystack inline checkout, used by the public client payment page -->
 <script src="https://js.paystack.co/v1/inline.js"></script>
-<!-- Email: EmailJS, used to email premium payment proof to the business with no backend -->
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- Client invoice/receipt document rendering -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -2066,19 +2069,6 @@ const db = getFirestore(app);
 // Replace with your real key from Paystack Dashboard → Settings → API Keys & Webhooks.
 // Use a pk_test_... key while testing, pk_live_... once you go live.
 const PAYSTACK_PUBLIC_KEY = "pk_test_replace_with_your_paystack_public_key";
-
-// EmailJS config — free, no-backend email sending, same "safe public key"
-// idea as Paystack's key above. Sign up free at emailjs.com, connect Gmail
-// as your "Email Service", create a Template with the variable names used
-// below (customer_name, email, phone, amount, bank_used, payment_date,
-// transaction_reference, screenshot_data), and set the template's "To Email"
-// to invoicexpro3@gmail.com. Then replace these three placeholders.
-const EMAILJS_PUBLIC_KEY = "replace_with_your_emailjs_public_key";
-const EMAILJS_SERVICE_ID = "replace_with_your_emailjs_service_id";
-const EMAILJS_TEMPLATE_ID = "replace_with_your_emailjs_template_id";
-if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
-  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-}
 
 // ================= PWA: install, service worker, updates =================
 (function setupPWA(){
@@ -2124,6 +2114,7 @@ if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
   window.addEventListener("appinstalled", () => {
     installBtn.classList.add("hidden");
     deferredInstallPrompt = null;
+    recordAppInstallation();
   });
 
   // Register the service worker and wire up the "update available" banner.
@@ -2198,10 +2189,12 @@ let currentUserDoc = null;
 let unsubClients = null;
 let unsubReps = null;
 let unsubMaterials = null;
-let unsubAnnouncements = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
 let unsubSelfSignupClients = null;
+let unsubAdminClientDirectory = null;
+let adminClientDirectoryCache = [];
+let unsubAppInstallClients = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -2475,13 +2468,13 @@ function wireLogout(id){
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
-    if(unsubAnnouncements){ unsubAnnouncements(); unsubAnnouncements = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
+    if(unsubAdminClientDirectory){ unsubAdminClientDirectory(); unsubAdminClientDirectory = null; }
     $("notifPanel").classList.add("hidden");
     await signOut(auth);
   });
@@ -2544,13 +2537,13 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
-    if(unsubAnnouncements){ unsubAnnouncements(); unsubAnnouncements = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
     if(unsubPremiumAdmin){ unsubPremiumAdmin(); unsubPremiumAdmin = null; }
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
+    if(unsubAdminClientDirectory){ unsubAdminClientDirectory(); unsubAdminClientDirectory = null; }
     showLanding();
     return;
   }
@@ -2564,6 +2557,9 @@ onAuthStateChanged(auth, async (user)=>{
     }
     const data = userSnap.data();
     currentUserDoc = data;
+    recordAppSeen();
+    const standaloneNow = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if(standaloneNow && data.appInstalled !== true){ recordAppInstallation(); }
 
     $("whoName").textContent = data.fullName || user.email;
     $("whoRole").textContent = data.role === "admin" ? "Administrator" : (data.role === "client" ? "Client" : "Representative");
@@ -2626,8 +2622,8 @@ function initAdminDashboard(){
   loadReps();
   loadClientsForAdmin();
   loadSelfSignupClientsForAdmin();
+  loadAdminClientDirectory();
   loadMaterialsForAdmin();
-  loadAnnouncementsForAdmin();
   loadCommissionRates();
   loadPremiumPricing();
   loadPremiumRequestsForAdmin();
@@ -2930,7 +2926,6 @@ function initRepDashboard(uid, data){
   $("repStatWallet").textContent = ngn(wallet);
   loadClientsForRep(uid);
   loadMaterialsForRep();
-  loadAnnouncementsForRep();
   loadReferralEarningsForRep(uid, data);
 }
 
@@ -3204,7 +3199,129 @@ $("uploadMaterialForm").addEventListener("submit", async (e)=>{
   }
 });
 
-// ================= ANNOUNCEMENTS =================
+// ================= ADMIN CLIENT DIRECTORY =================
+function adminClientSubValue(value){
+  return value == null ? "" : String(value);
+}
+function getAdminClientSubscriptionLabel(c){
+  const pkg=c.premiumPlan && c.premiumPlan !== "none" ? promotionAccessLabel(c.premiumPlan) : "Free";
+  const expiry=promotionDate(c.premiumExpiresAt);
+  if(expiry && Date.now() < expiry.getTime()) return `${pkg} until ${expiry.toLocaleDateString('en-NG')}`;
+  if(c.promotionExpiresAt){
+    const pEnd=promotionDate(c.promotionExpiresAt);
+    if(pEnd && Date.now() < pEnd.getTime()) return `${promotionAccessLabel(c.promotionPackage||"both")} promotion until ${pEnd.toLocaleDateString('en-NG')}`;
+  }
+  return pkg;
+}
+function loadAdminClientDirectory(){
+  if(unsubAdminClientDirectory) unsubAdminClientDirectory();
+  const q=query(collection(db,"users"),where("role","==","client"));
+  unsubAdminClientDirectory=onSnapshot(q,snap=>{
+    adminClientDirectoryCache=[];
+    snap.forEach(d=>adminClientDirectoryCache.push({id:d.id,...d.data()}));
+    adminClientDirectoryCache.sort((a,b)=>(a.businessName||a.fullName||a.email||"").localeCompare(b.businessName||b.fullName||b.email||""));
+    renderAdminClientDirectory();
+    renderAppInstallationClients();
+  },err=>console.error("Client directory load failed:",err));
+}
+function renderAdminClientDirectory(){
+  const tbody=$("adminClientDirectoryBody"); if(!tbody) return;
+  const search=($("adminClientSearch")?.value||"").trim().toLowerCase();
+  const rows=adminClientDirectoryCache.filter(c=>{
+    if(!search) return true;
+    return [c.businessName,c.fullName,c.email,c.address].some(v=>String(v||"").toLowerCase().includes(search));
+  });
+  tbody.innerHTML="";
+  $("adminClientDirectoryEmpty")?.classList.toggle("hidden",rows.length>0);
+  if($("adminClientDirectoryCount")) $("adminClientDirectoryCount").textContent=`${rows.length} client${rows.length===1?"":"s"}`;
+  for(const c of rows){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input class="admin-client-edit" data-field="businessName" data-id="${escapeHtml(c.id)}" value="${escapeHtml(adminClientSubValue(c.businessName||c.fullName))}" placeholder="Business name"></td>
+      <td><input class="admin-client-edit" data-field="email" data-id="${escapeHtml(c.id)}" type="email" value="${escapeHtml(adminClientSubValue(c.email))}" placeholder="Business Gmail/email"></td>
+      <td><input class="admin-client-edit" data-field="address" data-id="${escapeHtml(c.id)}" value="${escapeHtml(adminClientSubValue(c.address))}" placeholder="Business address"></td>
+      <td>${escapeHtml(getAdminClientSubscriptionLabel(c))}</td>
+      <td><button type="button" class="btn-sm confirm" data-save-client="${escapeHtml(c.id)}">Save</button></td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll("button[data-save-client]").forEach(btn=>btn.addEventListener("click",async()=>{
+    const id=btn.dataset.saveClient;
+    const row=btn.closest("tr");
+    const payload={updatedAt:serverTimestamp()};
+    row.querySelectorAll("input.admin-client-edit").forEach(inp=>payload[inp.dataset.field]=inp.value.trim());
+    if(!payload.businessName){toast("Business name cannot be empty.");return;}
+    if(payload.email && !/^\\S+@\\S+\\.\\S+$/.test(payload.email)){toast("Enter a valid business Gmail/email.");return;}
+    btn.disabled=true; btn.textContent="Saving…";
+    try{
+      await updateDoc(doc(db,"users",id),payload);
+      // Keep the legacy client record in sync when this user came from a representative.
+      const client=adminClientDirectoryCache.find(c=>c.id===id);
+      if(client?.clientRecordId){
+        try{ await updateDoc(doc(db,"clients",client.clientRecordId),{clientName:payload.businessName,businessName:payload.businessName,email:payload.email,address:payload.address,updatedAt:serverTimestamp()}); }catch(e){ console.warn("Legacy client record sync skipped",e); }
+      }
+      toast("Client business details updated successfully.");
+    }catch(err){console.error(err);toast(err.message||"Could not save client details.");}
+    finally{btn.disabled=false;btn.textContent="Save";}
+  }));
+}
+$("adminClientSearch")?.addEventListener("input",renderAdminClientDirectory);
+
+// ================= APP INSTALLATION TRACKING =================
+function getInstallationId(){
+  let id=localStorage.getItem("ixp_installation_id");
+  if(!id){
+    id=(crypto?.randomUUID ? crypto.randomUUID() : "ixp-"+Date.now()+"-"+Math.random().toString(36).slice(2));
+    localStorage.setItem("ixp_installation_id",id);
+  }
+  return id;
+}
+function getInstallPlatform(){
+  const ua=navigator.userAgent||"";
+  if(/android/i.test(ua)) return "Android";
+  if(/iphone|ipad|ipod/i.test(ua)) return "iOS";
+  if(/windows/i.test(ua)) return "Windows";
+  if(/macintosh|mac os/i.test(ua)) return "macOS";
+  return "Web";
+}
+async function recordAppInstallation(){
+  try{
+    if(!currentUser) return;
+    const id=getInstallationId();
+    await setDoc(doc(db,"users",currentUser.uid),{
+      appInstalled:true,
+      appInstalledAt:serverTimestamp(),
+      appInstallId:id,
+      appInstallPlatform:getInstallPlatform(),
+      lastAppSeenAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+  }catch(err){console.error("Could not record app installation:",err);}
+}
+async function recordAppSeen(){
+  try{
+    if(!currentUser) return;
+    await updateDoc(doc(db,"users",currentUser.uid),{lastAppSeenAt:serverTimestamp()});
+  }catch(err){/* optional activity field */}
+}
+function renderAppInstallationClients(){
+  const tbody=$("appInstallationsTableBody"); if(!tbody) return;
+  const rows=[...adminClientDirectoryCache].sort((a,b)=>{
+    const ai=a.appInstalledAt?.seconds||0, bi=b.appInstalledAt?.seconds||0;
+    return bi-ai;
+  });
+  const installed=rows.filter(c=>c.appInstalled).length;
+  $("installRegisteredClients") && ($("installRegisteredClients").textContent=String(rows.length));
+  $("installCountClients") && ($("installCountClients").textContent=String(installed));
+  $("installNotCountClients") && ($("installNotCountClients").textContent=String(Math.max(0,rows.length-installed)));
+  tbody.innerHTML="";
+  $("appInstallationsEmpty")?.classList.toggle("hidden",rows.length>0);
+  for(const c of rows){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${escapeHtml(c.businessName||c.fullName||"—")}</td><td>${escapeHtml(c.email||"—")}</td><td><span class="status-chip ${c.appInstalled?"approved":"pending"}">${c.appInstalled?fmtDate(c.appInstalledAt):"Not recorded"}</span></td><td>${escapeHtml(c.appInstallPlatform||"—")}</td><td>${escapeHtml(fmtDate(c.lastAppSeenAt))}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
 // ================= CLIENT PROMOTIONS =================
 let unsubClientPromotionsAdmin = null;
 let adminPromotionClientsCache = [];
@@ -3381,88 +3498,6 @@ $("clientPromotionForm")?.addEventListener("submit", async(e)=>{
     console.error(err);
     setFormMsg($("clientPromotionMsg"),err.message||"Could not create promotion.","error");
   }finally{ btn.disabled=false; btn.textContent="Create promotion"; }
-});
-
-// Simple admin-to-rep broadcast board: admin posts a title + message, it's
-// stored in Firestore and shown in every rep's Announcements panel, and a
-// real notification is pushed to the bell for every rep via the existing
-// broadcast-target pattern (REP_BROADCAST), mirroring how ADMIN_BROADCAST
-// already works for admin-facing notifications.
-function loadAnnouncementsForAdmin(){
-  if(unsubAnnouncements) unsubAnnouncements();
-  const q = query(collection(db, "announcements"), orderBy("createdAt","desc"), limit(50));
-  unsubAnnouncements = onSnapshot(q, (snap)=>{
-    const items = [];
-    snap.forEach(d=> items.push({ id:d.id, ...d.data() }));
-    renderAnnouncementsAdmin(items);
-  }, (err)=> console.error(err));
-}
-
-function renderAnnouncementsAdmin(items){
-  const tbody = $("announcementTableBodyAdmin");
-  tbody.innerHTML = "";
-  $("announcementEmptyStateAdmin").classList.toggle("hidden", items.length > 0);
-  for(const a of items){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${escapeHtml(a.title||"—")}</td>
-      <td style="max-width:320px; white-space:pre-wrap;">${escapeHtml(a.message||"—")}</td>
-      <td>${fmtDate(a.createdAt)}</td>
-      <td><button type="button" class="btn-sm reject" data-id="${a.id}">Delete</button></td>`;
-    tbody.appendChild(tr);
-  }
-  tbody.querySelectorAll("button[data-id]").forEach(btn=>{
-    btn.addEventListener("click", async ()=>{
-      try{
-        await deleteDoc(doc(db, "announcements", btn.dataset.id));
-        toast("Announcement deleted.");
-      }catch(err){ toast("Could not delete announcement."); }
-    });
-  });
-}
-
-function loadAnnouncementsForRep(){
-  if(unsubAnnouncements) unsubAnnouncements();
-  const q = query(collection(db, "announcements"), orderBy("createdAt","desc"), limit(50));
-  unsubAnnouncements = onSnapshot(q, (snap)=>{
-    const items = [];
-    snap.forEach(d=> items.push({ id:d.id, ...d.data() }));
-    const tbody = $("announcementTableBodyRep");
-    if(!tbody) return;
-    tbody.innerHTML = "";
-    $("announcementEmptyStateRep").classList.toggle("hidden", items.length > 0);
-    for(const a of items){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${escapeHtml(a.title||"—")}</td>
-        <td style="max-width:320px; white-space:pre-wrap;">${escapeHtml(a.message||"—")}</td>
-        <td>${fmtDate(a.createdAt)}</td>`;
-      tbody.appendChild(tr);
-    }
-  }, (err)=> console.error(err));
-}
-
-$("postAnnouncementForm").addEventListener("submit", async (e)=>{
-  e.preventDefault();
-  const title = $("announceTitle").value.trim();
-  const message = $("announceMessage").value.trim();
-  const btn = $("postAnnouncementBtn");
-  btn.disabled = true; btn.textContent = "Posting…";
-  setFormMsg($("postAnnouncementMsg"), "", "");
-  try{
-    await addDoc(collection(db, "announcements"), {
-      title, message,
-      createdBy: currentUser?.uid || "admin",
-      createdAt: serverTimestamp()
-    });
-    sendNotification("REP_BROADCAST", title, message, "announcement");
-    setFormMsg($("postAnnouncementMsg"), "Posted — every representative has been notified.", "success");
-    $("postAnnouncementForm").reset();
-  }catch(err){
-    setFormMsg($("postAnnouncementMsg"), err.message || "Could not post announcement.", "error");
-  }finally{
-    btn.disabled = false; btn.textContent = "Post announcement";
-  }
 });
 
 // ================= RECOGNITION & AWARDS MODULE =================
@@ -4757,6 +4792,42 @@ function generateBarcode(containerId, seedText){
   }
 }
 
+const WORLD_CURRENCIES = [{"code":"AED","name":"United Arab Emirates Dirham","symbol":"AED"},{"code":"AFN","name":"Afghan Afghani","symbol":"AFN"},{"code":"ALL","name":"Albanian Lek","symbol":"ALL"},{"code":"AMD","name":"Armenian Dram","symbol":"AMD"},{"code":"AOA","name":"Angolan Kwanza","symbol":"AOA"},{"code":"ARS","name":"Argentine Peso","symbol":"ARS"},{"code":"AUD","name":"Australian Dollar","symbol":"A$"},{"code":"AWG","name":"Aruban Florin","symbol":"AWG"},{"code":"AZN","name":"Azerbaijani Manat","symbol":"AZN"},{"code":"BAM","name":"Bosnia-Herzegovina Convertible Mark","symbol":"BAM"},{"code":"BBD","name":"Barbadian Dollar","symbol":"BBD"},{"code":"BDT","name":"Bangladeshi Taka","symbol":"BDT"},{"code":"BGN","name":"Bulgarian Lev","symbol":"BGN"},{"code":"BHD","name":"Bahraini Dinar","symbol":"BHD"},{"code":"BIF","name":"Burundian Franc","symbol":"BIF"},{"code":"BMD","name":"Bermudan Dollar","symbol":"BMD"},{"code":"BND","name":"Brunei Dollar","symbol":"BND"},{"code":"BOB","name":"Bolivian Boliviano","symbol":"BOB"},{"code":"BRL","name":"Brazilian Real","symbol":"R$"},{"code":"BSD","name":"Bahamian Dollar","symbol":"BSD"},{"code":"BTN","name":"Bhutanese Ngultrum","symbol":"BTN"},{"code":"BWP","name":"Botswanan Pula","symbol":"BWP"},{"code":"BYN","name":"Belarusian Ruble","symbol":"BYN"},{"code":"BZD","name":"Belize Dollar","symbol":"BZD"},{"code":"CAD","name":"Canadian Dollar","symbol":"CA$"},{"code":"CDF","name":"Congolese Franc","symbol":"CDF"},{"code":"CHF","name":"Swiss Franc","symbol":"CHF"},{"code":"CLP","name":"Chilean Peso","symbol":"CLP"},{"code":"CNY","name":"Chinese Yuan","symbol":"CN¥"},{"code":"COP","name":"Colombian Peso","symbol":"COP"},{"code":"CRC","name":"Costa Rican Colón","symbol":"CRC"},{"code":"CUP","name":"Cuban Peso","symbol":"CUP"},{"code":"CVE","name":"Cape Verdean Escudo","symbol":"CVE"},{"code":"CZK","name":"Czech Koruna","symbol":"CZK"},{"code":"DJF","name":"Djiboutian Franc","symbol":"DJF"},{"code":"DKK","name":"Danish Krone","symbol":"DKK"},{"code":"DOP","name":"Dominican Peso","symbol":"DOP"},{"code":"DZD","name":"Algerian Dinar","symbol":"DZD"},{"code":"EGP","name":"Egyptian Pound","symbol":"EGP"},{"code":"ERN","name":"Eritrean Nakfa","symbol":"ERN"},{"code":"ETB","name":"Ethiopian Birr","symbol":"ETB"},{"code":"EUR","name":"Euro","symbol":"€"},{"code":"FJD","name":"Fijian Dollar","symbol":"FJD"},{"code":"FKP","name":"Falkland Islands Pound","symbol":"FKP"},{"code":"GBP","name":"British Pound","symbol":"£"},{"code":"GEL","name":"Georgian Lari","symbol":"GEL"},{"code":"GHS","name":"Ghanaian Cedi","symbol":"GHS"},{"code":"GIP","name":"Gibraltar Pound","symbol":"GIP"},{"code":"GMD","name":"Gambian Dalasi","symbol":"GMD"},{"code":"GNF","name":"Guinean Franc","symbol":"GNF"},{"code":"GTQ","name":"Guatemalan Quetzal","symbol":"GTQ"},{"code":"GYD","name":"Guyanaese Dollar","symbol":"GYD"},{"code":"HKD","name":"Hong Kong Dollar","symbol":"HK$"},{"code":"HNL","name":"Honduran Lempira","symbol":"HNL"},{"code":"HTG","name":"Haitian Gourde","symbol":"HTG"},{"code":"HUF","name":"Hungarian Forint","symbol":"HUF"},{"code":"IDR","name":"Indonesian Rupiah","symbol":"IDR"},{"code":"ILS","name":"Israeli New Shekel","symbol":"₪"},{"code":"INR","name":"Indian Rupee","symbol":"₹"},{"code":"IQD","name":"Iraqi Dinar","symbol":"IQD"},{"code":"IRR","name":"Iranian Rial","symbol":"IRR"},{"code":"ISK","name":"Icelandic Króna","symbol":"ISK"},{"code":"JMD","name":"Jamaican Dollar","symbol":"JMD"},{"code":"JOD","name":"Jordanian Dinar","symbol":"JOD"},{"code":"JPY","name":"Japanese Yen","symbol":"¥"},{"code":"KES","name":"Kenyan Shilling","symbol":"KES"},{"code":"KGS","name":"Kyrgystani Som","symbol":"KGS"},{"code":"KHR","name":"Cambodian Riel","symbol":"KHR"},{"code":"KMF","name":"Comorian Franc","symbol":"KMF"},{"code":"KPW","name":"North Korean Won","symbol":"KPW"},{"code":"KRW","name":"South Korean Won","symbol":"₩"},{"code":"KWD","name":"Kuwaiti Dinar","symbol":"KWD"},{"code":"KYD","name":"Cayman Islands Dollar","symbol":"KYD"},{"code":"KZT","name":"Kazakhstani Tenge","symbol":"KZT"},{"code":"LAK","name":"Laotian Kip","symbol":"LAK"},{"code":"LBP","name":"Lebanese Pound","symbol":"LBP"},{"code":"LKR","name":"Sri Lankan Rupee","symbol":"LKR"},{"code":"LRD","name":"Liberian Dollar","symbol":"LRD"},{"code":"LSL","name":"Lesotho Loti","symbol":"LSL"},{"code":"LYD","name":"Libyan Dinar","symbol":"LYD"},{"code":"MAD","name":"Moroccan Dirham","symbol":"MAD"},{"code":"MDL","name":"Moldovan Leu","symbol":"MDL"},{"code":"MGA","name":"Malagasy Ariary","symbol":"MGA"},{"code":"MKD","name":"Macedonian Denar","symbol":"MKD"},{"code":"MMK","name":"Myanmar Kyat","symbol":"MMK"},{"code":"MNT","name":"Mongolian Tugrik","symbol":"MNT"},{"code":"MOP","name":"Macanese Pataca","symbol":"MOP"},{"code":"MRU","name":"Mauritanian Ouguiya","symbol":"MRU"},{"code":"MUR","name":"Mauritian Rupee","symbol":"MUR"},{"code":"MVR","name":"Maldivian Rufiyaa","symbol":"MVR"},{"code":"MWK","name":"Malawian Kwacha","symbol":"MWK"},{"code":"MXN","name":"Mexican Peso","symbol":"MX$"},{"code":"MYR","name":"Malaysian Ringgit","symbol":"MYR"},{"code":"MZN","name":"Mozambican Metical","symbol":"MZN"},{"code":"NAD","name":"Namibian Dollar","symbol":"NAD"},{"code":"NGN","name":"Nigerian Naira","symbol":"NGN"},{"code":"NIO","name":"Nicaraguan Córdoba","symbol":"NIO"},{"code":"NOK","name":"Norwegian Krone","symbol":"NOK"},{"code":"NPR","name":"Nepalese Rupee","symbol":"NPR"},{"code":"NZD","name":"New Zealand Dollar","symbol":"NZ$"},{"code":"OMR","name":"Omani Rial","symbol":"OMR"},{"code":"PAB","name":"Panamanian Balboa","symbol":"PAB"},{"code":"PEN","name":"Peruvian Sol","symbol":"PEN"},{"code":"PGK","name":"Papua New Guinean Kina","symbol":"PGK"},{"code":"PHP","name":"Philippine Peso","symbol":"₱"},{"code":"PKR","name":"Pakistani Rupee","symbol":"PKR"},{"code":"PLN","name":"Polish Zloty","symbol":"PLN"},{"code":"PYG","name":"Paraguayan Guarani","symbol":"PYG"},{"code":"QAR","name":"Qatari Riyal","symbol":"QAR"},{"code":"RON","name":"Romanian Leu","symbol":"RON"},{"code":"RSD","name":"Serbian Dinar","symbol":"RSD"},{"code":"RUB","name":"Russian Ruble","symbol":"RUB"},{"code":"RWF","name":"Rwandan Franc","symbol":"RWF"},{"code":"SAR","name":"Saudi Riyal","symbol":"SAR"},{"code":"SBD","name":"Solomon Islands Dollar","symbol":"SBD"},{"code":"SCR","name":"Seychellois Rupee","symbol":"SCR"},{"code":"SDG","name":"Sudanese Pound","symbol":"SDG"},{"code":"SEK","name":"Swedish Krona","symbol":"SEK"},{"code":"SGD","name":"Singapore Dollar","symbol":"SGD"},{"code":"SHP","name":"St. Helena Pound","symbol":"SHP"},{"code":"SLE","name":"Sierra Leonean Leone","symbol":"SLE"},{"code":"SOS","name":"Somali Shilling","symbol":"SOS"},{"code":"SRD","name":"Surinamese Dollar","symbol":"SRD"},{"code":"SSP","name":"South Sudanese Pound","symbol":"SSP"},{"code":"STN","name":"São Tomé & Príncipe Dobra","symbol":"STN"},{"code":"SYP","name":"Syrian Pound","symbol":"SYP"},{"code":"SZL","name":"Swazi Lilangeni","symbol":"SZL"},{"code":"THB","name":"Thai Baht","symbol":"THB"},{"code":"TJS","name":"Tajikistani Somoni","symbol":"TJS"},{"code":"TMT","name":"Turkmenistani Manat","symbol":"TMT"},{"code":"TND","name":"Tunisian Dinar","symbol":"TND"},{"code":"TOP","name":"Tongan Paʻanga","symbol":"TOP"},{"code":"TRY","name":"Turkish Lira","symbol":"TRY"},{"code":"TTD","name":"Trinidad & Tobago Dollar","symbol":"TTD"},{"code":"TWD","name":"New Taiwan Dollar","symbol":"NT$"},{"code":"TZS","name":"Tanzanian Shilling","symbol":"TZS"},{"code":"UAH","name":"Ukrainian Hryvnia","symbol":"UAH"},{"code":"UGX","name":"Ugandan Shilling","symbol":"UGX"},{"code":"USD","name":"US Dollar","symbol":"$"},{"code":"UYU","name":"Uruguayan Peso","symbol":"UYU"},{"code":"UZS","name":"Uzbekistani Som","symbol":"UZS"},{"code":"VES","name":"Venezuelan Bolívar","symbol":"VES"},{"code":"VND","name":"Vietnamese Dong","symbol":"₫"},{"code":"VUV","name":"Vanuatu Vatu","symbol":"VUV"},{"code":"WST","name":"Samoan Tala","symbol":"WST"},{"code":"XAF","name":"Central African CFA Franc","symbol":"FCFA"},{"code":"XCD","name":"East Caribbean Dollar","symbol":"EC$"},{"code":"XCG","name":"Caribbean guilder","symbol":"Cg."},{"code":"XOF","name":"West African CFA Franc","symbol":"F CFA"},{"code":"XPF","name":"CFP Franc","symbol":"CFPF"},{"code":"YER","name":"Yemeni Rial","symbol":"YER"},{"code":"ZAR","name":"South African Rand","symbol":"ZAR"},{"code":"ZMW","name":"Zambian Kwacha","symbol":"ZMW"},{"code":"ZWG","name":"Zimbabwean Gold","symbol":"ZWG"}];
+
+function currencyInfo(code){
+  return WORLD_CURRENCIES.find(c => c.code === code) || WORLD_CURRENCIES.find(c => c.code === "NGN") || {code:"NGN",name:"Nigerian Naira",symbol:"NGN"};
+}
+
+function populateCurrencySelect(selectId, selectedCode="NGN"){
+  const el = $(selectId);
+  if(!el) return;
+  el.innerHTML = WORLD_CURRENCIES.map(c => `<option value="${c.code}">${escapeHtml(c.name)} (${c.code}) — ${escapeHtml(c.symbol || c.code)}</option>`).join("");
+  el.value = WORLD_CURRENCIES.some(c => c.code === selectedCode) ? selectedCode : "NGN";
+}
+
+function formatCurrency(amount, code="NGN"){
+  const n = Number(amount) || 0;
+  try{
+    return new Intl.NumberFormat(undefined, {style:"currency", currency:code, currencyDisplay:"symbol", maximumFractionDigits: 2}).format(n);
+  }catch(e){
+    const info = currencyInfo(code);
+    return `${info.symbol || info.code}${n.toLocaleString()}`;
+  }
+}
+
+function currencyName(code){
+  const info = currencyInfo(code);
+  return info.name || code;
+}
+
+function savedCurrency(key){
+  try{ return localStorage.getItem(`ixp_${currentUser?.uid || "guest"}_${key}`) || "NGN"; }catch(e){ return "NGN"; }
+}
+
+function saveCurrency(key, code){
+  try{ localStorage.setItem(`ixp_${currentUser?.uid || "guest"}_${key}`, code); }catch(e){}
+}
+
 function numberToWords(num){
   num = Math.round(Number(num) || 0);
   const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
@@ -4839,6 +4910,7 @@ function resetInvoiceSession(){
   $("invClientAddress").value = "";
   $("invDiscount").value = 0;
   $("invVat").value = 7.5;
+  populateCurrencySelect("invCurrency", savedCurrency("invoiceCurrency"));
   $("invItemRows").innerHTML = "";
   addInvoiceRow();
   invSessionConsumed = false;
@@ -4871,6 +4943,7 @@ function initInvoiceGenerator(){
   ["invClientName","invClientAddress","invDiscount","invVat","invBizPhone","invBizEmail","invPaymentTerms","invBankName","invAccountName","invAccountNumber"].forEach(id=>{
     $(id).addEventListener("input", updateInvoicePreview);
   });
+  $("invCurrency")?.addEventListener("change", ()=>{{ saveCurrency("invoiceCurrency", $("invCurrency").value); updateInvoicePreview(); }});
 
   resetInvoiceSession();
 
@@ -4942,6 +5015,13 @@ function updateInvoicePreview(){
   const vatPct = Number($("invVat").value) || 0;
   $("invVatLabelOut").textContent = `VAT (${vatPct}%)`;
 
+  const currency = $("invCurrency")?.value || "NGN";
+  const info = currencyInfo(currency);
+  const money = value => formatCurrency(value, currency);
+  const headSymbol = info.symbol || currency;
+  $("invCurrencyHead").textContent = headSymbol;
+  $("invCurrencyHead2").textContent = headSymbol;
+
   let sub = 0;
   let rowsHtml = "";
   let sr = 1;
@@ -4951,7 +5031,7 @@ function updateInvoicePreview(){
     const price = Number(row.querySelector(".inv-price").value) || 0;
     const total = qty * price;
     sub += total;
-    rowsHtml += `<tr><td>${sr}</td><td>${escapeHtml(desc)}</td><td>${qty}</td><td>${price.toLocaleString()}</td><td>${total.toLocaleString()}</td></tr>`;
+    rowsHtml += `<tr><td>${sr}</td><td>${escapeHtml(desc)}</td><td>${qty}</td><td>${escapeHtml(money(price))}</td><td>${escapeHtml(money(total))}</td></tr>`;
     sr++;
   });
   $("invRowsOut").innerHTML = rowsHtml;
@@ -4961,11 +5041,11 @@ function updateInvoicePreview(){
   const vat = afterDiscount * (vatPct/100);
   const grand = afterDiscount + vat;
 
-  $("invSubOut").textContent = sub.toLocaleString();
-  $("invDisOut").textContent = dis.toLocaleString();
-  $("invVatOut").textContent = vat.toLocaleString();
-  $("invGrandOut").textContent = grand.toLocaleString();
-  $("invWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(grand) + " Naira Only</b>";
+  $("invSubMoney").textContent = money(sub);
+  $("invDisMoney").textContent = money(dis);
+  $("invVatMoney").textContent = money(vat);
+  $("invGrandMoney").textContent = money(grand);
+  $("invWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(grand) + " " + escapeHtml(currencyName(currency)) + " Only</b>";
 
   const sig = currentUserDoc?.signature;
   const wantSig = $("invShowSignature") ? $("invShowSignature").checked : true;
@@ -4987,6 +5067,7 @@ function resetReceiptSession(){
   $("rcpPackage").value = "";
   $("rcpTotal").value = "";
   $("rcpPaid").value = "";
+  populateCurrencySelect("rcpCurrency", savedCurrency("receiptCurrency"));
   $("rcpNoOut").textContent = "";
   rcpSessionConsumed = false;
   $("rcpDownloadPdfBtn").classList.add("hidden");
@@ -5027,6 +5108,8 @@ function initReceiptGenerator(){
   };
 
   resetReceiptSession();
+  ["rcpClientName","rcpClientAddress","rcpPackage","rcpTotal","rcpPaid","rcpVat"].forEach(id=> $(id)?.addEventListener("input", updateReceiptPreview));
+  $("rcpCurrency")?.addEventListener("change", ()=>{{ saveCurrency("receiptCurrency", $("rcpCurrency").value); updateReceiptPreview(); }});
 
   $("rcpDownloadPdfBtn").onclick = ()=>{
     const receiptNo = $("rcpNoOut").textContent || "receipt";
@@ -5058,13 +5141,15 @@ function updateReceiptPreview(){
   $("rcpClientNameOut").textContent = clientName;
   $("rcpClientAddressOut").textContent = clientAddress;
   $("rcpPackageOut").textContent = pkg ? `For: ${pkg}` : "";
+  const currency = $("rcpCurrency")?.value || "NGN";
+  const money = value => formatCurrency(value, currency);
   $("rcpVatLabelOut").textContent = `VAT (${vatPct}%)`;
-  $("rcpSubOut").textContent = Math.round(subTotal).toLocaleString();
-  $("rcpVatAmtOut").textContent = Math.round(vatAmount).toLocaleString();
-  $("rcpTotalOut").textContent = total.toLocaleString();
-  $("rcpPaidOut").textContent = paid.toLocaleString();
-  $("rcpBalanceOut").textContent = balance.toLocaleString();
-  $("rcpWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(paid) + " Naira Only</b>";
+  $("rcpSubMoney").textContent = money(Math.round(subTotal));
+  $("rcpVatMoney").textContent = money(Math.round(vatAmount));
+  $("rcpTotalMoney").textContent = money(total);
+  $("rcpPaidMoney").textContent = money(paid);
+  $("rcpBalanceMoney").textContent = money(balance);
+  $("rcpWordsOut").innerHTML = "Amount in words: <b>" + numberToWords(paid) + " " + escapeHtml(currencyName(currency)) + " Only</b>";
 
   const rcpSig = currentUserDoc?.signature;
   const rcpWantSig = $("rcpShowSignature") ? $("rcpShowSignature").checked : true;
@@ -5370,8 +5455,8 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
 // ================= FREEMIUM / PREMIUM SYSTEM (credit-based) =================
 // No Firebase Storage anywhere in this flow, per instruction: the payment
 // screenshot is compressed client-side and stored as inline data directly
-// in the Firestore paymentRequests document (so admin can view it in-app
-// too), and emailed to the business via EmailJS.
+// in the Firestore paymentRequests document so admin can view it in-app.
+// No email service is used by this version.
 const STARTING_CREDITS = 1000;      // every new client starts with this many
 const CREDIT_COST_PER_DOC = 50;     // deducted for each invoice/receipt generated
 const CREDIT_EXPIRY_DAYS = 90;      // credits stop working after this many days, even if unused
@@ -6350,22 +6435,6 @@ $("premiumPaymentForm").addEventListener("submit", async (e)=>{
     sendNotification("ADMIN_BROADCAST", "New Premium payment submitted",
       `${payload.customerName} submitted payment proof for ₦${payload.amount.toLocaleString()} (${PKG_LABELS[packageType]}, ${PERIOD_LABELS[billingPeriod]}).`, "premium-payment");
 
-    if(window.emailjs && !EMAILJS_PUBLIC_KEY.startsWith("replace_with_")){
-      try{
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-          customer_name: payload.customerName,
-          email: payload.email,
-          phone: payload.phone,
-          amount: payload.amount,
-          bank_used: payload.bankUsed,
-          payment_date: payload.paymentDate,
-          transaction_reference: payload.transactionReference || "—",
-          screenshot_data: payload.screenshotData
-        });
-      }catch(emailErr){
-        console.error("Email send failed (payment record was still saved):", emailErr);
-      }
-    }
 
     showPremiumSuccessScreen();
     $("premiumPaymentForm").reset();
