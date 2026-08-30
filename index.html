@@ -753,6 +753,53 @@
     .inv-sign-box{ text-align:left; align-items:flex-start; }
     .doc-stamp-circle{ right:16px; top:auto; bottom:16px; }
   }
+
+  /* ===== Client Feedback System (additive) ===== */
+  .star-rating{ display:flex; gap:6px; margin-top:4px; }
+  .star-rating .star-btn{
+    background:none; border:none; font-size:26px; line-height:1; padding:2px;
+    color:rgba(15,26,46,0.22); transition:color .15s, transform .15s;
+  }
+  .star-rating .star-btn.active{ color:var(--brass); }
+  .star-rating .star-btn:hover{ transform:scale(1.12); }
+  .star-display{ letter-spacing:1px; }
+  .chip-grid{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+  .chip-grid .chip{
+    display:inline-flex; align-items:center; padding:8px 14px; border-radius:999px;
+    background:var(--paper); border:1px solid var(--line); font-size:12.5px; font-weight:500;
+    cursor:pointer; user-select:none; transition:all .15s;
+  }
+  .chip-grid .chip.active{ background:var(--ink); color:var(--paper-2); border-color:var(--ink); }
+  #fbWorkedToggle.role-toggle{ margin-bottom:0; }
+  #fbWorkedToggle .fb-worked-btn{
+    flex:1; padding:10px; border:none; border-radius:8px; background:transparent;
+    font-size:13px; font-weight:600; color:rgba(15,26,46,0.6);
+  }
+  #fbWorkedToggle .fb-worked-btn.active{ background:var(--ink); color:var(--paper-2); }
+  .detail-readonly{
+    background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 14px;
+    font-size:13.5px; line-height:1.5; white-space:pre-wrap; word-break:break-word;
+  }
+  .feedback-detail-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; font-size:13px; margin-bottom:6px;
+  }
+  .feedback-detail-grid div b{ display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:rgba(15,26,46,0.5); font-weight:600; margin-bottom:2px; }
+  .status-chip.fb-new{ background:var(--pending-bg); color:var(--pending); }
+  .status-chip.fb-reviewing{ background:#dce8f2; color:#2A5578; }
+  .status-chip.fb-inprogress{ background:#e6ddf2; color:#5a3d8a; }
+  .status-chip.fb-resolved{ background:var(--confirm-bg); color:var(--confirm); }
+  .status-chip.fb-rejected{ background:var(--reject-bg); color:var(--reject); }
+  .status-chip.fb-archived{ background:rgba(15,26,46,0.08); color:rgba(15,26,46,0.5); }
+  .feedback-mini-card{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:12px; padding:16px 18px;
+    margin-bottom:12px; cursor:pointer; transition:box-shadow .15s;
+  }
+  .feedback-mini-card:hover{ box-shadow:var(--shadow); }
+  .feedback-mini-card .fmc-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:6px; flex-wrap:wrap; }
+  .feedback-mini-card .fmc-title{ font-weight:600; font-size:14.5px; }
+  .feedback-mini-card .fmc-meta{ font-size:12px; color:rgba(15,26,46,0.5); }
+  .link-btn-inline{ background:none; border:none; color:var(--brass); font-weight:600; font-size:13px; text-decoration:underline; padding:0; }
+  .admin-only-detail.hidden{ display:none !important; }
 </style>
 </head>
 <body>
@@ -950,6 +997,125 @@
     </form>
     <div class="modal-footer-link">
       <button type="button" id="forgotPasswordBtn">Forgot password?</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CLIENT FEEDBACK MODAL ============ -->
+<div class="overlay hidden" id="feedbackOverlay">
+  <div class="modal" style="max-width:640px; max-height:88vh; overflow-y:auto;">
+    <button class="modal-close" id="closeFeedbackBtn">&times;</button>
+    <h3>Give Feedback</h3>
+    <p class="sub">Testing Invoice X Pro? Tell us what worked, what didn't, and what we should improve — it goes straight to our team.</p>
+
+    <form id="feedbackForm">
+      <div class="field">
+        <label>Feedback category</label>
+        <select id="fbCategory" required></select>
+      </div>
+
+      <div class="field">
+        <label>Rating</label>
+        <div class="star-rating" id="fbStarRating"></div>
+        <input type="hidden" id="fbRatingValue" value="0" />
+      </div>
+
+      <div class="field"><label>Feedback title</label><input type="text" id="fbTitle" maxlength="120" required /></div>
+      <div class="field"><label>Detailed feedback / message</label><textarea id="fbMessage" rows="4" required></textarea></div>
+
+      <div class="field">
+        <label>What did you test? (select all that apply)</label>
+        <div class="chip-grid" id="fbTestGrid"></div>
+      </div>
+
+      <div class="field">
+        <label>Did the feature work?</label>
+        <div class="role-toggle" id="fbWorkedToggle">
+          <button type="button" data-val="Yes" class="fb-worked-btn">Yes</button>
+          <button type="button" data-val="Partially" class="fb-worked-btn">Partially</button>
+          <button type="button" data-val="No" class="fb-worked-btn">No</button>
+        </div>
+        <input type="hidden" id="fbWorkedValue" value="" />
+      </div>
+
+      <div class="field hidden" id="fbProblemWrap">
+        <label>What happened?</label>
+        <textarea id="fbProblem" rows="3" placeholder="Tell us what went wrong so we can fix it"></textarea>
+      </div>
+
+      <div class="field"><label>What should we improve? (optional)</label><textarea id="fbSuggestion" rows="2"></textarea></div>
+
+      <div class="field">
+        <label>Screenshot (optional)</label>
+        <div class="upload-drop" id="fbScreenshotDrop">
+          <div id="fbScreenshotPromptText">Tap to attach a screenshot</div>
+          <img class="upload-preview hidden" id="fbScreenshotPreview" />
+        </div>
+        <input type="file" id="fbScreenshotInput" accept="image/png,image/jpeg,image/jpg" class="hidden" />
+        <button type="button" class="link-btn-inline hidden" id="fbRemoveScreenshotBtn" style="margin-top:8px;">Remove screenshot</button>
+      </div>
+
+      <button type="submit" class="btn-primary" id="fbSubmitBtn">Submit Feedback</button>
+      <div class="form-msg" id="feedbackFormMsg"></div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ FEEDBACK DETAIL MODAL (shared: admin full view / client read-only view) ============ -->
+<div class="overlay hidden" id="feedbackDetailOverlay">
+  <div class="modal" style="max-width:680px; max-height:88vh; overflow-y:auto; text-align:left;">
+    <button class="modal-close" id="closeFeedbackDetailBtn">&times;</button>
+    <h3>Feedback details</h3>
+    <div class="hint mono" id="fdCode" style="margin-bottom:14px;"></div>
+
+    <div class="feedback-detail-grid" id="fdMainInfo"></div>
+
+    <div class="field" style="margin-top:12px;">
+      <label>Detailed feedback</label>
+      <div class="detail-readonly" id="fdMessage"></div>
+    </div>
+
+    <div class="field hidden" id="fdProblemWrap">
+      <label>Problem reported</label>
+      <div class="detail-readonly" id="fdProblem"></div>
+    </div>
+
+    <div class="field hidden" id="fdSuggestionWrap">
+      <label>Suggested improvement</label>
+      <div class="detail-readonly" id="fdSuggestion"></div>
+    </div>
+
+    <div class="field hidden" id="fdScreenshotWrap">
+      <label>Screenshot</label>
+      <img id="fdScreenshotImg" style="max-width:100%;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;" />
+    </div>
+
+    <div class="admin-only-detail hidden" id="fdAdminControls">
+      <div class="grid-2">
+        <div class="field">
+          <label>Status</label>
+          <select id="fdStatusSelect"></select>
+        </div>
+        <div class="field" style="align-self:end;">
+          <button type="button" class="btn-primary" id="fdSaveStatusBtn" style="max-width:180px;">Save status</button>
+        </div>
+      </div>
+      <div class="form-msg" id="fdStatusMsg"></div>
+
+      <div class="field">
+        <label>Internal note (admin only — never visible to the client)</label>
+        <textarea id="fdInternalNote" rows="3"></textarea>
+        <button type="button" class="btn-primary" id="fdSaveNoteBtn" style="max-width:180px;margin-top:10px;">Save note</button>
+        <div class="form-msg" id="fdNoteMsg"></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Admin response</label>
+      <div class="detail-readonly hidden" id="fdResponseReadonly">No response yet.</div>
+      <textarea class="admin-only-detail hidden" id="fdAdminResponseInput" rows="3" placeholder="Reply to this client…"></textarea>
+      <button type="button" class="btn-primary admin-only-detail hidden" id="fdSaveResponseBtn" style="max-width:200px;margin-top:10px;">Send response</button>
+      <div class="form-msg" id="fdResponseMsg"></div>
     </div>
   </div>
 </div>
@@ -1231,6 +1397,56 @@
       <div class="materials-grid" id="materialsGridAdmin" style="margin-top:18px;"></div>
       <div class="empty-state hidden" id="materialsEmptyStateAdmin">No materials uploaded yet.</div>
     </div>
+
+    <div class="panel" id="clientFeedbackAdminPanel">
+      <div class="panel-head">
+        <h3>Client Feedback</h3>
+        <span class="hint">Feedback and test reports submitted by clients</span>
+      </div>
+
+      <div class="cards-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card"><div class="label">Total feedback</div><div class="value" id="fbStatTotal">0</div></div>
+        <div class="stat-card"><div class="label">New</div><div class="value brass" id="fbStatNew">0</div></div>
+        <div class="stat-card"><div class="label">Reviewed</div><div class="value" id="fbStatReviewed">0</div></div>
+        <div class="stat-card"><div class="label">Resolved</div><div class="value" id="fbStatResolved">0</div></div>
+      </div>
+      <div class="cards-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="label">Average rating</div><div class="value" id="fbStatAvgRating">—</div></div>
+        <div class="stat-card"><div class="label">Bug reports</div><div class="value" id="fbStatBugs">0</div></div>
+        <div class="stat-card"><div class="label">Feature requests</div><div class="value" id="fbStatFeatures">0</div></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="field"><label>Search</label><input type="text" id="fbSearchInput" placeholder="Client, business, email, or feedback ID" /></div>
+        <div class="field"><label>Category</label><select id="fbFilterCategory"><option value="">All categories</option></select></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Status</label><select id="fbFilterStatus"><option value="">All statuses</option></select></div>
+        <div class="field"><label>Rating</label>
+          <select id="fbFilterRating">
+            <option value="">Any rating</option>
+            <option value="5">5 stars</option>
+            <option value="4">4 stars</option>
+            <option value="3">3 stars</option>
+            <option value="2">2 stars</option>
+            <option value="1">1 star</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Feature tested</label><select id="fbFilterFeature"><option value="">Any feature</option></select></div>
+        <div class="field"><label>Date</label><input type="date" id="fbFilterDate" /></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Client / Business</th><th>Email</th><th>Category</th><th>Rating</th><th>Title</th><th>Date</th><th>Worked?</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="feedbackTableBodyAdmin"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="feedbackEmptyStateAdmin">No client feedback yet.</div>
+    </div>
+
     <div class="panel">
       <div class="panel-head">
         <h3>Recognition &amp; Awards</h3>
@@ -1650,6 +1866,22 @@
         <a href="https://wa.me/2349041498427" target="_blank" rel="noopener" style="text-decoration:none;color:inherit;"><b>💬 WhatsApp:</b> 09041498427</a>
         <a href="mailto:invoicexpro3@gmail.com" style="text-decoration:none;color:inherit;"><b>✉️ Email:</b> invoicexpro3@gmail.com</a>
       </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:18px;" id="clientFeedbackPanel">
+      <div class="panel-head">
+        <h3>Client Feedback &amp; Testing</h3>
+        <span class="hint">Help us improve Invoice X Pro</span>
+      </div>
+      <p style="font-size:13px;color:rgba(15,26,46,0.6);margin:0 0 16px;">Testing something out? Found a bug, or have an idea for a feature? Tell us directly — it goes straight to our team.</p>
+      <button type="button" class="btn-primary" id="openFeedbackBtn" style="max-width:220px;">Give Feedback</button>
+
+      <div class="panel-head" style="margin-top:28px;">
+        <h3>My Feedback History</h3>
+        <span class="hint" id="myFeedbackHint">—</span>
+      </div>
+      <div id="myFeedbackList"></div>
+      <div class="empty-state hidden" id="myFeedbackEmptyState">You haven't submitted any feedback yet.</div>
     </div>
 
     <div id="planStatusCard"></div>
@@ -2219,6 +2451,8 @@ let unsubSelfSignupClients = null;
 let unsubAdminClientDirectory = null;
 let adminClientDirectoryCache = [];
 let unsubAppInstallClients = null;
+let unsubMyFeedback = null;
+let unsubFeedbackAdmin = null;
 
 // ---------- Landing / modal wiring ----------
 let selectedRole = "rep";
@@ -2568,6 +2802,8 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubReferralCommissions){ unsubReferralCommissions(); unsubReferralCommissions = null; }
     if(unsubSelfSignupClients){ unsubSelfSignupClients(); unsubSelfSignupClients = null; }
     if(unsubAdminClientDirectory){ unsubAdminClientDirectory(); unsubAdminClientDirectory = null; }
+    if(unsubMyFeedback){ unsubMyFeedback(); unsubMyFeedback = null; }
+    if(unsubFeedbackAdmin){ unsubFeedbackAdmin(); unsubFeedbackAdmin = null; }
     showLanding();
     return;
   }
@@ -2653,6 +2889,7 @@ function initAdminDashboard(){
   loadPremiumRequestsForAdmin();
   loadClientPromotionsForAdmin();
   initRecognitionModuleAdmin();
+  loadFeedbackForAdmin();
 }
 
 async function loadReps(){
@@ -4886,6 +5123,7 @@ function initClientDashboard(clientRecordId, clientRecord){
   $("rcpBizAddressOut").textContent = address;
   renderBusinessLogo();
   loadPremiumPricing();
+  if(currentUser) loadMyFeedback(currentUser.uid);
 
   const referredByBanner = $("clientReferredByBanner");
   if(referredByBanner){
@@ -6598,6 +6836,506 @@ $("screenshotLightbox").addEventListener("click", (e)=>{
 function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
+
+// ================= CLIENT FEEDBACK SYSTEM =================
+// Additive feature — does not touch any existing collection, function, or
+// UI panel. Clients submit feedback/test reports from their dashboard,
+// admin reviews/replies from a new "Client Feedback" admin panel, and the
+// client sees the admin's reply in their own feedback history.
+//
+// Architecture notes:
+//  - Uses the existing Firestore `db`, the existing addDoc/onSnapshot/query
+//    helpers, the existing sendNotification()/notifications collection
+//    (no new notification system, no email, no announcements), and the
+//    existing compressImageFile() helper for the optional screenshot
+//    (no Firebase Storage — same pattern as payment proof / logos).
+//  - New Firestore collection: `feedback/{feedbackId}` — see the payload
+//    object built inside the feedbackForm submit handler below for the
+//    exact field list.
+//  - Internal admin notes are kept in a private subcollection
+//    (`feedback/{feedbackId}/private/note`) instead of a field on the main
+//    document. Firestore can't hide individual fields from someone who is
+//    allowed to read a document at all, so the only reliable way to keep
+//    internal notes invisible to the client is to put them somewhere the
+//    client's read rule never grants access to at all.
+//  - IMPORTANT — Firestore security rules are not part of this HTML file
+//    and must be published separately in the Firebase console. A matching
+//    `match /feedback/{feedbackId} { ... }` block (using this project's own
+//    isSignedIn()/isAdmin() helpers, with a private-notes subcollection
+//    locked to admin-only) has been added to this project's rules file —
+//    publish that updated rules file before relying on this feature in
+//    production; until then this collection is only as secure as whatever
+//    blanket rules already exist.
+
+const FEEDBACK_CATEGORIES = ["General Feedback","Bug / Problem","Feature Request","User Experience","Invoice","Receipt","Subscription","Payment","Currency","Performance","Other"];
+const FEEDBACK_FEATURES = ["Sign up","Login","Client dashboard","Business information","Invoice creation","Receipt creation","Currency selection","World currencies","Business logo","Signature","PDF generation","Downloading documents","Sharing documents","Subscription","Payment","Promotions","Notifications","PWA/app installation","Other"];
+const FEEDBACK_STATUSES = ["New","Reviewing","In Progress","Resolved","Rejected","Archived"];
+const FEEDBACK_APP_VERSION = "1.0.0";
+
+let feedbackAdminCache = [];
+let currentFeedbackScreenshotData = null;
+let currentFeedbackDetailItem = null; // the feedback item currently open in the shared detail modal
+
+function fbStandaloneMode(){
+  return !!((window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true);
+}
+function genFeedbackCode(){
+  return "FB-" + Date.now().toString(36).toUpperCase() + "-" + Math.floor(100 + Math.random()*900);
+}
+function fbStatusClass(status){
+  const map = { "New":"fb-new","Reviewing":"fb-reviewing","In Progress":"fb-inprogress","Resolved":"fb-resolved","Rejected":"fb-rejected","Archived":"fb-archived" };
+  return map[status] || "fb-new";
+}
+function renderStarsReadonly(n){
+  n = Number(n) || 0;
+  let out = "";
+  for(let i=1;i<=5;i++) out += `<span style="color:${i<=n ? 'var(--brass)' : 'rgba(15,26,46,0.2)'};">★</span>`;
+  return `<span class="star-display">${out}</span>`;
+}
+
+// ---------- Build static form options (runs once at load) ----------
+(function buildFeedbackFormOptions(){
+  const catSel = $("fbCategory");
+  if(catSel) catSel.innerHTML = FEEDBACK_CATEGORIES.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+
+  const starWrap = $("fbStarRating");
+  if(starWrap){
+    starWrap.innerHTML = [1,2,3,4,5].map(n=>`<button type="button" class="star-btn" data-val="${n}" aria-label="${n} star">★</button>`).join("");
+    starWrap.querySelectorAll(".star-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const val = Number(btn.dataset.val);
+        $("fbRatingValue").value = val;
+        starWrap.querySelectorAll(".star-btn").forEach(b=> b.classList.toggle("active", Number(b.dataset.val) <= val));
+      });
+    });
+  }
+
+  const testGrid = $("fbTestGrid");
+  if(testGrid){
+    testGrid.innerHTML = FEEDBACK_FEATURES.map(f=>`
+      <label class="chip">
+        <input type="checkbox" class="fb-test-chip" value="${escapeHtml(f)}" style="display:none;" />
+        <span>${escapeHtml(f)}</span>
+      </label>`).join("");
+    testGrid.querySelectorAll(".chip").forEach(chip=>{
+      chip.addEventListener("click", (e)=>{
+        e.preventDefault();
+        const input = chip.querySelector("input");
+        input.checked = !input.checked;
+        chip.classList.toggle("active", input.checked);
+      });
+    });
+  }
+
+  const workedToggle = $("fbWorkedToggle");
+  if(workedToggle){
+    workedToggle.querySelectorAll(".fb-worked-btn").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        workedToggle.querySelectorAll(".fb-worked-btn").forEach(b=> b.classList.remove("active"));
+        btn.classList.add("active");
+        $("fbWorkedValue").value = btn.dataset.val;
+        $("fbProblemWrap").classList.toggle("hidden", btn.dataset.val === "Yes");
+      });
+    });
+  }
+
+  const statusSel = $("fdStatusSelect");
+  if(statusSel) statusSel.innerHTML = FEEDBACK_STATUSES.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+
+  const catFilter = $("fbFilterCategory");
+  if(catFilter) catFilter.insertAdjacentHTML("beforeend", FEEDBACK_CATEGORIES.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join(""));
+
+  const statusFilter = $("fbFilterStatus");
+  if(statusFilter) statusFilter.insertAdjacentHTML("beforeend", FEEDBACK_STATUSES.map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join(""));
+
+  const featureFilter = $("fbFilterFeature");
+  if(featureFilter) featureFilter.insertAdjacentHTML("beforeend", FEEDBACK_FEATURES.map(f=>`<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join(""));
+})();
+
+// ---------- Client: submission modal ----------
+function resetFeedbackForm(){
+  $("feedbackForm").reset();
+  $("fbRatingValue").value = "0";
+  $("fbStarRating").querySelectorAll(".star-btn").forEach(b=> b.classList.remove("active"));
+  $("fbTestGrid").querySelectorAll(".chip").forEach(c=>{ c.classList.remove("active"); c.querySelector("input").checked = false; });
+  $("fbWorkedToggle").querySelectorAll(".fb-worked-btn").forEach(b=> b.classList.remove("active"));
+  $("fbWorkedValue").value = "";
+  $("fbProblemWrap").classList.add("hidden");
+  $("fbProblem").value = "";
+  $("fbScreenshotPreview").classList.add("hidden");
+  $("fbScreenshotPreview").src = "";
+  $("fbScreenshotInput").value = "";
+  $("fbScreenshotPromptText").textContent = "Tap to attach a screenshot";
+  $("fbRemoveScreenshotBtn").classList.add("hidden");
+  currentFeedbackScreenshotData = null;
+  $("feedbackFormMsg").className = "form-msg";
+}
+function openFeedbackModal(){
+  resetFeedbackForm();
+  $("feedbackOverlay").classList.remove("hidden");
+}
+function closeFeedbackModal(){
+  $("feedbackOverlay").classList.add("hidden");
+}
+if($("openFeedbackBtn")) $("openFeedbackBtn").addEventListener("click", openFeedbackModal);
+if($("closeFeedbackBtn")) $("closeFeedbackBtn").addEventListener("click", closeFeedbackModal);
+if($("feedbackOverlay")) $("feedbackOverlay").addEventListener("click", (e)=>{ if(e.target.id === "feedbackOverlay") closeFeedbackModal(); });
+
+if($("fbScreenshotDrop")) $("fbScreenshotDrop").addEventListener("click", ()=> $("fbScreenshotInput").click());
+if($("fbScreenshotInput")) $("fbScreenshotInput").addEventListener("change", async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ toast("Screenshot must be under 5MB."); e.target.value=""; return; }
+  try{
+    currentFeedbackScreenshotData = await compressImageFile(file, 250*1024);
+    $("fbScreenshotPreview").src = currentFeedbackScreenshotData;
+    $("fbScreenshotPreview").classList.remove("hidden");
+    $("fbScreenshotPromptText").textContent = "Screenshot attached — tap to change";
+    $("fbRemoveScreenshotBtn").classList.remove("hidden");
+  }catch(err){ console.error(err); toast("Could not process that image."); }
+});
+if($("fbRemoveScreenshotBtn")) $("fbRemoveScreenshotBtn").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  currentFeedbackScreenshotData = null;
+  $("fbScreenshotInput").value = "";
+  $("fbScreenshotPreview").classList.add("hidden");
+  $("fbScreenshotPreview").src = "";
+  $("fbScreenshotPromptText").textContent = "Tap to attach a screenshot";
+  $("fbRemoveScreenshotBtn").classList.add("hidden");
+});
+
+if($("feedbackForm")) $("feedbackForm").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  if(!currentUser || !currentUserDoc){ toast("Please sign in again."); return; }
+
+  const rating = Number($("fbRatingValue").value || 0);
+  const worked = $("fbWorkedValue").value;
+  const title = $("fbTitle").value.trim();
+  const message = $("fbMessage").value.trim();
+
+  if(rating < 1){ setFormMsg($("feedbackFormMsg"), "Please choose a star rating.", "error"); return; }
+  if(!title || !message){ setFormMsg($("feedbackFormMsg"), "Please fill in a title and your feedback.", "error"); return; }
+  if(!worked){ setFormMsg($("feedbackFormMsg"), "Please tell us whether the feature worked.", "error"); return; }
+
+  const testedFeatures = Array.from($("fbTestGrid").querySelectorAll(".fb-test-chip:checked")).map(i=>i.value);
+  const btn = $("fbSubmitBtn");
+  btn.disabled = true; btn.textContent = "Submitting…";
+  try{
+    const feedbackCode = genFeedbackCode();
+    const payload = {
+      feedbackCode,
+      clientUid: currentUser.uid,
+      clientEmail: currentUser.email || currentUserDoc.email || "",
+      businessName: currentUserDoc.businessName || currentUserDoc.fullName || "",
+      businessAddress: currentUserDoc.address || "",
+      clientRecordId: currentUserDoc.clientRecordId || null,
+      representativeId: currentUserDoc.referredByRepId || null,
+      category: $("fbCategory").value,
+      rating,
+      title,
+      message,
+      testedFeatures,
+      workedStatus: worked,
+      problem: worked === "Yes" ? "" : $("fbProblem").value.trim(),
+      suggestion: $("fbSuggestion").value.trim(),
+      screenshotData: currentFeedbackScreenshotData || null,
+      platform: getInstallPlatform(),
+      isStandalone: fbStandaloneMode(),
+      appVersion: FEEDBACK_APP_VERSION,
+      subscriptionStatus: (currentUserDoc.premiumPlan && currentUserDoc.premiumPlan !== "none") ? currentUserDoc.premiumPlan : "Free",
+      status: "New",
+      adminResponse: "",
+      adminResponseAt: null,
+      adminUid: null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+    await addDoc(collection(db, "feedback"), payload);
+    sendNotification("ADMIN_BROADCAST", "New client feedback 📝",
+      `${payload.businessName || payload.clientEmail} submitted "${title}" (${payload.category}).`, "feedback-new");
+    setFormMsg($("feedbackFormMsg"), `Thank you for helping us improve Invoice X Pro. Feedback ID: ${feedbackCode}`, "success");
+    setTimeout(()=> closeFeedbackModal(), 2200);
+  }catch(err){
+    console.error(err);
+    setFormMsg($("feedbackFormMsg"), describeSaveError(err, "feedback"), "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Submit Feedback";
+  }
+});
+
+// ---------- Client: feedback history ----------
+function loadMyFeedback(uid){
+  if(unsubMyFeedback) unsubMyFeedback();
+  const q = query(collection(db, "feedback"), where("clientUid", "==", uid), orderBy("createdAt", "desc"));
+  unsubMyFeedback = onSnapshot(q, (snap)=>{
+    const items = [];
+    snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+    renderMyFeedback(items);
+  }, (err)=> console.error("My feedback listener failed:", err));
+}
+function renderMyFeedback(items){
+  const list = $("myFeedbackList");
+  const empty = $("myFeedbackEmptyState");
+  const hint = $("myFeedbackHint");
+  if(!list) return;
+  list.innerHTML = "";
+  empty.classList.toggle("hidden", items.length > 0);
+  hint.textContent = items.length ? `${items.length} submitted` : "—";
+
+  items.forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "feedback-mini-card";
+    card.innerHTML = `
+      <div class="fmc-top">
+        <div class="fmc-title">${escapeHtml(item.title || "Untitled feedback")}</div>
+        <span class="status-chip ${fbStatusClass(item.status)}">${escapeHtml(item.status || "New")}</span>
+      </div>
+      <div class="fmc-meta">${escapeHtml(item.category || "")} · ${renderStarsReadonly(item.rating)} · ${fmtDate(item.createdAt)}</div>
+      ${item.adminResponse ? `<div class="fmc-meta" style="margin-top:6px;color:var(--confirm);">💬 Admin replied — tap to view</div>` : ""}
+    `;
+    card.addEventListener("click", ()=> openFeedbackDetail(item, false));
+    list.appendChild(card);
+  });
+}
+
+// ---------- Admin: dashboard ----------
+function loadFeedbackForAdmin(){
+  if(unsubFeedbackAdmin) unsubFeedbackAdmin();
+  const q = query(collection(db, "feedback"), orderBy("createdAt", "desc"));
+  unsubFeedbackAdmin = onSnapshot(q, (snap)=>{
+    feedbackAdminCache = [];
+    snap.forEach(d=> feedbackAdminCache.push({ id: d.id, ...d.data() }));
+    renderFeedbackStatsAdmin(feedbackAdminCache);
+    applyFeedbackFiltersAdmin();
+  }, (err)=> console.error("Admin feedback listener failed:", err));
+}
+function renderFeedbackStatsAdmin(items){
+  const total = items.length;
+  const newCount = items.filter(i=> (i.status||"New") === "New").length;
+  const reviewed = items.filter(i=> ["Reviewing","In Progress"].includes(i.status)).length;
+  const resolved = items.filter(i=> i.status === "Resolved").length;
+  const bugs = items.filter(i=> i.category === "Bug / Problem").length;
+  const features = items.filter(i=> i.category === "Feature Request").length;
+  const rated = items.filter(i=> Number(i.rating) > 0);
+  const avg = rated.length ? (rated.reduce((s,i)=> s + Number(i.rating||0), 0) / rated.length) : 0;
+
+  $("fbStatTotal").textContent = total;
+  $("fbStatNew").textContent = newCount;
+  $("fbStatReviewed").textContent = reviewed;
+  $("fbStatResolved").textContent = resolved;
+  $("fbStatBugs").textContent = bugs;
+  $("fbStatFeatures").textContent = features;
+  $("fbStatAvgRating").textContent = rated.length ? avg.toFixed(1) + " ★" : "—";
+}
+function applyFeedbackFiltersAdmin(){
+  const search = ($("fbSearchInput").value || "").trim().toLowerCase();
+  const category = $("fbFilterCategory").value;
+  const status = $("fbFilterStatus").value;
+  const rating = $("fbFilterRating").value;
+  const feature = $("fbFilterFeature").value;
+  const dateStr = $("fbFilterDate").value;
+
+  const filtered = feedbackAdminCache.filter(item=>{
+    if(category && item.category !== category) return false;
+    if(status && (item.status || "New") !== status) return false;
+    if(rating && Number(item.rating) !== Number(rating)) return false;
+    if(feature && !(item.testedFeatures || []).includes(feature)) return false;
+    if(dateStr){
+      const d = item.createdAt?.toDate ? item.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : null);
+      if(!d) return false;
+      const iso = d.toISOString().slice(0,10);
+      if(iso !== dateStr) return false;
+    }
+    if(search){
+      const hay = [item.businessName, item.clientEmail, item.feedbackCode, item.title].map(v=> String(v||"").toLowerCase()).join(" ");
+      if(!hay.includes(search)) return false;
+    }
+    return true;
+  });
+  renderFeedbackTableAdmin(filtered);
+}
+["fbSearchInput","fbFilterCategory","fbFilterStatus","fbFilterRating","fbFilterFeature","fbFilterDate"].forEach(id=>{
+  const el = $(id);
+  if(el) el.addEventListener("input", applyFeedbackFiltersAdmin);
+});
+function renderFeedbackTableAdmin(items){
+  const tbody = $("feedbackTableBodyAdmin");
+  const empty = $("feedbackEmptyStateAdmin");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  empty.classList.toggle("hidden", items.length > 0);
+  items.forEach(item=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="mono">${escapeHtml(item.feedbackCode || item.id.slice(0,8))}</td>
+      <td>${escapeHtml(item.businessName || "—")}</td>
+      <td>${escapeHtml(item.clientEmail || "—")}</td>
+      <td>${escapeHtml(item.category || "—")}</td>
+      <td>${renderStarsReadonly(item.rating)}</td>
+      <td>${escapeHtml(item.title || "—")}</td>
+      <td>${fmtDate(item.createdAt)}</td>
+      <td>${escapeHtml(item.workedStatus || "—")}</td>
+      <td><span class="status-chip ${fbStatusClass(item.status)}">${escapeHtml(item.status || "New")}</span></td>
+      <td><button type="button" class="btn-sm confirm fb-view-btn">View</button></td>
+    `;
+    tr.querySelector(".fb-view-btn").addEventListener("click", ()=> openFeedbackDetail(item, true));
+    tbody.appendChild(tr);
+  });
+}
+
+// ---------- Shared detail modal (admin full view / client read-only view) ----------
+async function openFeedbackDetail(item, isAdminView){
+  currentFeedbackDetailItem = item;
+  $("fdCode").textContent = item.feedbackCode || item.id;
+
+  const repName = (window.__repsById && item.representativeId && window.__repsById[item.representativeId])
+    ? (window.__repsById[item.representativeId].fullName || window.__repsById[item.representativeId].email)
+    : (item.representativeId || "—");
+
+  $("fdMainInfo").innerHTML = `
+    <div><b>Client</b>${escapeHtml(item.clientEmail || "—")}</div>
+    <div><b>Business</b>${escapeHtml(item.businessName || "—")}</div>
+    <div><b>Category</b>${escapeHtml(item.category || "—")}</div>
+    <div><b>Rating</b>${renderStarsReadonly(item.rating)}</div>
+    <div><b>Date</b>${fmtDate(item.createdAt)}</div>
+    <div><b>Did it work?</b>${escapeHtml(item.workedStatus || "—")}</div>
+    <div><b>Features tested</b>${(item.testedFeatures||[]).map(escapeHtml).join(", ") || "—"}</div>
+    <div><b>Subscription</b>${escapeHtml(item.subscriptionStatus || "—")}</div>
+    ${isAdminView ? `<div><b>Representative</b>${escapeHtml(String(repName))}</div>` : ""}
+    ${isAdminView ? `<div><b>Platform</b>${escapeHtml(item.platform || "—")}${item.isStandalone ? " (installed app)" : ""}</div>` : ""}
+    ${isAdminView ? `<div><b>App version</b>${escapeHtml(item.appVersion || "—")}</div>` : ""}
+    ${isAdminView ? `<div><b>Business address</b>${escapeHtml(item.businessAddress || "—")}</div>` : ""}
+  `;
+
+  $("fdMessage").textContent = item.message || "—";
+
+  const problemWrap = $("fdProblemWrap");
+  if(item.problem){
+    $("fdProblem").textContent = item.problem;
+    problemWrap.classList.remove("hidden");
+  } else {
+    problemWrap.classList.add("hidden");
+  }
+
+  const suggestionWrap = $("fdSuggestionWrap");
+  if(item.suggestion){
+    $("fdSuggestion").textContent = item.suggestion;
+    suggestionWrap.classList.remove("hidden");
+  } else {
+    suggestionWrap.classList.add("hidden");
+  }
+
+  const shotWrap = $("fdScreenshotWrap");
+  if(item.screenshotData){
+    $("fdScreenshotImg").src = item.screenshotData;
+    shotWrap.classList.remove("hidden");
+  } else {
+    shotWrap.classList.add("hidden");
+  }
+
+  // Toggle admin-only sections
+  document.querySelectorAll(".admin-only-detail").forEach(el=> el.classList.toggle("hidden", !isAdminView));
+
+  const responseReadonly = $("fdResponseReadonly");
+  const responseInput = $("fdAdminResponseInput");
+  const saveResponseBtn = $("fdSaveResponseBtn");
+  if(isAdminView){
+    responseReadonly.classList.add("hidden");
+    responseInput.classList.remove("hidden");
+    saveResponseBtn.classList.remove("hidden");
+    responseInput.value = item.adminResponse || "";
+
+    $("fdStatusSelect").value = item.status || "New";
+    $("fdStatusMsg").className = "form-msg";
+    $("fdNoteMsg").className = "form-msg";
+    $("fdResponseMsg").className = "form-msg";
+
+    try{
+      const noteSnap = await getDoc(doc(db, "feedback", item.id, "private", "note"));
+      $("fdInternalNote").value = noteSnap.exists() ? (noteSnap.data().note || "") : "";
+    }catch(err){
+      console.error("Could not load internal note:", err);
+      $("fdInternalNote").value = "";
+    }
+  } else {
+    responseInput.classList.add("hidden");
+    saveResponseBtn.classList.add("hidden");
+    responseReadonly.classList.remove("hidden");
+    responseReadonly.textContent = item.adminResponse ? item.adminResponse : "No response yet.";
+  }
+
+  $("feedbackDetailOverlay").classList.remove("hidden");
+}
+function closeFeedbackDetail(){
+  $("feedbackDetailOverlay").classList.add("hidden");
+  currentFeedbackDetailItem = null;
+}
+if($("closeFeedbackDetailBtn")) $("closeFeedbackDetailBtn").addEventListener("click", closeFeedbackDetail);
+if($("feedbackDetailOverlay")) $("feedbackDetailOverlay").addEventListener("click", (e)=>{ if(e.target.id === "feedbackDetailOverlay") closeFeedbackDetail(); });
+if($("fdScreenshotImg")) $("fdScreenshotImg").addEventListener("click", ()=>{
+  const src = $("fdScreenshotImg").src;
+  const lightbox = $("screenshotLightbox");
+  if(src && lightbox && $("lightboxImg")){
+    $("lightboxImg").src = src;
+    lightbox.classList.remove("hidden");
+  }
+});
+
+if($("fdSaveStatusBtn")) $("fdSaveStatusBtn").addEventListener("click", async ()=>{
+  if(!currentFeedbackDetailItem) return;
+  const newStatus = $("fdStatusSelect").value;
+  const btn = $("fdSaveStatusBtn");
+  btn.disabled = true;
+  try{
+    await updateDoc(doc(db, "feedback", currentFeedbackDetailItem.id), { status: newStatus, updatedAt: serverTimestamp() });
+    setFormMsg($("fdStatusMsg"), "Status updated.", "success");
+    currentFeedbackDetailItem.status = newStatus;
+  }catch(err){
+    console.error(err);
+    setFormMsg($("fdStatusMsg"), describeSaveError(err, "status"), "error");
+  }finally{ btn.disabled = false; }
+});
+
+if($("fdSaveNoteBtn")) $("fdSaveNoteBtn").addEventListener("click", async ()=>{
+  if(!currentFeedbackDetailItem) return;
+  const btn = $("fdSaveNoteBtn");
+  btn.disabled = true;
+  try{
+    await setDoc(doc(db, "feedback", currentFeedbackDetailItem.id, "private", "note"), {
+      note: $("fdInternalNote").value,
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser?.uid || null
+    }, { merge: true });
+    setFormMsg($("fdNoteMsg"), "Internal note saved.", "success");
+  }catch(err){
+    console.error(err);
+    setFormMsg($("fdNoteMsg"), describeSaveError(err, "internal note"), "error");
+  }finally{ btn.disabled = false; }
+});
+
+if($("fdSaveResponseBtn")) $("fdSaveResponseBtn").addEventListener("click", async ()=>{
+  if(!currentFeedbackDetailItem) return;
+  const responseText = $("fdAdminResponseInput").value.trim();
+  const btn = $("fdSaveResponseBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try{
+    await updateDoc(doc(db, "feedback", currentFeedbackDetailItem.id), {
+      adminResponse: responseText,
+      adminResponseAt: serverTimestamp(),
+      adminUid: currentUser?.uid || null,
+      updatedAt: serverTimestamp()
+    });
+    setFormMsg($("fdResponseMsg"), "Response sent to client.", "success");
+    currentFeedbackDetailItem.adminResponse = responseText;
+    if(currentFeedbackDetailItem.clientUid){
+      sendNotification(currentFeedbackDetailItem.clientUid, "💬 Admin replied to your feedback",
+        `Your feedback "${currentFeedbackDetailItem.title || ""}" received a response.`, "feedback-reply");
+    }
+  }catch(err){
+    console.error(err);
+    setFormMsg($("fdResponseMsg"), describeSaveError(err, "response"), "error");
+  }finally{ btn.disabled = false; btn.textContent = "Send response"; }
+});
 </script>
 </body>
 </html>
