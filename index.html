@@ -7883,18 +7883,9 @@ $("showcaseForm")?.addEventListener("submit", async (e)=>{
 
 // ---------- Public showcase ----------
 // ============================================================
-// HARD-CODED APPROVED SHOWCASE RECORDS
-// ============================================================
-// These records are intentionally kept in the frontend so they
-// do not depend on Firestore. Put the matching PNG files in the
-// SAME folder as this index.html.
-//
-// Current logo filename required:
-//   wisdom-digital-hub.png
-//
-// To add another approved partner later, copy one object below,
-// change its values, add a comma after the previous object, and
-// place its logo in the same folder.
+// HARD-CODED PUBLIC PARTNERS
+// Add more approved organizations by copying the object below.
+// Put each logo in: assets/images/partners/
 // ============================================================
 const HARDCODED_SHOWCASE_PARTNERS = [
   {
@@ -7903,7 +7894,7 @@ const HARDCODED_SHOWCASE_PARTNERS = [
     publicName: "Wisdom Digital Hub",
     type: "Technology Partner",
     publicCategory: "Technology Partner",
-    logo: "./wisdom-digital-hub.png",
+    logo: "./assets/images/partners/wisdom-digital-hub.png",
     website: "https://wisdomdigitalhub.github.io/wisdom-digital-hub/",
     description: "We turn ideas into technology that works. Wisdom Digital Hub is a growing digital innovation hub creating smart, practical solutions for businesses, entrepreneurs, and organizations—combining software, web technology, creativity, and problem-solving to make everyday work simpler and opportunities more accessible.",
     featured: true,
@@ -7911,81 +7902,51 @@ const HARDCODED_SHOWCASE_PARTNERS = [
     displayOrder: 1
   }
 
-  // ----------------------------------------------------------
-  // PLACEHOLDER FOR MORE HARD-CODED PARTNERS / MENTORS
-  // ----------------------------------------------------------
-  // Copy the object above and add a comma after it. Example:
-  //
-  // ,{
-  //   id: "hardcoded-example-partner",
-  //   name: "Example Organization",
-  //   publicName: "Example Organization",
-  //   type: "Partner",
-  //   publicCategory: "Strategic Partner",
-  //   logo: "./example-organization.png",
-  //   website: "https://example.com/",
-  //   description: "Approved public description.",
-  //   featured: false,
-  //   published: true,
-  //   displayOrder: 2
-  // }
+  // PLACEHOLDER — ADD MORE PARTNERS HERE
+  // Copy the object above, add a comma after the previous object,
+  // then change the details and logo filename.
 ];
 
 async function loadPublicShowcase(){
   const wrap = $("showcaseContent");
   if(!wrap) return;
-
-  // Hard-coded records are always available. Only records marked
-  // published=true are allowed into the public page.
-  const hardcodedRecords = HARDCODED_SHOWCASE_PARTNERS
-    .filter(r => r && r.published === true)
-    .map(r => ({ ...r, _source: "hardcoded" }));
-
   try{
-    // Deliberately a single where() with no orderBy() here — combining an
-    // equality filter (published==true) with orderBy() on a different field
-    // requires a Firestore composite index that doesn't exist by default.
-    // Sorting client-side avoids that dependency.
+    // Keep the existing Firestore showcase exactly as it is.
     const q = query(
       collection(db, "organizationShowcase"),
       where("published","==",true)
     );
     const snap = await getDocs(q);
-    const firestoreRecords = [];
-    snap.forEach(d=> firestoreRecords.push({ id:d.id, ...d.data(), _source: "firestore" }));
-
-    // Combine hard-coded approved records with existing Firestore records.
-    // If the same public name exists in both places, the hard-coded record
-    // wins so the manually approved listing cannot be duplicated.
     const records = [];
-    const seen = new Set();
+    snap.forEach(d=> records.push({ id:d.id, ...d.data() }));
 
-    for(const record of [...hardcodedRecords, ...firestoreRecords]){
-      const key = String(record.publicName || record.name || record.id || "")
-        .trim()
-        .toLowerCase();
-      if(!key || seen.has(key)) continue;
-      seen.add(key);
-      records.push(record);
-    }
+    // Add manually approved hard-coded records without replacing
+    // or removing any existing Firestore partners.
+    const seen = new Set(records.map(r =>
+      String(r.publicName || r.name || r.id || "").trim().toLowerCase()
+    ));
 
-    records.sort((a,b)=>
-      (Number.isFinite(a.displayOrder) ? a.displayOrder : 9999) -
-      (Number.isFinite(b.displayOrder) ? b.displayOrder : 9999)
-    );
+    HARDCODED_SHOWCASE_PARTNERS
+      .filter(r => r.published === true)
+      .forEach(r => {
+        const key = String(r.publicName || r.name || r.id || "").trim().toLowerCase();
+        if(!seen.has(key)){
+          records.push(r);
+          seen.add(key);
+        }
+      });
 
+    records.sort((a,b)=> (Number.isFinite(a.displayOrder)?a.displayOrder:0) - (Number.isFinite(b.displayOrder)?b.displayOrder:0));
     renderPublicShowcase(records);
   }catch(err){
     console.error(err);
 
-    // If Firestore has a temporary problem, keep the hard-coded
-    // approved listings visible instead of hiding them.
-    if(hardcodedRecords.length){
-      const records = [...hardcodedRecords].sort((a,b)=>
-        (Number.isFinite(a.displayOrder) ? a.displayOrder : 9999) -
-        (Number.isFinite(b.displayOrder) ? b.displayOrder : 9999)
-      );
-      renderPublicShowcase(records);
+    // Still show hard-coded approved partners if Firestore has a
+    // temporary error. Existing behavior remains the same otherwise.
+    const fallback = HARDCODED_SHOWCASE_PARTNERS.filter(r => r.published === true);
+    if(fallback.length){
+      fallback.sort((a,b)=> (Number.isFinite(a.displayOrder)?a.displayOrder:0) - (Number.isFinite(b.displayOrder)?b.displayOrder:0));
+      renderPublicShowcase(fallback);
     }else{
       wrap.innerHTML = `<div class="empty-state">Couldn't load partners right now — please refresh the page.</div>`;
     }
