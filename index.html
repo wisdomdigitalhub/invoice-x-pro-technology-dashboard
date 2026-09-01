@@ -754,6 +754,34 @@
     .doc-stamp-circle{ right:16px; top:auto; bottom:16px; }
   }
 
+
+  /* ===== Partners, Mentors & Supporters (additive) ===== */
+  .showcase-page{max-width:1180px;margin:0 auto;padding:42px 5vw 70px;}
+  .showcase-hero{text-align:center;max-width:820px;margin:0 auto 34px;}
+  .showcase-hero h1{font-size:clamp(34px,5vw,58px);margin:10px 0 14px;letter-spacing:-1.5px;}
+  .showcase-hero p{font-size:16px;line-height:1.7;color:rgba(15,26,46,.68);}
+  .showcase-toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin:24px 0;flex-wrap:wrap;}
+  .showcase-filters{display:flex;gap:8px;flex-wrap:wrap;}
+  .showcase-filter{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:12px;}
+  .showcase-filter.active{background:var(--ink);color:var(--paper-2);border-color:var(--ink);}
+  .showcase-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+  .showcase-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 8px 30px rgba(15,26,46,.05);transition:transform .18s,box-shadow .18s;}
+  .showcase-card:hover{transform:translateY(-3px);box-shadow:0 14px 38px rgba(15,26,46,.09);}
+  .showcase-logo{width:78px;height:78px;border-radius:16px;border:1px solid var(--line);background:var(--paper);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:16px;}
+  .showcase-logo img{width:100%;height:100%;object-fit:contain;}
+  .showcase-logo-fallback{font-weight:900;font-size:22px;color:var(--ink);}
+  .showcase-card h3{margin:0 0 6px;font-size:19px;}
+  .showcase-type{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--brass);font-weight:800;margin-bottom:10px;}
+  .showcase-card p{font-size:13px;line-height:1.6;color:rgba(15,26,46,.65);margin:0 0 16px;}
+  .showcase-card a{font-size:12.5px;font-weight:700;color:var(--ink);text-decoration:underline;}
+  .showcase-empty{text-align:center;padding:42px;border:1px dashed var(--line);border-radius:18px;color:rgba(15,26,46,.55);grid-column:1/-1;}
+  .showcase-back{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;}
+  .showcase-upload-preview{width:92px;height:92px;border:1px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--paper);margin-top:8px;}
+  .showcase-upload-preview img{width:100%;height:100%;object-fit:contain;}
+  .showcase-admin-actions{display:flex;gap:7px;flex-wrap:wrap;}
+  @media(max-width:900px){.showcase-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){.showcase-grid{grid-template-columns:1fr;}.showcase-page{padding-top:28px;}.showcase-card{padding:18px;}}
+
   /* ===== Client Feedback System (additive) ===== */
   .star-rating{ display:flex; gap:6px; margin-top:4px; }
   .star-rating .star-btn{
@@ -800,24 +828,6 @@
   .feedback-mini-card .fmc-meta{ font-size:12px; color:rgba(15,26,46,0.5); }
   .link-btn-inline{ background:none; border:none; color:var(--brass); font-weight:600; font-size:13px; text-decoration:underline; padding:0; }
   .admin-only-detail.hidden{ display:none !important; }
-
-  /* Partnership & mentorship — additive only */
-  .partnership-mentorship{margin:0 5vw 34px; padding:28px; border:1px solid var(--line); border-radius:22px; background:linear-gradient(135deg,rgba(255,255,255,.98),rgba(247,244,238,.9)); box-shadow:0 12px 34px rgba(15,26,46,.06);}
-  .partnership-mentorship .pm-grid{display:grid;grid-template-columns:1.35fr .85fr;gap:24px;align-items:center;}
-  .partnership-mentorship .pm-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);margin-bottom:9px;}
-  .partnership-mentorship h2{margin:0 0 9px;font-size:clamp(24px,3vw,36px);line-height:1.08;}
-  .partnership-mentorship p{margin:0;color:rgba(15,26,46,.68);line-height:1.65;max-width:760px;}
-  .pm-pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
-  .pm-pill{padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12px;font-weight:650;color:rgba(15,26,46,.78);}
-  .pm-contact{display:grid;gap:10px;padding:18px;border:1px solid var(--line);border-radius:17px;background:rgba(255,255,255,.82);}
-  .pm-contact strong{font-size:13px;}
-  .pm-contact a{color:inherit;text-decoration:none;word-break:break-word;}
-  .pm-contact a:hover{text-decoration:underline;text-decoration-color:var(--brass);}
-  .pm-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px;}
-  .pm-action{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 15px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--ink);text-decoration:none;font-weight:750;font-size:13px;}
-  .pm-action.primary{background:var(--brass);border-color:var(--brass);color:#1c1206;}
-  @media(max-width:820px){.partnership-mentorship{margin:0 5vw 26px;padding:21px;}.partnership-mentorship .pm-grid{grid-template-columns:1fr;gap:17px;}.pm-actions{display:grid;grid-template-columns:1fr;}.pm-action{width:100%;}}
-
 </style>
 </head>
 <body>
@@ -855,7 +865,7 @@
       <button class="nav-cta" id="signUpNavBtn" style="background:var(--brass); color:#1c1206;">Sign Up</button>
       <button class="nav-cta" id="clientLoginNavBtn" style="background:none; color:var(--ink); border:1.5px solid var(--line);">Client Login</button>
       <button class="nav-cta" id="repLoginNavBtn">Representative Login</button>
-      <a class="nav-cta" href="#partnershipMentorshipTitle" style="background:var(--brass); color:#1c1206; text-decoration:none;">Partnerships</a>
+      <button class="nav-cta" id="partnersNavBtn" style="background:none; color:var(--ink); border:1.5px solid var(--line);">Partners</button>
     </div>
   </nav>
 
@@ -924,41 +934,32 @@
     <button class="btn-brass" id="repLoginCtaBtn">Representative sign in</button>
   </div>
 
-
-  <!-- ============ PARTNERSHIP & MENTORSHIP INVITATION (additive) ============ -->
-  <section class="partnership-mentorship" aria-labelledby="partnershipMentorshipTitle">
-    <div class="pm-grid">
-      <div>
-        <div class="pm-kicker">✦ Open to meaningful collaboration</div>
-        <h2 id="partnershipMentorshipTitle">Let’s build something that helps businesses move forward.</h2>
-        <p>Invoice X Pro Technology is open to <strong>partnerships, mentorship and strategic collaboration</strong> with technology companies, SMEs, startup hubs, NGOs, business communities, financial institutions, investors, educators and other organizations that want to support practical digital solutions for businesses.</p>
-        <div class="pm-pill-row" aria-label="Partnership opportunities">
-          <span class="pm-pill">Strategic Partnerships</span>
-          <span class="pm-pill">Mentorship</span>
-          <span class="pm-pill">Technology</span>
-          <span class="pm-pill">SME Access</span>
-          <span class="pm-pill">Community</span>
-          <span class="pm-pill">Growth</span>
-        </div>
-        <div class="pm-actions">
-          <a class="pm-action primary" href="mailto:invoicexpro3@gmail.com?subject=Invoice%20X%20Pro%20Partnership%20%2F%20Mentorship%20Opportunity">Partner or Mentor Us</a>
-          <a class="pm-action" href="https://wa.me/2349041498427?text=Hello%20Invoice%20X%20Pro%20Team%2C%20I%27m%20interested%20in%20partnership%20or%20mentorship." target="_blank" rel="noopener">Contact on WhatsApp</a>
-        </div>
-      </div>
-      <div class="pm-contact">
-        <strong>Partnership &amp; Mentorship Contact</strong>
-        <a href="tel:09041498427">📞 09041498427</a>
-        <a href="https://wa.me/2349041498427" target="_blank" rel="noopener">💬 WhatsApp: 09041498427</a>
-        <a href="mailto:invoicexpro3@gmail.com">✉️ invoicexpro3@gmail.com</a>
-        <span style="font-size:12px;color:rgba(15,26,46,.52);line-height:1.55;">Tell us how you would like to collaborate. We welcome practical ideas, introductions, mentorship and opportunities that can create value for businesses.</span>
-      </div>
-    </div>
-  </section>
-
   <footer>
-    <span>Invoice X Pro Technology · Open to Partnerships &amp; Mentorship · <a href="mailto:invoicexpro3@gmail.com" style="color:inherit;">invoicexpro3@gmail.com</a></span>
+    <span>Invoice X Pro Technology</span>
     <span>&copy; 2026</span>
   </footer>
+</div>
+
+
+<!-- ============ PARTNERS, MENTORS & SUPPORTERS PUBLIC PAGE (additive) ============ -->
+<div class="showcase-page hidden" id="partnersPublicPage">
+  <button type="button" class="showcase-back" id="partnersBackBtn">← Back to Invoice X Pro</button>
+  <div class="showcase-hero">
+    <span class="eyebrow">Our ecosystem</span>
+    <h1>Partners, Mentors &amp; Supporters</h1>
+    <p>We are open to meaningful partnerships, mentorship and collaboration with organizations helping businesses, entrepreneurs and technology communities grow.</p>
+  </div>
+  <div class="showcase-toolbar">
+    <strong id="showcaseCountText">Loading…</strong>
+    <div class="showcase-filters" id="showcaseFilters">
+      <button type="button" class="showcase-filter active" data-type="all">All</button>
+      <button type="button" class="showcase-filter" data-type="Partner">Partners</button>
+      <button type="button" class="showcase-filter" data-type="Mentor">Mentors</button>
+      <button type="button" class="showcase-filter" data-type="Sponsor">Sponsors</button>
+      <button type="button" class="showcase-filter" data-type="Other">Others</button>
+    </div>
+  </div>
+  <div class="showcase-grid" id="publicShowcaseGrid"></div>
 </div>
 
 <!-- ============ PUBLIC CERTIFICATE VERIFICATION (no login required) ============ -->
@@ -1446,6 +1447,37 @@
       </form>
       <div class="materials-grid" id="materialsGridAdmin" style="margin-top:18px;"></div>
       <div class="empty-state hidden" id="materialsEmptyStateAdmin">No materials uploaded yet.</div>
+    </div>
+
+    
+    <div class="panel" id="organizationShowcaseAdminPanel">
+      <div class="panel-head">
+        <h3>Partners, Mentors &amp; Supporters</h3>
+        <span class="hint">Only records marked Published appear on the public website.</span>
+      </div>
+      <form id="showcaseAdminForm">
+        <div class="grid-2">
+          <div class="field"><label>Organization / Person name</label><input type="text" id="showcaseName" required placeholder="e.g. Stonetech" /></div>
+          <div class="field"><label>Relationship type</label><select id="showcaseType" required><option value="Partner">Partner</option><option value="Mentor">Mentor</option><option value="Sponsor">Sponsor</option><option value="Technology Partner">Technology Partner</option><option value="Ecosystem Partner">Ecosystem Partner</option><option value="Supporter">Supporter</option><option value="Other">Other</option></select></div>
+          <div class="field"><label>Short description</label><textarea id="showcaseDescription" rows="3" required placeholder="A short approved public description…"></textarea></div>
+          <div class="field"><label>Approved website (optional)</label><input type="url" id="showcaseWebsite" placeholder="https://example.com" /></div>
+          <div class="field"><label>Logo</label><input type="file" id="showcaseLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" /><div class="showcase-upload-preview" id="showcaseLogoPreview"><span>Logo</span></div><div class="hint">PNG, JPG, WEBP or SVG · max 1MB before compression</div></div>
+          <div class="field"><label>Display order</label><input type="number" id="showcaseOrder" min="0" max="9999" value="0" /></div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;"><input type="checkbox" id="showcasePublished" style="width:auto;"> Published publicly</label>
+          <label style="display:flex;align-items:center;gap:8px;font-weight:700;cursor:pointer;"><input type="checkbox" id="showcaseFeatured" style="width:auto;"> Featured</label>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+          <button type="submit" class="btn-primary" id="showcaseSaveBtn" style="max-width:210px;">Add to public list</button>
+          <button type="button" class="btn-ghost hidden" id="showcaseCancelEditBtn">Cancel edit</button>
+        </div>
+        <div class="form-msg" id="showcaseAdminMsg"></div>
+      </form>
+      <div class="table-wrap" style="margin-top:20px;">
+        <table><thead><tr><th>Logo</th><th>Name</th><th>Type</th><th>Status</th><th>Order</th><th>Actions</th></tr></thead><tbody id="showcaseAdminTableBody"></tbody></table>
+      </div>
+      <div class="empty-state hidden" id="showcaseAdminEmpty">No partners, mentors or supporters added yet.</div>
     </div>
 
     <div class="panel" id="clientFeedbackAdminPanel">
@@ -2794,6 +2826,7 @@ wireLogout("userNotAvailableLogout");
 
 // ---------- View switching ----------
 function showLanding(){
+  $("partnersPublicPage")?.classList.add("hidden");
   $("landing").classList.remove("hidden");
   $("app-shell").classList.remove("active");
   $("notAcceptedScreen").classList.add("hidden");
@@ -2854,7 +2887,7 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubAdminClientDirectory){ unsubAdminClientDirectory(); unsubAdminClientDirectory = null; }
     if(unsubMyFeedback){ unsubMyFeedback(); unsubMyFeedback = null; }
     if(unsubFeedbackAdmin){ unsubFeedbackAdmin(); unsubFeedbackAdmin = null; }
-    showLanding();
+    if(location.hash === "#partners") openPartnersPublic(); else showLanding();
     return;
   }
   currentUser = user;
@@ -2940,6 +2973,7 @@ function initAdminDashboard(){
   loadClientPromotionsForAdmin();
   initRecognitionModuleAdmin();
   loadFeedbackForAdmin();
+  loadOrganizationShowcaseForAdmin();
 }
 
 async function loadReps(){
@@ -6887,7 +6921,8 @@ function escapeHtml(str){
   return String(str ?? "").replace(/[&<>"']/g, (m)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
 }
 
-// ================= CLIENT FEEDBACK SYSTEM =================
+\n// ================= PARTNERS, MENTORS & SUPPORTERS =================\n// Additive feature only. Uses Firestore and the existing image compressor; no Storage.\nconst SHOWCASE_COLLECTION = "organizationShowcase";\nlet showcaseAdminCache = [];\nlet showcaseEditingId = null;\nlet showcaseLogoDataUrl = null;\nlet showcasePublicCache = [];\n\nfunction resetShowcaseAdminForm(){\n  showcaseEditingId = null;\n  showcaseLogoDataUrl = null;\n  $("showcaseAdminForm")?.reset();\n  $("showcaseOrder").value = 0;\n  $("showcasePublished").checked = false;\n  $("showcaseFeatured").checked = false;\n  $("showcaseLogoPreview").innerHTML = "<span>Logo</span>";\n  $("showcaseSaveBtn").textContent = "Add to public list";\n  $("showcaseCancelEditBtn")?.classList.add("hidden");\n}\n\nasync function loadOrganizationShowcaseForAdmin(){\n  if(!currentUser || currentUserDoc?.role !== "admin") return;\n  const q = query(collection(db, SHOWCASE_COLLECTION), orderBy("displayOrder", "asc"));\n  onSnapshot(q, snap=>{\n    showcaseAdminCache = [];\n    snap.forEach(d=> showcaseAdminCache.push({id:d.id, ...d.data()}));\n    renderShowcaseAdminTable();\n  }, err=>{\n    console.error("Showcase admin load failed", err);\n    const msg = $("showcaseAdminMsg"); if(msg) setFormMsg(msg, "Could not load the public list. Check Firestore rules.", "error");\n  });\n}\n\nfunction renderShowcaseAdminTable(){\n  const tbody = $("showcaseAdminTableBody"), empty = $("showcaseAdminEmpty");\n  if(!tbody) return;\n  tbody.innerHTML = "";\n  empty.classList.toggle("hidden", showcaseAdminCache.length > 0);\n  showcaseAdminCache.forEach(item=>{\n    const tr=document.createElement("tr");\n    const logo=item.logoData ? `<img src="${item.logoData}" alt="" style="width:42px;height:42px;object-fit:contain;border:1px solid var(--line);border-radius:8px;">` : "—";\n    tr.innerHTML=`<td>${logo}</td><td><b>${escapeHtml(item.name||"—")}</b>${item.featured?'<div style="font-size:10px;color:var(--brass);font-weight:800;">FEATURED</div>':''}</td><td>${escapeHtml(item.type||"Other")}</td><td><span class="status-chip ${item.published?"approved":"pending"}">${item.published?"Published":"Hidden"}</span></td><td>${Number(item.displayOrder)||0}</td><td><div class="showcase-admin-actions"><button type="button" class="btn-sm confirm" data-edit="${item.id}">Edit</button><button type="button" class="btn-sm reject" data-delete="${item.id}">Delete</button></div></td>`;\n    tbody.appendChild(tr);\n  });\n  tbody.querySelectorAll("[data-edit]").forEach(b=>b.addEventListener("click",()=>editShowcase(b.dataset.edit)));\n  tbody.querySelectorAll("[data-delete]").forEach(b=>b.addEventListener("click",()=>deleteShowcase(b.dataset.delete)));\n}\n\nfunction editShowcase(id){\n  const item=showcaseAdminCache.find(x=>x.id===id); if(!item) return;\n  showcaseEditingId=id;\n  $("showcaseName").value=item.name||"";\n  $("showcaseType").value=item.type||"Other";\n  $("showcaseDescription").value=item.description||"";\n  $("showcaseWebsite").value=item.website||"";\n  $("showcaseOrder").value=Number(item.displayOrder)||0;\n  $("showcasePublished").checked=!!item.published;\n  $("showcaseFeatured").checked=!!item.featured;\n  showcaseLogoDataUrl=item.logoData||null;\n  $("showcaseLogoPreview").innerHTML=showcaseLogoDataUrl?`<img src="${showcaseLogoDataUrl}" alt="Logo preview">`:'<span>Logo</span>';\n  $("showcaseSaveBtn").textContent="Save changes";\n  $("showcaseCancelEditBtn").classList.remove("hidden");\n  $("organizationShowcaseAdminPanel").scrollIntoView({behavior:"smooth",block:"start"});\n}\n\nasync function deleteShowcase(id){\n  const item=showcaseAdminCache.find(x=>x.id===id);\n  if(!item || !confirm(`Remove ${item.name||"this item"} from the Partners & Mentors list?`)) return;\n  try{ await deleteDoc(doc(db, SHOWCASE_COLLECTION, id)); toast("Removed from public list."); }\n  catch(err){ console.error(err); toast("Could not remove item."); }\n}\n\n$("showcaseLogoFile")?.addEventListener("change", async e=>{\n  const file=e.target.files?.[0]; if(!file) return;\n  const allowed=["image/png","image/jpeg","image/webp","image/svg+xml"];\n  if(!allowed.includes(file.type)){ e.target.value=""; setFormMsg($("showcaseAdminMsg"),"Please choose PNG, JPG, WEBP or SVG.","error"); return; }\n  if(file.type==="image/svg+xml" && file.size>180*1024){ e.target.value=""; setFormMsg($("showcaseAdminMsg"),"SVG logo must be 180KB or smaller.","error"); return; }
+  if(file.size>1024*1024){ e.target.value=""; setFormMsg($("showcaseAdminMsg"),"Logo must be 1MB or smaller.","error"); return; }\n  try{\n    // Existing app compressor stores images as compact JPEG data in Firestore.\n    // For SVG, use FileReader because canvas conversion may not preserve vector input consistently.\n    if(file.type==="image/svg+xml"){\n      const reader=new FileReader();\n      reader.onload=()=>{ showcaseLogoDataUrl=reader.result; $("showcaseLogoPreview").innerHTML=`<img src="${showcaseLogoDataUrl}" alt="Logo preview">`; };\n      reader.readAsDataURL(file);\n    }else{\n      showcaseLogoDataUrl=await compressImageFile(file, 220*1024);\n      $("showcaseLogoPreview").innerHTML=`<img src="${showcaseLogoDataUrl}" alt="Logo preview">`;\n    }\n  }catch(err){ console.error(err); setFormMsg($("showcaseAdminMsg"),"Could not process that logo.","error"); }\n});\n\n$("showcaseCancelEditBtn")?.addEventListener("click",resetShowcaseAdminForm);\n\n$("showcaseAdminForm")?.addEventListener("submit",async e=>{\n  e.preventDefault();\n  if(currentUserDoc?.role!=="admin"){ setFormMsg($("showcaseAdminMsg"),"Admin access required.","error"); return; }\n  const name=$("showcaseName").value.trim(), description=$("showcaseDescription").value.trim(), website=$("showcaseWebsite").value.trim();\n  if(!name||!description){ setFormMsg($("showcaseAdminMsg"),"Name and description are required.","error"); return; }\n  if(website && !/^https?:\\/\\//i.test(website)){ setFormMsg($("showcaseAdminMsg"),"Website must start with https:// or http://.","error"); return; }\n  const btn=$("showcaseSaveBtn"); btn.disabled=true; btn.textContent="Saving…";\n  try{\n    const payload={\n      name, type:$("showcaseType").value, description, website, logoData:showcaseLogoDataUrl||null,\n      published:$("showcasePublished").checked, featured:$("showcaseFeatured").checked,\n      displayOrder:Number($("showcaseOrder").value)||0, updatedAt:serverTimestamp(), updatedBy:currentUser.uid\n    };\n    if(showcaseEditingId){ await updateDoc(doc(db,SHOWCASE_COLLECTION,showcaseEditingId),payload); setFormMsg($("showcaseAdminMsg"),"Saved.","success"); }\n    else { payload.createdAt=serverTimestamp(); payload.createdBy=currentUser.uid; await addDoc(collection(db,SHOWCASE_COLLECTION),payload); setFormMsg($("showcaseAdminMsg"),"Added successfully.","success"); }\n    resetShowcaseAdminForm();\n  }catch(err){ console.error(err); setFormMsg($("showcaseAdminMsg"),"Could not save. Check your Firestore rules and try again.","error"); }\n  finally{ btn.disabled=false; if(!showcaseEditingId) btn.textContent="Add to public list"; }\n});\n\nasync function loadPublicShowcase(){\n  try{\n    const q=query(collection(db,SHOWCASE_COLLECTION),where("published","==",true));\n    onSnapshot(q,snap=>{ showcasePublicCache=[]; snap.forEach(d=>showcasePublicCache.push({id:d.id,...d.data()})); showcasePublicCache.sort((a,b)=>(Number(a.displayOrder)||0)-(Number(b.displayOrder)||0)); renderPublicShowcase("all"); },err=>{ console.error(err); $("showcaseCountText").textContent="Partners list unavailable"; });\n  }catch(err){ console.error(err); }\n}\n\nfunction renderPublicShowcase(filter){\n  const grid=$("publicShowcaseGrid"); if(!grid) return;\n  const items=showcasePublicCache.filter(x=>filter==="all" || x.type===filter || (filter==="Partner" && /partner/i.test(x.type||"")));\n  $("showcaseCountText").textContent=`${items.length} approved ${items.length===1?"organization/person":"organizations & people"}`;\n  grid.innerHTML="";\n  if(!items.length){ grid.innerHTML='<div class="showcase-empty">No approved listings in this category yet.</div>'; return; }\n  items.forEach(item=>{\n    const card=document.createElement("article"); card.className="showcase-card";\n    const initials=escapeHtml((item.name||"IX").split(/\\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase());\n    const logo=item.logoData?`<img src="${item.logoData}" alt="${escapeHtml(item.name||"")} logo">`:`<span class="showcase-logo-fallback">${initials}</span>`;\n    const link=item.website?`<a href="${escapeHtml(item.website)}" target="_blank" rel="noopener noreferrer">Visit website ↗</a>`:"";\n    card.innerHTML=`<div class="showcase-logo">${logo}</div><div class="showcase-type">${escapeHtml(item.type||"Other")}</div><h3>${escapeHtml(item.name||"—")}</h3><p>${escapeHtml(item.description||"")}</p>${link}`;\n    grid.appendChild(card);\n  });\n}\n\nfunction openPartnersPublic(){\n  $("landing").classList.add("hidden"); $("partnersPublicPage").classList.remove("hidden");\n  $("publicVerifyPage")?.classList.add("hidden");\n  history.replaceState(null,"","#partners");\n  renderPublicShowcase("all");\n}\nfunction closePartnersPublic(){\n  $("partnersPublicPage").classList.add("hidden"); showLanding(); history.replaceState(null,"",location.pathname+location.search); }\n$("partnersNavBtn")?.addEventListener("click",openPartnersPublic);\n$("partnersBackBtn")?.addEventListener("click",closePartnersPublic);\ndocument.querySelectorAll("#showcaseFilters .showcase-filter").forEach(btn=>btn.addEventListener("click",()=>{ document.querySelectorAll("#showcaseFilters .showcase-filter").forEach(b=>b.classList.remove("active")); btn.classList.add("active"); renderPublicShowcase(btn.dataset.type); }));\nloadPublicShowcase();\n\n// ================= CLIENT FEEDBACK SYSTEM =================
 // Additive feature — does not touch any existing collection, function, or
 // UI panel. Clients submit feedback/test reports from their dashboard,
 // admin reviews/replies from a new "Client Feedback" admin panel, and the
