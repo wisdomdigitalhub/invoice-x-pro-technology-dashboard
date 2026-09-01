@@ -818,6 +818,49 @@
   .pm-action.primary{background:var(--brass);border-color:var(--brass);color:#1c1206;}
   @media(max-width:820px){.partnership-mentorship{margin:0 5vw 26px;padding:21px;}.partnership-mentorship .pm-grid{grid-template-columns:1fr;gap:17px;}.pm-actions{display:grid;grid-template-columns:1fr;}.pm-action{width:100%;}}
 
+  /* ===== Partners, Mentors & Supporters — public showcase ===== */
+  .showcase-section{margin:0 5vw 40px; padding:34px 30px; border:1px solid var(--line); border-radius:22px; background:var(--paper-2); box-shadow:0 12px 34px rgba(15,26,46,.05);}
+  .showcase-head{text-align:center; max-width:720px; margin:0 auto 26px;}
+  .showcase-head .pm-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--brass);margin-bottom:9px;}
+  .showcase-head h2{margin:0 0 10px;font-size:clamp(24px,3vw,34px);line-height:1.1;}
+  .showcase-head p{margin:0;color:rgba(15,26,46,.66);line-height:1.6;}
+  .showcase-category{margin-top:28px;}
+  .showcase-category h3{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(15,26,46,.55);margin:0 0 14px;}
+  .showcase-category.featured h3{color:var(--brass);}
+  .showcase-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px;}
+  .showcase-card{border:1px solid var(--line); border-radius:16px; padding:20px; background:#fff; display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px; transition:transform .15s ease, box-shadow .15s ease;}
+  .showcase-card:hover{transform:translateY(-3px); box-shadow:0 10px 26px rgba(15,26,46,.08);}
+  .showcase-logo{width:76px; height:76px; border-radius:14px; object-fit:contain; background:var(--paper); border:1px solid var(--line); padding:8px;}
+  .showcase-logo-fallback{width:76px; height:76px; border-radius:14px; background:var(--paper); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Fraunces',serif; font-size:22px; color:rgba(15,26,46,.4);}
+  .showcase-card .sc-name{font-family:'Fraunces',serif; font-size:16.5px; font-weight:600; margin:2px 0 0;}
+  .showcase-card .sc-category{font-size:11.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--brass);}
+  .showcase-card .sc-desc{font-size:13px; color:rgba(15,26,46,.62); line-height:1.55;}
+  .showcase-card .sc-link{margin-top:6px; display:inline-flex; align-items:center; justify-content:center; padding:8px 14px; border-radius:9px; border:1px solid var(--line); background:var(--paper); color:var(--ink); text-decoration:none; font-weight:700; font-size:12.5px;}
+  .showcase-card .sc-link:hover{border-color:var(--brass); color:var(--brass);}
+  .showcase-empty{text-align:center; padding:26px 16px;}
+  .showcase-empty p{color:rgba(15,26,46,.6); max-width:480px; margin:0 auto 16px; line-height:1.6;}
+  @media(max-width:820px){.showcase-section{margin:0 5vw 30px;padding:24px 18px;} .showcase-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}}
+
+  /* ===== Partners, Mentors & Supporters — admin panel ===== */
+  .showcase-admin-toolbar{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;}
+  .showcase-filter-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .showcase-filter-row select, .showcase-filter-row input[type="search"]{max-width:220px;}
+  .showcase-logo-thumb{width:40px; height:40px; border-radius:8px; object-fit:contain; background:var(--paper); border:1px solid var(--line); padding:3px;}
+  .showcase-logo-thumb-fallback{width:40px; height:40px; border-radius:8px; background:var(--paper); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; color:rgba(15,26,46,.4);}
+  .showcase-cards-mobile{display:none;}
+  @media(max-width:800px){
+    .showcase-table-wrap{display:none;}
+    .showcase-cards-mobile{display:grid; gap:12px;}
+    .showcase-admin-card{border:1px solid var(--line); border-radius:14px; padding:14px; background:var(--paper);}
+    .showcase-admin-card .sac-head{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+    .showcase-admin-card .sac-name{font-weight:700; font-size:14px;}
+    .showcase-admin-card .sac-meta{font-size:12px; color:rgba(15,26,46,.55); margin-bottom:10px; display:grid; gap:3px;}
+    .showcase-admin-card .sac-actions{display:flex; flex-wrap:wrap; gap:6px;}
+  }
+  .showcase-logo-uploader{display:flex; align-items:center; gap:14px; margin-bottom:6px;}
+  .showcase-logo-preview{width:64px; height:64px; border-radius:12px; object-fit:contain; background:var(--paper); border:1px solid var(--line); padding:6px;}
+  .showcase-logo-preview-fallback{width:64px; height:64px; border-radius:12px; background:var(--paper); border:1px dashed var(--line); display:flex; align-items:center; justify-content:center; font-size:11px; color:rgba(15,26,46,.4); text-align:center;}
+
 </style>
 </head>
 <body>
@@ -856,6 +899,7 @@
       <button class="nav-cta" id="clientLoginNavBtn" style="background:none; color:var(--ink); border:1.5px solid var(--line);">Client Login</button>
       <button class="nav-cta" id="repLoginNavBtn">Representative Login</button>
       <a class="nav-cta" href="#partnershipMentorshipTitle" style="background:var(--brass); color:#1c1206; text-decoration:none;">Partnerships</a>
+      <a class="nav-cta" href="#showcaseTitle" style="background:none; color:var(--ink); border:1.5px solid var(--line); text-decoration:none;">Our Partners</a>
     </div>
   </nav>
 
@@ -952,6 +996,18 @@
         <a href="mailto:invoicexpro3@gmail.com">✉️ invoicexpro3@gmail.com</a>
         <span style="font-size:12px;color:rgba(15,26,46,.52);line-height:1.55;">Tell us how you would like to collaborate. We welcome practical ideas, introductions, mentorship and opportunities that can create value for businesses.</span>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ PARTNERS, MENTORS & SUPPORTERS — PUBLIC SHOWCASE (additive) ============ -->
+  <section class="showcase-section" id="showcaseSection" aria-labelledby="showcaseTitle">
+    <div class="showcase-head">
+      <div class="pm-kicker">✦ Our showcase</div>
+      <h2 id="showcaseTitle">Partners, Mentors &amp; Supporters</h2>
+      <p>Building Invoice X Pro with the support, knowledge and collaboration of people and organizations committed to better digital tools for businesses.</p>
+    </div>
+    <div id="showcaseContent">
+      <div class="empty-state">Loading…</div>
     </div>
   </section>
 
@@ -1695,6 +1751,130 @@
         <button type="button" class="btn-primary" id="verifyCertBtnAdmin" style="max-width:160px;">Verify</button>
         <div id="verifyResultAdmin"></div>
       </div>
+    </div>
+
+    <div class="panel" id="showcaseAdminPanel">
+      <div class="panel-head">
+        <h3>Partners, Mentors &amp; Supporters</h3>
+        <span class="hint">Manually add and manage what appears on the public showcase — nothing here is visible on the site until you publish it</span>
+      </div>
+
+      <div class="cards-row" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card"><div class="label">Published</div><div class="value" id="scStatPublished">0</div></div>
+        <div class="stat-card"><div class="label">Hidden</div><div class="value" id="scStatHidden">0</div></div>
+        <div class="stat-card"><div class="label">Featured</div><div class="value brass" id="scStatFeatured">0</div></div>
+        <div class="stat-card"><div class="label">Total records</div><div class="value" id="scStatTotal">0</div></div>
+      </div>
+
+      <div class="showcase-admin-toolbar">
+        <span class="hint">Records only appear publicly once marked "Published"</span>
+        <button type="button" class="btn-primary" id="scAddBtn" style="max-width:200px; margin-top:0;">+ Add Partner / Mentor</button>
+      </div>
+
+      <div class="showcase-filter-row">
+        <div class="field" style="min-width:220px; margin-bottom:0;"><input type="search" id="scSearchInput" placeholder="Search name, description, type…" /></div>
+        <select id="scFilterType">
+          <option value="">All types</option>
+          <option value="Partner">Partners</option>
+          <option value="Mentor">Mentors</option>
+          <option value="Sponsor">Sponsors</option>
+          <option value="Technology Partner">Technology Partners</option>
+          <option value="Ecosystem Partner">Ecosystem Partners</option>
+          <option value="Supporter">Supporters</option>
+          <option value="Investor">Investors</option>
+          <option value="Media Partner">Media Partners</option>
+          <option value="Training Partner">Training Partners</option>
+          <option value="Strategic Partner">Strategic Partners</option>
+          <option value="Other">Other</option>
+        </select>
+        <select id="scFilterStatus">
+          <option value="">All statuses</option>
+          <option value="published">Published</option>
+          <option value="hidden">Hidden</option>
+        </select>
+        <select id="scFilterFeatured">
+          <option value="">Featured &amp; non-featured</option>
+          <option value="yes">Featured only</option>
+        </select>
+      </div>
+
+      <div class="table-wrap showcase-table-wrap">
+        <table>
+          <thead><tr><th>Logo</th><th>Name</th><th>Relationship Type</th><th>Status</th><th>Featured</th><th>Order</th><th>Date Added</th><th>Actions</th></tr></thead>
+          <tbody id="showcaseTableBodyAdmin"></tbody>
+        </table>
+      </div>
+      <div class="showcase-cards-mobile" id="showcaseCardsMobileAdmin"></div>
+      <div class="empty-state hidden" id="showcaseEmptyStateAdmin">No partners, mentors or supporters added yet — click "+ Add Partner / Mentor" to add your first record.</div>
+    </div>
+  </div><!-- /#adminDash -->
+
+  <!-- ============ PARTNERS, MENTORS & SUPPORTERS — ADMIN ADD/EDIT MODAL (additive) ============ -->
+  <div class="overlay hidden" id="showcaseFormOverlay">
+    <div class="modal" style="max-width:600px; max-height:90vh; overflow-y:auto;">
+      <button class="modal-close" id="scCloseFormBtn">&times;</button>
+      <h3 id="scFormTitle" style="margin-top:0;">Add Partner / Mentor</h3>
+      <form id="showcaseForm">
+        <input type="hidden" id="scRecordId" value="" />
+        <div class="field"><label>Name *</label><input type="text" id="scName" required maxlength="120" /></div>
+
+        <div class="field">
+          <label>Logo *</label>
+          <div class="showcase-logo-uploader">
+            <div id="scLogoPreviewWrap"><div class="showcase-logo-preview-fallback" id="scLogoPreviewFallback">No logo</div></div>
+            <div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" id="scLogoUploadBtn">Upload logo</button>
+                <button type="button" class="remove hidden" id="scLogoRemoveBtn">Remove</button>
+              </div>
+              <div class="logo-uploader-hint">PNG, JPG or WEBP. Square images look best.</div>
+              <input type="file" id="scLogoFileInput" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden" />
+            </div>
+          </div>
+          <div class="form-msg" id="scLogoMsg"></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field"><label>Relationship Type *</label>
+            <select id="scType" required>
+              <option value="Partner">Partner</option>
+              <option value="Mentor">Mentor</option>
+              <option value="Sponsor">Sponsor</option>
+              <option value="Technology Partner">Technology Partner</option>
+              <option value="Ecosystem Partner">Ecosystem Partner</option>
+              <option value="Supporter">Supporter</option>
+              <option value="Investor">Investor</option>
+              <option value="Media Partner">Media Partner</option>
+              <option value="Training Partner">Training Partner</option>
+              <option value="Strategic Partner">Strategic Partner</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field"><label>Website (optional)</label><input type="url" id="scWebsite" placeholder="https://example.com" /></div>
+        </div>
+
+        <div class="field"><label>Short Description</label><textarea id="scDescription" rows="3" maxlength="400" placeholder="Helping Invoice X Pro with startup mentorship, business growth and ecosystem connections."></textarea></div>
+
+        <div class="grid-2">
+          <div class="field"><label>Public Display Name</label><input type="text" id="scPublicName" maxlength="120" placeholder="Defaults to Name" /></div>
+          <div class="field"><label>Public Category</label><input type="text" id="scPublicCategory" maxlength="80" placeholder="e.g. Ecosystem &amp; Mentorship Partner" /></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field"><label>Display Order</label><input type="number" id="scDisplayOrder" value="0" step="1" /></div>
+          <div class="field"><label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="scFeatured" style="width:auto;" /> Featured</label></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field"><label>Start Date (optional)</label><input type="date" id="scStartDate" /></div>
+          <div class="field"><label>End Date (optional)</label><input type="date" id="scEndDate" /></div>
+        </div>
+
+        <div class="field"><label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="scPublished" style="width:auto;" /> Published (visible on the public site)</label></div>
+
+        <button type="submit" class="btn-primary" id="scSaveBtn">Save</button>
+        <div class="form-msg" id="scFormMsg"></div>
+      </form>
     </div>
   </div>
 
@@ -2495,6 +2675,7 @@ let currentUserDoc = null;
 let unsubClients = null;
 let unsubReps = null;
 let unsubMaterials = null;
+let unsubShowcaseAdmin = null;
 let unsubNotifications = null;
 let unsubReferralCommissions = null;
 let unsubSelfSignupClients = null;
@@ -2776,6 +2957,7 @@ function wireLogout(id){
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
+    if(unsubShowcaseAdmin){ unsubShowcaseAdmin(); unsubShowcaseAdmin = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
@@ -2845,6 +3027,7 @@ onAuthStateChanged(auth, async (user)=>{
     if(unsubClients){ unsubClients(); unsubClients = null; }
     if(unsubReps){ unsubReps(); unsubReps = null; }
     if(unsubMaterials){ unsubMaterials(); unsubMaterials = null; }
+    if(unsubShowcaseAdmin){ unsubShowcaseAdmin(); unsubShowcaseAdmin = null; }
     if(unsubNotifications){ unsubNotifications(); unsubNotifications = null; }
     if(unsubClientUserDoc){ unsubClientUserDoc(); unsubClientUserDoc = null; }
     if(unsubPaymentRequest){ unsubPaymentRequest(); unsubPaymentRequest = null; }
@@ -2940,6 +3123,7 @@ function initAdminDashboard(){
   loadClientPromotionsForAdmin();
   initRecognitionModuleAdmin();
   loadFeedbackForAdmin();
+  loadShowcaseForAdmin();
 }
 
 async function loadReps(){
@@ -7386,6 +7570,398 @@ if($("fdSaveResponseBtn")) $("fdSaveResponseBtn").addEventListener("click", asyn
     setFormMsg($("fdResponseMsg"), describeSaveError(err, "response"), "error");
   }finally{ btn.disabled = false; btn.textContent = "Send response"; }
 });
+
+// ================= PARTNERS, MENTORS & SUPPORTERS — PUBLIC SHOWCASE =================
+// Additive feature — does not touch any existing collection, function, or UI panel.
+// Architecture notes:
+//  - Uses the existing Firestore `db`, the existing addDoc/updateDoc/deleteDoc/
+//    onSnapshot/query helpers, and the existing compressImageFile() /
+//    readFileAsDataURL() helpers for the logo (no Firebase Storage — same
+//    pattern as marketing materials / business logos).
+//  - New Firestore collection: `organizationShowcase/{docId}`.
+//  - Two concepts stay separate: this is the ADMIN-CURATED public showcase.
+//    It is not connected to any partnership-application/lead system — if this
+//    project later adds one, an accepted application still requires an admin
+//    to manually create/publish a showcase record; nothing here auto-publishes.
+//  - IMPORTANT — Firestore security rules are not part of this HTML file and
+//    must be published separately in the Firebase console. A matching
+//    `match /organizationShowcase/{docId} { ... }` block (using this
+//    project's own isAdmin() helper) has been added to this project's rules
+//    file — publish that updated rules file before relying on this feature in
+//    production; until then this collection is only as secure as whatever
+//    blanket rules already exist.
+
+const SHOWCASE_TYPES = ["Partner","Mentor","Sponsor","Technology Partner","Ecosystem Partner","Supporter","Investor","Media Partner","Training Partner","Strategic Partner","Other"];
+const SHOWCASE_SECTION_LABELS = {
+  "Partner":"Our Partners","Mentor":"Our Mentors","Sponsor":"Our Sponsors",
+  "Technology Partner":"Technology Partners","Ecosystem Partner":"Ecosystem Partners",
+  "Supporter":"Supporters","Investor":"Investors","Media Partner":"Media Partners",
+  "Training Partner":"Training Partners","Strategic Partner":"Strategic Partners","Other":"Other"
+};
+const MAX_SHOWCASE_LOGO_BYTES = 250 * 1024;
+
+let showcaseAdminRecords = [];
+let showcaseLogoDataPending = "";
+
+function safeExternalUrl(raw){
+  const v = (raw || "").trim();
+  if(!v) return "";
+  try{
+    const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+    const u = new URL(withScheme);
+    if(u.protocol !== "https:" && u.protocol !== "http:") return "";
+    return u.href;
+  }catch(e){ return ""; }
+}
+
+// ---------- Admin: load + render ----------
+function loadShowcaseForAdmin(){
+  if(unsubShowcaseAdmin) unsubShowcaseAdmin();
+  const q = query(collection(db, "organizationShowcase"), orderBy("displayOrder","asc"));
+  unsubShowcaseAdmin = onSnapshot(q, (snap)=>{
+    showcaseAdminRecords = [];
+    snap.forEach(d=> showcaseAdminRecords.push({ id:d.id, ...d.data() }));
+    renderShowcaseAdminList();
+  }, (err)=>{ console.error(err); toast("Could not load partners/mentors: " + (err.message||err)); });
+}
+
+function showcaseFilteredRecords(){
+  const term = ($("scSearchInput")?.value || "").trim().toLowerCase();
+  const typeFilter = $("scFilterType")?.value || "";
+  const statusFilter = $("scFilterStatus")?.value || "";
+  const featuredFilter = $("scFilterFeatured")?.value || "";
+  return showcaseAdminRecords.filter(r=>{
+    if(typeFilter && r.type !== typeFilter) return false;
+    if(statusFilter === "published" && r.published !== true) return false;
+    if(statusFilter === "hidden" && r.published === true) return false;
+    if(featuredFilter === "yes" && r.featured !== true) return false;
+    if(term){
+      const hay = [r.name, r.publicName, r.description, r.type].filter(Boolean).join(" ").toLowerCase();
+      if(!hay.includes(term)) return false;
+    }
+    return true;
+  });
+}
+
+function renderShowcaseAdminList(){
+  const records = showcaseFilteredRecords();
+
+  // Stats are computed from the full unfiltered set, not the current filter.
+  const published = showcaseAdminRecords.filter(r=> r.published === true).length;
+  const hidden = showcaseAdminRecords.length - published;
+  const featured = showcaseAdminRecords.filter(r=> r.featured === true).length;
+  if($("scStatPublished")) $("scStatPublished").textContent = published;
+  if($("scStatHidden")) $("scStatHidden").textContent = hidden;
+  if($("scStatFeatured")) $("scStatFeatured").textContent = featured;
+  if($("scStatTotal")) $("scStatTotal").textContent = showcaseAdminRecords.length;
+
+  const tbody = $("showcaseTableBodyAdmin");
+  const cardsWrap = $("showcaseCardsMobileAdmin");
+  if(tbody) tbody.innerHTML = "";
+  if(cardsWrap) cardsWrap.innerHTML = "";
+  $("showcaseEmptyStateAdmin")?.classList.toggle("hidden", showcaseAdminRecords.length > 0);
+
+  for(const r of records){
+    const logoHtml = r.logo
+      ? `<img class="showcase-logo-thumb" src="${r.logo}" alt="${escapeHtml(r.publicName || r.name)} logo" />`
+      : `<div class="showcase-logo-thumb-fallback">—</div>`;
+    const statusChip = r.published
+      ? `<span class="status-chip approved">Published</span>`
+      : `<span class="status-chip pending">Hidden</span>`;
+    const featuredLabel = r.featured ? "Yes" : "No";
+
+    if(tbody){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${logoHtml}</td>
+        <td>${escapeHtml(r.name || "")}</td>
+        <td>${escapeHtml(r.type || "")}</td>
+        <td>${statusChip}</td>
+        <td>${featuredLabel}</td>
+        <td>${Number.isFinite(r.displayOrder) ? r.displayOrder : 0}</td>
+        <td>${fmtDate(r.createdAt)}</td>
+        <td>
+          <button type="button" class="btn-sm confirm sc-edit-btn" data-id="${r.id}">Edit</button>
+          <button type="button" class="btn-sm approve sc-toggle-btn" data-id="${r.id}">${r.published ? "Hide" : "Publish"}</button>
+          <button type="button" class="btn-sm reject sc-delete-btn" data-id="${r.id}">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
+    }
+
+    if(cardsWrap){
+      const card = document.createElement("div");
+      card.className = "showcase-admin-card";
+      card.innerHTML = `
+        <div class="sac-head">${logoHtml}<div class="sac-name">${escapeHtml(r.name || "")}</div></div>
+        <div class="sac-meta">
+          <div>Type: ${escapeHtml(r.type || "")}</div>
+          <div>Status: ${r.published ? "Published" : "Hidden"}</div>
+          <div>Featured: ${featuredLabel}</div>
+          <div>Order: ${Number.isFinite(r.displayOrder) ? r.displayOrder : 0}</div>
+          <div>Added: ${fmtDate(r.createdAt)}</div>
+        </div>
+        <div class="sac-actions">
+          <button type="button" class="btn-sm confirm sc-edit-btn" data-id="${r.id}">Edit</button>
+          <button type="button" class="btn-sm approve sc-toggle-btn" data-id="${r.id}">${r.published ? "Hide" : "Publish"}</button>
+          <button type="button" class="btn-sm reject sc-delete-btn" data-id="${r.id}">Delete</button>
+        </div>`;
+      cardsWrap.appendChild(card);
+    }
+  }
+
+  document.querySelectorAll(".sc-edit-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=> openShowcaseForm(btn.dataset.id));
+  });
+  document.querySelectorAll(".sc-toggle-btn").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const rec = showcaseAdminRecords.find(x=> x.id === btn.dataset.id);
+      if(!rec) return;
+      try{
+        await updateDoc(doc(db, "organizationShowcase", rec.id), {
+          published: !rec.published, updatedAt: serverTimestamp(), updatedBy: currentUser?.uid || null
+        });
+        toast(rec.published ? "Partner hidden successfully." : "Partner published successfully.");
+      }catch(err){ toast("Could not update status: " + (err.message||err)); }
+    });
+  });
+  document.querySelectorAll(".sc-delete-btn").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      if(!confirm("Are you sure you want to remove this organization from the public showcase?")) return;
+      try{
+        await deleteDoc(doc(db, "organizationShowcase", btn.dataset.id));
+        toast("Partner deleted successfully.");
+      }catch(err){ toast("Could not delete: " + (err.message||err)); }
+    });
+  });
+}
+
+$("scSearchInput")?.addEventListener("input", renderShowcaseAdminList);
+$("scFilterType")?.addEventListener("change", renderShowcaseAdminList);
+$("scFilterStatus")?.addEventListener("change", renderShowcaseAdminList);
+$("scFilterFeatured")?.addEventListener("change", renderShowcaseAdminList);
+
+// ---------- Admin: add/edit form ----------
+function resetShowcaseForm(){
+  $("scRecordId").value = "";
+  $("showcaseForm").reset();
+  $("scDisplayOrder").value = "0";
+  showcaseLogoDataPending = "";
+  renderShowcaseLogoPreview();
+  setFormMsg($("scLogoMsg"), "", "");
+  setFormMsg($("scFormMsg"), "", "");
+}
+
+function renderShowcaseLogoPreview(){
+  const wrap = $("scLogoPreviewWrap");
+  if(!wrap) return;
+  wrap.innerHTML = showcaseLogoDataPending
+    ? `<img class="showcase-logo-preview" src="${showcaseLogoDataPending}" alt="Logo preview" />`
+    : `<div class="showcase-logo-preview-fallback" id="scLogoPreviewFallback">No logo</div>`;
+  $("scLogoRemoveBtn")?.classList.toggle("hidden", !showcaseLogoDataPending);
+}
+
+function openShowcaseForm(recordId){
+  resetShowcaseForm();
+  if(recordId){
+    const rec = showcaseAdminRecords.find(x=> x.id === recordId);
+    if(!rec) return;
+    $("scFormTitle").textContent = "Edit Partner / Mentor";
+    $("scRecordId").value = rec.id;
+    $("scName").value = rec.name || "";
+    $("scType").value = rec.type || "Partner";
+    $("scWebsite").value = rec.website || "";
+    $("scDescription").value = rec.description || "";
+    $("scPublicName").value = rec.publicName || "";
+    $("scPublicCategory").value = rec.publicCategory || "";
+    $("scDisplayOrder").value = Number.isFinite(rec.displayOrder) ? rec.displayOrder : 0;
+    $("scFeatured").checked = rec.featured === true;
+    $("scPublished").checked = rec.published === true;
+    $("scStartDate").value = rec.startDate || "";
+    $("scEndDate").value = rec.endDate || "";
+    showcaseLogoDataPending = rec.logo || "";
+    renderShowcaseLogoPreview();
+  } else {
+    $("scFormTitle").textContent = "Add Partner / Mentor";
+  }
+  $("showcaseFormOverlay").classList.remove("hidden");
+}
+
+$("scAddBtn")?.addEventListener("click", ()=> openShowcaseForm(null));
+$("scCloseFormBtn")?.addEventListener("click", ()=> $("showcaseFormOverlay").classList.add("hidden"));
+$("showcaseFormOverlay")?.addEventListener("click", (e)=>{
+  if(e.target.id === "showcaseFormOverlay") $("showcaseFormOverlay").classList.add("hidden");
+});
+
+$("scLogoUploadBtn")?.addEventListener("click", ()=> $("scLogoFileInput").click());
+$("scLogoRemoveBtn")?.addEventListener("click", ()=>{
+  showcaseLogoDataPending = "";
+  $("scLogoFileInput").value = "";
+  renderShowcaseLogoPreview();
+});
+$("scLogoFileInput")?.addEventListener("change", async ()=>{
+  const file = $("scLogoFileInput").files[0];
+  if(!file) return;
+  const allowed = ["image/png","image/jpeg","image/jpg","image/webp"];
+  if(!allowed.includes(file.type)){
+    setFormMsg($("scLogoMsg"), "Please choose a PNG, JPG or WEBP image.", "error");
+    $("scLogoFileInput").value = "";
+    return;
+  }
+  setFormMsg($("scLogoMsg"), "Processing image…", "info");
+  try{
+    const compressed = await compressImageFile(file, MAX_SHOWCASE_LOGO_BYTES);
+    showcaseLogoDataPending = compressed;
+    renderShowcaseLogoPreview();
+    setFormMsg($("scLogoMsg"), "Logo ready.", "success");
+  }catch(err){
+    setFormMsg($("scLogoMsg"), "Could not process that image — try a smaller file.", "error");
+  }finally{
+    $("scLogoFileInput").value = "";
+  }
+});
+
+$("showcaseForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const btn = $("scSaveBtn");
+  setFormMsg($("scFormMsg"), "", "");
+
+  const name = $("scName").value.trim();
+  if(!name){ setFormMsg($("scFormMsg"), "Name is required.", "error"); return; }
+  if(!showcaseLogoDataPending){ setFormMsg($("scFormMsg"), "A logo is required.", "error"); return; }
+  const type = $("scType").value;
+  if(!SHOWCASE_TYPES.includes(type)){ setFormMsg($("scFormMsg"), "Choose a relationship type.", "error"); return; }
+
+  const rawWebsite = $("scWebsite").value.trim();
+  let website = "";
+  if(rawWebsite){
+    website = safeExternalUrl(rawWebsite);
+    if(!website){ setFormMsg($("scFormMsg"), "That website address doesn't look valid.", "error"); return; }
+  }
+
+  const displayOrderNum = Number($("scDisplayOrder").value);
+  const recordId = $("scRecordId").value;
+
+  const payload = {
+    name,
+    logo: showcaseLogoDataPending,
+    type,
+    description: $("scDescription").value.trim().slice(0, 400),
+    website,
+    publicName: $("scPublicName").value.trim() || name,
+    publicCategory: $("scPublicCategory").value.trim() || type,
+    featured: $("scFeatured").checked === true,
+    published: $("scPublished").checked === true,
+    displayOrder: Number.isFinite(displayOrderNum) ? displayOrderNum : 0,
+    startDate: $("scStartDate").value || null,
+    endDate: $("scEndDate").value || null,
+    updatedAt: serverTimestamp(),
+    updatedBy: currentUser?.uid || null
+  };
+
+  btn.disabled = true; btn.textContent = "Saving…";
+  try{
+    if(recordId){
+      await updateDoc(doc(db, "organizationShowcase", recordId), payload);
+      toast("Partner updated successfully.");
+    } else {
+      await addDoc(collection(db, "organizationShowcase"), {
+        ...payload,
+        createdAt: serverTimestamp(),
+        createdBy: currentUser?.uid || null
+      });
+      toast("Partner added successfully.");
+    }
+    $("showcaseFormOverlay").classList.add("hidden");
+    resetShowcaseForm();
+  }catch(err){
+    console.error(err);
+    setFormMsg($("scFormMsg"), describeSaveError(err, "partner record"), "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Save";
+  }
+});
+
+// ---------- Public showcase ----------
+async function loadPublicShowcase(){
+  const wrap = $("showcaseContent");
+  if(!wrap) return;
+  try{
+    const q = query(
+      collection(db, "organizationShowcase"),
+      where("published","==",true),
+      orderBy("displayOrder","asc")
+    );
+    const snap = await getDocs(q);
+    const records = [];
+    snap.forEach(d=> records.push({ id:d.id, ...d.data() }));
+    renderPublicShowcase(records);
+  }catch(err){
+    console.error(err);
+    wrap.innerHTML = `<div class="empty-state">Couldn't load partners right now — please refresh the page.</div>`;
+  }
+}
+
+function showcaseCardHtml(r){
+  const publicName = r.publicName || r.name || "";
+  const category = r.publicCategory || r.type || "";
+  const logoHtml = r.logo
+    ? `<img class="showcase-logo" src="${r.logo}" alt="${escapeHtml(publicName)} logo" />`
+    : `<div class="showcase-logo-fallback">${escapeHtml((publicName||"?").slice(0,1).toUpperCase())}</div>`;
+  const websiteHtml = r.website
+    ? `<a class="sc-link" href="${r.website}" target="_blank" rel="noopener noreferrer">Visit Website</a>`
+    : "";
+  return `
+    <div class="showcase-card">
+      ${logoHtml}
+      <div class="sc-name">${escapeHtml(publicName)}</div>
+      ${category ? `<div class="sc-category">${escapeHtml(category)}</div>` : ""}
+      ${r.description ? `<div class="sc-desc">${escapeHtml(r.description)}</div>` : ""}
+      ${websiteHtml}
+    </div>`;
+}
+
+function renderPublicShowcase(records){
+  const wrap = $("showcaseContent");
+  if(!wrap) return;
+
+  if(records.length === 0){
+    wrap.innerHTML = `
+      <div class="showcase-empty">
+        <h3 style="margin:0 0 8px; font-family:'Fraunces',serif;">Partner With Us</h3>
+        <p>Invoice X Pro is open to meaningful partnerships, mentorship, technology collaboration and ecosystem support.</p>
+        <a class="pm-action primary" href="mailto:invoicexpro3@gmail.com?subject=Invoice%20X%20Pro%20Partnership%20%2F%20Mentorship%20Opportunity" style="display:inline-flex;">Become a Partner</a>
+      </div>`;
+    return;
+  }
+
+  let html = "";
+
+  const featuredRecords = records.filter(r=> r.featured === true);
+  if(featuredRecords.length){
+    html += `
+      <div class="showcase-category featured">
+        <h3>Featured Partners &amp; Mentors</h3>
+        <div class="showcase-grid">${featuredRecords.map(showcaseCardHtml).join("")}</div>
+      </div>`;
+  }
+
+  for(const type of SHOWCASE_TYPES){
+    const group = records.filter(r=> (r.type || "Other") === type);
+    if(!group.length) continue;
+    html += `
+      <div class="showcase-category">
+        <h3>${escapeHtml(SHOWCASE_SECTION_LABELS[type] || type)}</h3>
+        <div class="showcase-grid">${group.map(showcaseCardHtml).join("")}</div>
+      </div>`;
+  }
+
+  wrap.innerHTML = html;
+}
+
+// Public read — no auth required, matches the world-readable certificate
+// verification / announcements pattern already used elsewhere in this app.
+loadPublicShowcase();
+
 </script>
 </body>
 </html>
