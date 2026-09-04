@@ -8033,7 +8033,7 @@ function ixpTeamPayoutWindow(d=new Date()){
 function ixpTeamDate(v){try{if(!v)return "—"; if(v.toDate)return v.toDate().toLocaleDateString(); return new Date(v).toLocaleDateString();}catch(e){return "—"}}
 function ixpTeamToast(m){try{toast(m)}catch(e){alert(m)}}
 function ixpTeamMsg(text,type="ok"){return '<div class="ixpt-msg '+type+'">'+ixpTeamEsc(text)+'</div>'}
-function ixpTeamPublicUrl(slug){return location.origin+location.pathname+"?team="+encodeURIComponent(slug)}
+function ixpTeamPublicUrl(slug,ref,code){let u=location.origin+location.pathname+"?team="+encodeURIComponent(slug||"");if(ref)u+="&ref="+encodeURIComponent(ref);if(code)u+="&rc="+encodeURIComponent(code);return u}
 function ixpTeamClose(){ixpTeamEl("ixpTeamModal").classList.add("hidden")}
 ixpTeamEl("ixptModalClose").addEventListener("click",ixpTeamClose);
 ixpTeamEl("ixpTeamModal").addEventListener("click",e=>{if(e.target.id==="ixpTeamModal")ixpTeamClose()});
@@ -8049,11 +8049,22 @@ function ixpTeamOpportunityStatus(o){
 }
 function ixpTeamCanApply(o,profile){
   if(ixpTeamOpportunityStatus(o)!=="open")return "This opportunity is not currently open.";
-  if(o.country && o.country!=="Any" && o.country!==profile.country)return "This opportunity is restricted to "+o.country+".";
-  if(o.minAge && Number(profile.age)<Number(o.minAge))return "You do not meet the minimum age for this opportunity.";
-  if(o.maxAge && Number(profile.age)>Number(o.maxAge))return "You do not meet the maximum age for this opportunity.";
   if(o.maxApplicants && Number(o.applicantCount||0)>=Number(o.maxApplicants))return "Applications are currently full.";
   if(o.maxSelected && Number(o.selectedCount||0)>=Number(o.maxSelected))return "All available positions have been filled.";
+  // Country/age are only checked here when we already have real data for the person
+  // (e.g. an existing profile). Anonymous visitors haven't filled the form yet, so
+  // those two are (re)checked at submit time instead — never used to pre-block anyone.
+  if(profile && profile.age){
+    if(o.minAge && Number(profile.age)<Number(o.minAge))return "You do not meet the minimum age for this opportunity.";
+    if(o.maxAge && Number(profile.age)>Number(o.maxAge))return "You do not meet the maximum age for this opportunity.";
+  }
+  if(profile && profile.country && o.country && o.country!=="Any" && o.country!==profile.country)return "This opportunity is restricted to "+o.country+".";
+  return "";
+}
+function ixpTeamValidateSubmission(o,data){
+  if(o.minAge && Number(data.age)<Number(o.minAge))return "You do not meet the minimum age for this opportunity.";
+  if(o.maxAge && Number(data.age)>Number(o.maxAge))return "You do not meet the maximum age for this opportunity.";
+  if(o.country && o.country!=="Any" && o.country!==data.country)return "This opportunity is restricted to "+o.country+".";
   return "";
 }
 function ixpTeamOpportunityCard(o){
@@ -8075,36 +8086,214 @@ async function ixpTeamLoadPublic(slug=""){
 }
 function ixpTeamProfile(){return {fullName:currentUserDoc?.fullName||currentUser?.displayName||"",username:currentUserDoc?.username||"",email:currentUser?.email||currentUserDoc?.email||"",phone:currentUserDoc?.phone||"",whatsapp:currentUserDoc?.whatsapp||currentUserDoc?.phone||"",country:currentUserDoc?.country||"Nigeria",state:currentUserDoc?.state||"",city:currentUserDoc?.city||"",age:currentUserDoc?.age||"",gender:currentUserDoc?.gender||"",skills:currentUserDoc?.skills||"",experience:currentUserDoc?.experience||"",socialMedia:currentUserDoc?.socialMedia||"",linkedin:currentUserDoc?.linkedin||""}}
 function ixpTeamApplicationForm(o){
- const q=(o.applicationQuestions||[]).map((x,i)=>'<div class="ixpt-field"><label>'+ixpTeamEsc(x.label||('Question '+(i+1)))+(x.required!==false?' *':'')+'</label><textarea data-custom-q="'+i+'" rows="3" '+(x.required!==false?'required':'')+'></textarea></div>').join("");
- return '<form id="ixptApplyForm" class="ixpt-form"><div class="ixpt-alert">Please submit truthful information. Your application is reviewed manually by Invoice X Pro. Applying does not guarantee selection.</div><div class="ixpt-two">'+[["Full name","fullName"],["Username","username"],["Email","email"],["Phone number","phone"],["WhatsApp number","whatsapp"],["Country","country"],["State","state"],["City","city"],["Age","age"],["Gender","gender"],["Skills","skills"],["Experience","experience"],["Social media","socialMedia"],["LinkedIn (optional)","linkedin"]].map(([l,k])=>'<div class="ixpt-field"><label>'+l+'</label><input name="'+k+'" value="'+ixpTeamEsc(ixpTeamProfile()[k])+'" '+(k==="email"?'readonly':'')+' required></div>').join("")+'</div><div class="ixpt-field"><label>Short introduction *</label><textarea name="introduction" rows="3" required></textarea></div><div class="ixpt-field"><label>Why do you want this role? *</label><textarea name="whyRole" rows="3" required></textarea></div><div class="ixpt-field"><label>References *</label><textarea name="references" rows="3" required></textarea></div>'+q+'<label style="font-size:12px"><input type="checkbox" required> I confirm that the information is accurate and I agree to the rules of this opportunity.</label><button class="ixpt-btn primary" type="submit">Submit application</button><div id="ixptApplyMsg"></div></form>';
+  const prof=typeof ixpTeamProfile==='function'?ixpTeamProfile():{};
+  const q=(o.applicationQuestions||[]).map((x,i)=>{
+    const lbl='<label>'+ixpTeamEsc(x.label||('Question '+(i+1)))+(x.required!==false?' *':'')+'</label>';
+    const req=x.required!==false?'required':'';
+    const type=x.type||'long';
+    let control='';
+    if(type==='short') control='<input type="text" data-custom-q="'+i+'" '+req+'>';
+    else if(type==='number') control='<input type="number" data-custom-q="'+i+'" '+req+'>';
+    else if(type==='yesno') control='<select data-custom-q="'+i+'" '+req+'><option value="">Select…</option><option value="Yes">Yes</option><option value="No">No</option></select>';
+    else if(type==='select') control='<select data-custom-q="'+i+'" '+req+'><option value="">Select…</option>'+(x.options||[]).map(o2=>'<option value="'+ixpTeamEsc(o2)+'">'+ixpTeamEsc(o2)+'</option>').join("")+'</select>';
+    else if(type==='multi') control='<div class="ixpt-checkgroup">'+(x.options||[]).map((o2,oi)=>'<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-weight:400"><input type="checkbox" data-custom-q="'+i+'" data-custom-q-multi="1" value="'+ixpTeamEsc(o2)+'"> '+ixpTeamEsc(o2)+'</label>').join("")+'</div>';
+    else control='<textarea data-custom-q="'+i+'" rows="3" '+req+'></textarea>';
+    return '<div class="ixpt-field">'+lbl+control+'</div>';
+  }).join("");
+  const isKnown=!!(currentUser && prof.email);
+  const field=(l,k,type='text',req=true,extra='')=>'<div class="ixpt-field"><label>'+l+(req?' *':'')+'</label><input name="'+k+'" type="'+type+'" value="'+ixpTeamEsc(prof[k]||'')+'" '+(req?'required':'')+' '+extra+'></div>';
+  return '<form id="ixptApplyForm" class="ixpt-form">'+
+    '<div class="ixpt-alert">'+(isKnown?'You are already signed in, so we will use your existing account for this application.':'<b>Create your Invoice X Pro Team login here.</b><br>You will not need to sign up again if you are selected. Use the same email and password to log in to your Team dashboard.')+'</div>'+
+    '<div class="ixpt-two">'+
+    field('Full name','fullName')+
+    field('Username','username')+
+    field('Email','email','email',true,isKnown?'readonly':'autocomplete="username"')+
+    (isKnown?'':field('Password','password','password',true,'minlength="6" autocomplete="new-password"'))+
+    (isKnown?'':field('Confirm password','confirmPassword','password',true,'minlength="6" autocomplete="new-password"'))+
+    field('Phone number','phone','tel')+
+    field('WhatsApp number','whatsapp','tel')+
+    field('Country','country','text',true,'')+
+    field('State','state')+
+    field('City','city')+
+    field('Age','age','number',true,'min="1" max="120"')+
+    field('Gender','gender')+
+    field('Skills','skills')+
+    field('Experience','experience')+
+    field('Social media','socialMedia','text',false)+
+    field('LinkedIn (optional)','linkedin','url',false)
+    +'</div>'+
+    '<div class="ixpt-two">'+
+    field('Bank name','bankName')+
+    field('Account name','accountName')+
+    field('Account number','accountNumber','text',true,'inputmode="numeric" autocomplete="off"')+
+    '</div>'+
+    '<div class="ixpt-field"><label>Short introduction *</label><textarea name="introduction" rows="3" required></textarea></div>'+
+    '<div class="ixpt-field"><label>Why do you want this role? *</label><textarea name="whyRole" rows="3" required></textarea></div>'+
+    '<div class="ixpt-field"><label>References *</label><textarea name="references" rows="3" required></textarea></div>'+q+
+    '<label style="font-size:12px;display:block;margin:10px 0"><input type="checkbox" required> I confirm that the information is accurate and I agree to the rules of this opportunity.</label>'+
+    '<button class="ixpt-btn primary" type="submit" id="ixptSubmitApplicationBtn">'+(isKnown?'Submit application':'Create account & submit application')+'</button>'+
+    '<div id="ixptApplyMsg"></div></form>';
 }
 function ixpTeamOpenOpportunity(o,admin=false){
- const status=ixpTeamOpportunityStatus(o), link=ixpTeamPublicUrl(o.slug);let body='<div class="ixpt-meta"><span class="ixpt-pill">'+ixpTeamEsc(o.roleType||"Opportunity")+'</span><span class="ixpt-pill">'+ixpTeamEsc(status)+'</span></div><h2>'+ixpTeamEsc(o.title)+'</h2><p class="ixpt-sub">'+ixpTeamEsc(o.description||o.shortDescription||"")+'</p><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Location</b><br>'+ixpTeamEsc(o.country||"Nigeria")+'</div><div class="ixpt-detail"><b>Slots</b><br>'+ixpTeamEsc(o.maxSelected||"Custom")+'</div><div class="ixpt-detail"><b>Payment</b><br>'+ixpTeamEsc(o.paymentSummary||"See terms")+'</div><div class="ixpt-detail"><b>Age</b><br>'+ixpTeamEsc((o.minAge||"Any")+" – "+(o.maxAge||"Any"))+'</div></div><div class="ixpt-section"><h3>Responsibilities</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.responsibilities||"Not specified")+'</p></div><div class="ixpt-section"><h3>Requirements & restrictions</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.requirements||"Not specified")+'</p></div><div class="ixpt-section"><h3>Opportunity link</h3><div class="ixpt-copy">'+ixpTeamEsc(link)+'</div></div>';
- if(!admin){if(currentUser){const reason=ixpTeamCanApply(o,ixpTeamProfile());body+='<div class="ixpt-actions">'+(reason?'<div class="ixpt-msg err">'+ixpTeamEsc(reason)+'</div>':'<button class="ixpt-btn alt" id="ixptStartApply">Apply for this opportunity</button>')+'</div>'}else body+='<div class="ixpt-actions"><button class="ixpt-btn primary" id="ixptLoginToApply">Login to apply</button></div>';}
- ixpTeamOpen(o.title,body);
- if(ixpTeamEl("ixptStartApply"))ixpTeamEl("ixptStartApply").onclick=()=>{ixpTeamEl("ixptModalBody").innerHTML='<div class="ixpt-kicker">Application</div><h2>'+ixpTeamEsc(o.title)+'</h2>'+ixpTeamApplicationForm(o);document.getElementById("ixptApplyForm").addEventListener("submit",e=>ixpTeamSubmitApplication(e,o))};
- if(ixpTeamEl("ixptLoginToApply"))ixpTeamEl("ixptLoginToApply").onclick=()=>{ixpTeamClose();try{openModal("client")}catch(e){ixpTeamToast("Please use Client Login first.")}};
+  const status=ixpTeamOpportunityStatus(o), link=ixpTeamPublicUrl(o.slug);
+  let body='<div class="ixpt-meta"><span class="ixpt-pill">'+ixpTeamEsc(o.roleType||"Opportunity")+'</span><span class="ixpt-pill">'+ixpTeamEsc(status)+'</span></div>'+
+    '<h2>'+ixpTeamEsc(o.title)+'</h2><p class="ixpt-sub">'+ixpTeamEsc(o.description||o.shortDescription||"")+'</p>'+
+    '<div class="ixpt-detail-list"><div class="ixpt-detail"><b>Location</b><br>'+ixpTeamEsc(o.country||"Nigeria")+'</div>'+
+    '<div class="ixpt-detail"><b>Slots</b><br>'+ixpTeamEsc(o.maxSelected||"Custom")+'</div>'+
+    '<div class="ixpt-detail"><b>Payment</b><br>'+ixpTeamEsc(o.paymentSummary||"See terms")+'</div>'+
+    '<div class="ixpt-detail"><b>Age</b><br>'+ixpTeamEsc((o.minAge||"Any")+" – "+(o.maxAge||"Any"))+'</div></div>'+
+    '<div class="ixpt-section"><h3>Responsibilities</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.responsibilities||"Not specified")+'</p></div>'+
+    '<div class="ixpt-section"><h3>Requirements & restrictions</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.requirements||"Not specified")+'</p></div>'+
+    '<div class="ixpt-section"><h3>Payment rules</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.paymentRules||o.paymentSummary||"See role terms")+'</p></div>'+
+    '<div class="ixpt-section"><h3>Referral rules</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.referralRules||"Commission is earned only on eligible verified client payments.")+'</p></div>'+
+    '<div class="ixpt-section"><h3>Code of conduct</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.codeOfConduct||"Act professionally, provide truthful information and follow Invoice X Pro policies.")+'</p></div>'+
+    '<div class="ixpt-section"><h3>Opportunity link</h3><div class="ixpt-copy">'+ixpTeamEsc(link)+'</div></div>';
+  if(!admin){
+    // Anyone can start an application — logged in or not. Only capacity/status block it here;
+    // age/country are validated against the real form data at submit time.
+    const reason=ixpTeamCanApply(o,currentUser?ixpTeamProfile():null);
+    body+='<div class="ixpt-actions">'+(reason?'<div class="ixpt-msg err">'+ixpTeamEsc(reason)+'</div>':'<button class="ixpt-btn alt" id="ixptStartApply">Apply for this opportunity</button>')+'</div>';
+  }
+  ixpTeamOpen(o.title,body);
+  if(ixpTeamEl("ixptStartApply")) ixpTeamEl("ixptStartApply").onclick=()=>{
+    ixpTeamEl("ixptModalBody").innerHTML='<div class="ixpt-kicker">Application</div><h2>'+ixpTeamEsc(o.title)+'</h2>'+ixpTeamApplicationForm(o);
+    ixpTeamEl("ixptApplyForm").addEventListener("submit",e=>ixpTeamSubmitApplication(e,o));
+  };
 }
-async function ixpTeamSubmitApplication(e,o){e.preventDefault();const f=e.target,msg=ixpTeamEl("ixptApplyMsg");msg.innerHTML="Submitting…";try{
- const existing=await getDocs(query(collection(db,"teamApplications"),where("opportunityId","==",o.id),where("applicantUid","==",currentUser.uid),limit(1)));if(!existing.empty){msg.innerHTML=ixpTeamMsg("You have already applied for this opportunity.","err");return;}
- const fd=new FormData(f),data={};for(const [k,v] of fd.entries())data[k]=String(v).trim();const custom={};f.querySelectorAll("[data-custom-q]").forEach(x=>custom[x.dataset.customQ]=x.value.trim());
- await addDoc(collection(db,"teamApplications"),{opportunityId:o.id,opportunitySlug:o.slug,opportunityTitle:o.title,applicantUid:currentUser.uid,applicantEmail:currentUser.email,profile:data,customAnswers:custom,status:"pending",country:data.country||"Nigeria",createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
- await updateDoc(doc(db,"teamOpportunities",o.id),{applicantCount:(Number(o.applicantCount)||0)+1});await ixpTeamLog("application_submitted",o.id,{title:o.title});msg.innerHTML=ixpTeamMsg("Application submitted. You can apply for other opportunities too.");setTimeout(ixpTeamClose,900);
- }catch(err){console.error(err);msg.innerHTML=ixpTeamMsg(err.message||"Could not submit application.","err")}}
+async function ixpTeamSubmitApplication(e,o){
+  e.preventDefault();
+  const f=e.target,msg=ixpTeamEl("ixptApplyMsg"),btn=ixpTeamEl("ixptSubmitApplicationBtn");
+  if(btn) btn.disabled=true;
+  msg.innerHTML=currentUser?"Submitting…":"Creating your account and submitting application…";
+  try{
+    const fd=new FormData(f),data={};
+    for(const [k,v] of fd.entries()) data[k]=String(v).trim();
+
+    const ageCountryIssue=ixpTeamValidateSubmission(o,data);
+    if(ageCountryIssue) throw new Error(ageCountryIssue);
+
+    let rawPassword=null;
+    if(!currentUser){
+      if(data.password!==data.confirmPassword) throw new Error("Passwords do not match.");
+      if(data.password.length<6) throw new Error("Password must be at least 6 characters.");
+      rawPassword=data.password;
+    }
+    delete data.confirmPassword;delete data.password;
+
+    const custom={};
+    f.querySelectorAll("[data-custom-q]").forEach(x=>{
+      const idx=x.dataset.customQ;
+      if(x.dataset.customQMulti){ if(!x.checked) return; custom[idx]=custom[idx]?custom[idx]+", "+x.value:x.value; }
+      else custom[idx]=(x.value||"").trim();
+    });
+
+    const attribution=teamAttr();
+    let uid=currentUser?.uid||null;
+
+    // If the applicant is not logged in, create (or sign into) their Firebase Auth account here.
+    if(!uid){
+      try{
+        const cred=await createUserWithEmailAndPassword(auth,data.email,rawPassword);
+        uid=cred.user.uid;
+      }catch(authErr){
+        if(authErr?.code==="auth/email-already-in-use"){
+          const cred=await signInWithEmailAndPassword(auth,data.email,rawPassword);
+          uid=cred.user.uid;
+        }else if(authErr?.code==="auth/weak-password"){
+          throw new Error("Please choose a stronger password (at least 6 characters).");
+        }else if(authErr?.code==="auth/invalid-email"){
+          throw new Error("Please enter a valid email address.");
+        }else if(authErr?.code==="auth/wrong-password" || authErr?.code==="auth/invalid-credential"){
+          throw new Error("An account with this email already exists but the password doesn't match. Please use the correct password or reset it from Team Member Login.");
+        }else if(authErr?.code==="auth/network-request-failed"){
+          throw new Error("Network error — please check your connection and try again.");
+        }else if(authErr?.code==="auth/too-many-requests"){
+          throw new Error("Too many attempts. Please wait a moment and try again.");
+        }else throw authErr;
+      }
+    }
+
+    // Password is never written to Firestore — Firebase Authentication owns it.
+    const userPayload={
+      fullName:data.fullName,username:data.username,email:data.email,phone:data.phone,whatsapp:data.whatsapp,
+      country:data.country||"Nigeria",state:data.state,city:data.city,age:Number(data.age)||null,gender:data.gender,
+      skills:data.skills,experience:data.experience,socialMedia:data.socialMedia,linkedin:data.linkedin,
+      role:(currentUserDoc?.role && currentUserDoc.role!=="teamApplicant" ? currentUserDoc.role : "teamApplicant"),
+      teamApplicationStatus:"pending",updatedAt:serverTimestamp()
+    };
+    const existingUser=await getDoc(doc(db,"users",uid));
+    if(!existingUser.exists()){
+      await setDoc(doc(db,"users",uid),{...userPayload,createdAt:serverTimestamp()},{merge:true});
+    }else{
+      const old=existingUser.data()||{};
+      // Never touch an existing Admin/Rep/Client profile document — those roles have their
+      // own protected self-update rules, and the full profile is already on the application.
+      if(!old.role || old.role==="teamApplicant" || old.role==="teamMember"){
+        await setDoc(doc(db,"users",uid),{...userPayload,role:old.role||userPayload.role,updatedAt:serverTimestamp()},{merge:true});
+      }
+    }
+
+    const existing=await getDocs(query(collection(db,"teamApplications"),where("opportunityId","==",o.id),where("applicantUid","==",uid),limit(1)));
+    if(!existing.empty){
+      msg.innerHTML=ixpTeamMsg("You have already applied for this opportunity.","err");
+      if(btn) btn.disabled=false;
+      return;
+    }
+    const application={
+      opportunityId:o.id,opportunitySlug:o.slug,opportunityTitle:o.title,applicantUid:uid,applicantEmail:data.email,
+      profile:data,customAnswers:custom,status:"pending",country:data.country||"Nigeria",
+      termsAccepted:true,termsAcceptedAt:serverTimestamp(),
+      referralMemberUid:(attribution?.teamSlug===o.slug?attribution.memberUid:null),
+      createdAt:serverTimestamp(),updatedAt:serverTimestamp()
+    };
+    const appRef=await addDoc(collection(db,"teamApplications"),application);
+    await updateDoc(doc(db,"teamOpportunities",o.id),{applicantCount:(Number(o.applicantCount)||0)+1});
+    try{await addDoc(collection(db,"notifications"),{userId:"ADMIN_BROADCAST",title:"New Team application",body:data.fullName+" applied for "+o.title+".",createdAt:serverTimestamp(),read:false,type:"team-application"});}catch(_){ }
+    try{await ixpTeamLog("application_submitted",o.id,{applicationId:appRef.id,title:o.title,applicantUid:uid});}catch(_){ }
+    msg.innerHTML=ixpTeamMsg(currentUser?"Application submitted. You can apply for other opportunities too.":"Application submitted successfully. Your Invoice X Pro login has been created. If selected, use this same email and password to access your Team dashboard.");
+    if(btn) btn.disabled=false;
+    setTimeout(ixpTeamClose,1800);
+  }catch(err){
+    console.error(err);
+    msg.innerHTML=ixpTeamMsg(err?.message||"Could not submit application.","err");
+    if(btn) btn.disabled=false;
+  }
+}
 function ixpTeamClientPanel(){return '<div class="ixpt-card"><div class="ixpt-kicker">Opportunities</div><h2>Invoice X Pro Team</h2><p class="ixpt-sub">Explore open roles, apply for more than one opportunity and track your applications.</p><div class="ixpt-actions"><button class="ixpt-btn primary" id="ixptOpenOpportunities">View opportunities</button></div></div>'}
 async function ixpTeamLoadClient(){const root=ixpTeamEl("ixptClientTeam");if(ixpTeamRole()!=="client"){root.innerHTML="";return}root.innerHTML=ixpTeamClientPanel();ixpTeamEl("ixptOpenOpportunities").onclick=()=>ixpTeamShowPublic();}
-async function ixpTeamLoadMember(){const root=ixpTeamEl("ixptMemberTeam");if(!currentUser){root.innerHTML="";return}try{const uid=currentUser.uid;const [m,a,r,p]=await Promise.all([getDocs(query(collection(db,"teamMembers"),where("uid","==",uid),limit(1))),getDocs(query(collection(db,"teamApplications"),where("applicantUid","==",uid))),getDocs(query(collection(db,"teamReferrals"),where("memberUid","==",uid))),getDocs(query(collection(db,"teamPaymentProofs"),where("memberUid","==",uid)))]);const member=m.empty?null:{id:m.docs[0].id,...m.docs[0].data()};const apps=[];a.forEach(d=>apps.push({id:d.id,...d.data()}));const refs=[];r.forEach(d=>refs.push({id:d.id,...d.data()}));const proofs=[];p.forEach(d=>proofs.push({id:d.id,...d.data()}));const earned=refs.filter(x=>x.commissionStatus==="approved").reduce((s,x)=>s+Number(x.commissionAmount||0),0);root.innerHTML='<div class="ixpt-card"><div class="ixpt-kicker">Your role</div><h2>'+ixpTeamEsc(member?.roleTitle||"Team member")+'</h2><div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+refs.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+refs.filter(x=>x.paymentVerified).length+'</b><span>Verified paid</span></div><div class="ixpt-stat"><b>₦'+earned.toLocaleString()+'</b><span>Approved earnings</span></div></div><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Referral link</b><div class="ixpt-copy">'+ixpTeamEsc(member?.referralLink||"")+'</div></div><div class="ixpt-detail"><b>Payment policy</b><br>'+ixpTeamEsc(member?.paymentSummary||"Custom")+'</div></div><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCopyReferral">Copy referral link</button><button class="ixpt-btn ghost" id="ixptSubmitProof">Submit client payment proof</button></div></div><div class="ixpt-card" style="margin-top:16px"><h3>My applications</h3>'+(apps.length?'<div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applied</th></tr></thead><tbody>'+apps.map(x=>'<tr><td>'+ixpTeamEsc(x.opportunityTitle)+'</td><td>'+ixpTeamEsc(x.status)+'</td><td>'+ixpTeamDate(x.createdAt)+'</td></tr>').join("")+'</tbody></table></div>':'<div class="ixpt-empty">No applications yet.</div>')+'</div>';
- ixpTeamEl("ixptCopyReferral").onclick=async()=>{await navigator.clipboard?.writeText(member?.referralLink||"");ixpTeamToast("Referral link copied.")};ixpTeamEl("ixptSubmitProof").onclick=()=>ixpTeamProofForm(member); }catch(e){root.innerHTML=ixpTeamMsg(e.message||"Could not load team member data","err")}}
+async function ixpTeamLoadMember(){
+  const root=ixpTeamEl("ixptMemberTeam");if(!root||!currentUser){if(root)root.innerHTML="";return;}
+  try{
+    const uid=currentUser.uid;
+    const mSnap=await getDoc(doc(db,"teamMembers",uid));
+    const aSnap=await getDocs(query(collection(db,"teamApplications"),where("applicantUid","==",uid)));
+    const rSnap=await getDocs(query(collection(db,"teamReferrals"),where("memberUid","==",uid)));
+    const member=mSnap.exists()?{id:mSnap.id,...mSnap.data()}:null;
+    const apps=[],refs=[];aSnap.forEach(d=>apps.push({id:d.id,...d.data()}));rSnap.forEach(d=>refs.push({id:d.id,...d.data()}));
+    if(!member){
+      const pending=apps.find(x=>x.status==="pending")||apps[apps.length-1];
+      root.innerHTML='<div class="ixpt-card"><div class="ixpt-kicker">Application status</div><h2>Pending Review</h2><p class="ixpt-sub">Your application for '+ixpTeamEsc(pending?.opportunityTitle||currentUserDoc?.teamRole||"Invoice X Pro Team")+' is still being reviewed.</p><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Login account</b><br>Your email and password are already active. You do not need to sign up again.</div><div class="ixpt-detail"><b>Status</b><br>Pending Review</div></div></div>';
+      return;
+    }
+    let leadCount=0;
+    try{const lSnap=await getDocs(query(collection(db,"teamReferralLeads"),where("teamMemberUid","==",uid)));leadCount=lSnap.size;}catch(e){}
+    const earned=refs.filter(x=>x.commissionStatus==="approved").reduce((s,x)=>s+Number(x.commissionAmount||0),0);
+    root.innerHTML='<div class="ixpt-card"><div class="ixpt-kicker">Your role</div><h2>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</h2><p class="ixpt-sub">Welcome, '+ixpTeamEsc(member.fullName||currentUser.email)+'. This is your Team dashboard.</p><div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+leadCount+'</b><span>Link clicks</span></div><div class="ixpt-stat"><b>'+refs.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+refs.filter(x=>x.paymentVerified).length+'</b><span>Verified paid</span></div><div class="ixpt-stat"><b>₦'+earned.toLocaleString()+'</b><span>Approved earnings</span></div></div><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Role</b><br>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</div><div class="ixpt-detail"><b>Referral code</b><br>'+ixpTeamEsc(member.referralCode||"—")+'</div><div class="ixpt-detail"><b>Referral link</b><div class="ixpt-copy">'+ixpTeamEsc(member.referralLink||"")+'</div></div><div class="ixpt-detail"><b>Payment rules</b><br>'+ixpTeamEsc(member.paymentRules||member.paymentSummary||"Custom")+'</div><div class="ixpt-detail"><b>Referral rules</b><br>'+ixpTeamEsc(member.referralRules||"Commission is earned only after eligible payment verification.")+'</div></div><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCopyReferral">Copy referral link</button><button class="ixpt-btn ghost" id="ixptSubmitProof">Submit client payment proof</button></div></div><div class="ixpt-card" style="margin-top:16px"><h3>My applications</h3>'+(apps.length?'<div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applied</th></tr></thead><tbody>'+apps.map(x=>'<tr><td>'+ixpTeamEsc(x.opportunityTitle)+'</td><td>'+ixpTeamEsc(x.status)+'</td><td>'+ixpTeamDate(x.createdAt)+'</td></tr>').join("")+'</tbody></table></div>':'<div class="ixpt-empty">No applications yet.</div>')+'</div>';
+    ixpTeamEl("ixptCopyReferral").onclick=async()=>{try{await navigator.clipboard.writeText(member.referralLink||"");ixpTeamToast("Referral link copied.")}catch(e){ixpTeamToast("Could not copy link.")}};
+    ixpTeamEl("ixptSubmitProof").onclick=()=>ixpTeamProofForm(member);
+  }catch(e){root.innerHTML=ixpTeamMsg(e.message||"Could not load Team dashboard","err")}
+}
 function ixpTeamProofForm(member){ixpTeamOpen("Verify a client payment",'<form id="ixptProofForm" class="ixpt-form"><div class="ixpt-field"><label>Client email *</label><input name="clientEmail" type="email" required></div><div class="ixpt-field"><label>Client name/business *</label><input name="clientName" required></div><div class="ixpt-field"><label>Amount paid (₦) *</label><input name="amount" type="number" min="1" required></div><div class="ixpt-field"><label>Plan *</label><input name="plan" placeholder="Monthly / Yearly / Custom" required></div><div class="ixpt-field"><label>Payment reference (if available)</label><input name="paymentReference"></div><div class="ixpt-field"><label>Payment screenshot *</label><input id="ixptProofFile" type="file" accept="image/*" required></div><div id="ixptProofMsg"></div><button class="ixpt-btn primary">Submit proof</button></form>');ixpTeamEl("ixptProofForm").addEventListener("submit",async e=>{e.preventDefault();const msg=ixpTeamEl("ixptProofMsg"),file=ixpTeamEl("ixptProofFile").files[0];if(!file){msg.innerHTML=ixpTeamMsg("Please choose a screenshot.","err");return}try{msg.innerHTML="Compressing screenshot…";const proof=await compressImageFile(file,350000),fd=new FormData(e.target),amount=Number(fd.get("amount"));await addDoc(collection(db,"teamPaymentProofs"),{memberUid:currentUser.uid,memberName:currentUserDoc?.fullName||currentUser.email,opportunityId:member?.opportunityId||null,clientEmail:String(fd.get("clientEmail")).trim(),clientName:String(fd.get("clientName")).trim(),amount,plan:String(fd.get("plan")).trim(),paymentReference:String(fd.get("paymentReference")||"").trim(),screenshot:proof,status:"pending",createdAt:serverTimestamp(),whatsapp:IXP_TEAM.adminWhatsApp});await addDoc(collection(db,"notifications"),{userId:"ADMIN_BROADCAST",title:"Team payment proof submitted",body:(currentUserDoc?.fullName||currentUser.email)+" submitted a payment proof for ₦"+amount.toLocaleString()+". Open Team → Payment Proofs to review.",createdAt:serverTimestamp(),read:false,type:"team-payment-proof"});msg.innerHTML=ixpTeamMsg("Submitted for admin verification. You will only earn after approval.");await ixpTeamLog("payment_proof_submitted",currentUser.uid,{amount,clientEmail:String(fd.get("clientEmail"))});setTimeout(ixpTeamClose,1000)}catch(err){msg.innerHTML=ixpTeamMsg(err.message||"Could not submit proof","err")}})}
-function ixpTeamAdminPanel(){return '<div class="ixpt-role-nav"><button class="active" data-team-admin-tab="overview">Overview</button><button data-team-admin-tab="opps">Opportunities</button><button data-team-admin-tab="apps">Applications</button><button data-team-admin-tab="members">Team members</button><button data-team-admin-tab="proofs">Payment proofs</button><button data-team-admin-tab="payroll">Payroll</button><button data-team-admin-tab="settings">Settings</button></div><div id="ixptAdminTab"></div>'}
+function ixpTeamAdminPanel(){return '<div class="ixpt-role-nav"><button class="active" data-team-admin-tab="overview">Overview</button><button data-team-admin-tab="opps">Opportunities</button><button data-team-admin-tab="apps">Applications</button><button data-team-admin-tab="members">Team members</button><button data-team-admin-tab="leads">Referral leads</button><button data-team-admin-tab="proofs">Payment proofs</button><button data-team-admin-tab="payroll">Payroll</button><button data-team-admin-tab="settings">Settings</button></div><div id="ixptAdminTab"></div>'}
 async function ixpTeamLoadSettings(){try{const s=await getDoc(doc(db,"teamSettings","main"));if(s.exists()){const v=s.data();IXP_TEAM.adminWhatsApp=v.adminWhatsApp||IXP_TEAM.adminWhatsApp;IXP_TEAM.commissionDefault=(v.commissionDefault!=null?Number(v.commissionDefault):IXP_TEAM.commissionDefault);IXP_TEAM.policies=v.policies||"";}}catch(e){console.warn("Team settings load",e)}}
 setTimeout(ixpTeamLoadSettings,500);
 async function ixpTeamLoadAdmin(){const root=ixpTeamEl("ixptAdminTeam");if(!ixpTeamIsAdmin()){root.innerHTML="";return}await ixpTeamLoadSettings();root.innerHTML=ixpTeamAdminPanel();root.querySelectorAll("[data-team-admin-tab]").forEach(b=>b.onclick=()=>{root.querySelectorAll("[data-team-admin-tab]").forEach(x=>x.classList.remove("active"));b.classList.add("active");ixpTeamAdminTab(b.dataset.teamAdminTab)});ixpTeamAdminTab("overview")}
-async function ixpTeamFetchAll(){const cols=["teamOpportunities","teamApplications","teamMembers","teamReferrals","teamPaymentProofs","teamPayouts"];const out={};for(const c of cols){out[c]=[];const s=await getDocs(collection(db,c));s.forEach(d=>out[c].push({id:d.id,...d.data()}))}ixpTeamCache.opps=out.teamOpportunities;ixpTeamCache.apps=out.teamApplications;ixpTeamCache.members=out.teamMembers;ixpTeamCache.referrals=out.teamReferrals;ixpTeamCache.proofs=out.teamPaymentProofs;ixpTeamCache.payouts=out.teamPayouts;return out}
+async function ixpTeamFetchAll(){const cols=["teamOpportunities","teamApplications","teamMembers","teamReferrals","teamPaymentProofs","teamPayouts","teamReferralLeads"];const out={};for(const c of cols){out[c]=[];const s=await getDocs(collection(db,c));s.forEach(d=>out[c].push({id:d.id,...d.data()}))}ixpTeamCache.opps=out.teamOpportunities;ixpTeamCache.apps=out.teamApplications;ixpTeamCache.members=out.teamMembers;ixpTeamCache.referrals=out.teamReferrals;ixpTeamCache.proofs=out.teamPaymentProofs;ixpTeamCache.payouts=out.teamPayouts;ixpTeamCache.leads=out.teamReferralLeads;return out}
 async function ixpTeamAdminTab(tab){const root=ixpTeamEl("ixptAdminTab");root.innerHTML='<div class="ixpt-empty">Loading…</div>';try{const d=await ixpTeamFetchAll();if(tab==="overview"){const pending=d.teamPaymentProofs.filter(x=>x.status==="pending").length;root.innerHTML='<div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+d.teamOpportunities.length+'</b><span>Opportunities</span></div><div class="ixpt-stat"><b>'+d.teamApplications.length+'</b><span>Applications</span></div><div class="ixpt-stat"><b>'+d.teamMembers.length+'</b><span>Team members</span></div><div class="ixpt-stat"><b>'+d.teamReferrals.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+pending+'</b><span>Proofs pending</span></div><div class="ixpt-stat"><b>₦'+d.teamPayouts.reduce((s,x)=>s+Number(x.amount||0),0).toLocaleString()+'</b><span>Total recorded payouts</span></div></div><div class="ixpt-card"><h3>Quick actions</h3><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCreateOpp">Create opportunity</button><button class="ixpt-btn ghost" id="ixptRefreshAdmin">Refresh</button></div></div>';ixpTeamEl("ixptCreateOpp").onclick=()=>ixpTeamOpportunityEditor();ixpTeamEl("ixptRefreshAdmin").onclick=()=>ixpTeamAdminTab("overview");return}
 if(tab==="opps"){root.innerHTML='<div class="ixpt-card"><div class="ixpt-top"><h3>Opportunities</h3><button class="ixpt-btn alt" id="ixptCreateOpp2">+ New opportunity</button></div><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applicants</th><th>Slots</th><th>Commission</th><th>Link</th><th></th></tr></thead><tbody>'+d.teamOpportunities.map(o=>'<tr><td><b>'+ixpTeamEsc(o.title)+'</b><br><small>'+ixpTeamEsc(o.roleType||"")+'</small></td><td>'+ixpTeamEsc(ixpTeamOpportunityStatus(o))+'</td><td>'+Number(o.applicantCount||0)+'</td><td>'+ixpTeamEsc(o.maxSelected||"—")+'</td><td>'+ixpTeamEsc(o.commissionMode||"10%")+'</td><td><button class="ixpt-btn ghost" data-copy-o="'+ixpTeamEsc(o.slug)+'">Copy</button></td><td><button class="ixpt-btn primary" data-edit-o="'+o.id+'">Edit</button></td></tr>').join("")+'</tbody></table></div></div>';ixpTeamEl("ixptCreateOpp2").onclick=()=>ixpTeamOpportunityEditor();root.querySelectorAll("[data-copy-o]").forEach(b=>b.onclick=async()=>{await navigator.clipboard?.writeText(ixpTeamPublicUrl(b.dataset.copyO));ixpTeamToast("Link copied")});root.querySelectorAll("[data-edit-o]").forEach(b=>b.onclick=()=>ixpTeamOpportunityEditor(d.teamOpportunities.find(x=>x.id===b.dataset.editO)));return}
 if(tab==="apps"){root.innerHTML='<div class="ixpt-card"><h3>All applications</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Applicant</th><th>Opportunity</th><th>Status</th><th>Applied</th><th></th></tr></thead><tbody>'+d.teamApplications.map(a=>'<tr><td><b>'+ixpTeamEsc(a.profile?.fullName||a.applicantEmail)+'</b><br>'+ixpTeamEsc(a.profile?.phone||"")+'</td><td>'+ixpTeamEsc(a.opportunityTitle)+'</td><td>'+ixpTeamEsc(a.status)+'</td><td>'+ixpTeamDate(a.createdAt)+'</td><td><button class="ixpt-btn primary" data-app="'+a.id+'">Review</button></td></tr>').join("")+'</tbody></table></div></div>';root.querySelectorAll("[data-app]").forEach(b=>b.onclick=()=>ixpTeamReviewApplication(d.teamApplications.find(x=>x.id===b.dataset.app),d.teamOpportunities.find(o=>o.id===d.teamApplications.find(x=>x.id===b.dataset.app)?.opportunityId)));return}
 if(tab==="members"){root.innerHTML='<div class="ixpt-card"><h3>Selected team members</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Name</th><th>Role</th><th>Referrals</th><th>Approved earnings</th><th>Status</th></tr></thead><tbody>'+d.teamMembers.map(m=>{const rr=d.teamReferrals.filter(r=>r.memberUid===m.uid);const earn=rr.filter(r=>r.commissionStatus==="approved").reduce((s,r)=>s+Number(r.commissionAmount||0),0);return '<tr><td>'+ixpTeamEsc(m.fullName||m.email)+'</td><td>'+ixpTeamEsc(m.roleTitle)+'</td><td>'+rr.length+'</td><td>₦'+earn.toLocaleString()+'</td><td>'+ixpTeamEsc(m.status||"active")+'</td></tr>'}).join("")+'</tbody></table></div></div>';return}
+if(tab==="leads"){const leads=(d.teamReferralLeads||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));root.innerHTML='<div class="ixpt-card"><h3>Referral leads</h3><p class="ixpt-sub">Every time someone opens a Team Member referral link, it is logged here.</p>'+(leads.length?'<div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Team member</th><th>Opportunity</th><th>Referral code</th><th>Status</th><th>Source</th><th>Clicked</th></tr></thead><tbody>'+leads.map(l=>{const m=d.teamMembers.find(x=>x.uid===l.teamMemberUid);return '<tr><td>'+ixpTeamEsc(m?.fullName||l.teamMemberUid)+'</td><td>'+ixpTeamEsc(l.opportunitySlug||"")+'</td><td>'+ixpTeamEsc(l.referralCode||"")+'</td><td>'+ixpTeamEsc(l.status||"visitor")+'</td><td>'+ixpTeamEsc(l.source||"direct")+'</td><td>'+ixpTeamDate(l.createdAt)+'</td></tr>'}).join("")+'</tbody></table></div>':'<div class="ixpt-empty">No referral link clicks recorded yet.</div>')+'</div>';return}
 if(tab==="proofs"){root.innerHTML='<div class="ixpt-card"><h3>Payment proofs</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Member</th><th>Client</th><th>Amount</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>'+d.teamPaymentProofs.map(p=>'<tr><td>'+ixpTeamEsc(p.memberName)+'</td><td>'+ixpTeamEsc(p.clientName)+'<br>'+ixpTeamEsc(p.clientEmail)+'</td><td>₦'+Number(p.amount||0).toLocaleString()+'</td><td>'+ixpTeamEsc(p.status)+'</td><td>'+ixpTeamDate(p.createdAt)+'</td><td><button class="ixpt-btn primary" data-proof="'+p.id+'">Review</button></td></tr>').join("")+'</tbody></table></div></div>';root.querySelectorAll("[data-proof]").forEach(b=>b.onclick=()=>ixpTeamReviewProof(d.teamPaymentProofs.find(x=>x.id===b.dataset.proof)));return}
 if(tab==="payroll"){const win=ixpTeamPayoutWindow();const rows=d.teamMembers.map(m=>{const rr=d.teamReferrals.filter(r=>r.memberUid===m.uid&&r.commissionStatus==="approved");const amount=rr.reduce((s,r)=>s+Number(r.commissionAmount||0),0);const paidThisMonth=d.teamPayouts.find(p=>p.memberUid===m.uid&&p.monthKey===win.monthKey&&p.status==="paid");return '<tr><td>'+ixpTeamEsc(m.fullName||m.email)+'</td><td>'+ixpTeamEsc(m.roleTitle)+'</td><td>'+rr.length+'</td><td>₦'+amount.toLocaleString()+'</td><td>'+(paidThisMonth?'Paid ✓':ixpTeamEsc(m.payoutStatus||"Not paid"))+'</td><td><button class="ixpt-btn ghost" data-paymsg="'+m.id+'">Copy payment message</button> <button class="ixpt-btn alt" data-recordpay="'+m.id+'" '+(paidThisMonth?'disabled':'')+'>Record payout</button></td></tr>'});
 root.innerHTML='<div class="ixpt-card"><h3>'+win.label+' payroll</h3>'+
@@ -8171,11 +8360,60 @@ function ixpTeamQuestionToLine(x){const type=x.type||"long";const opts=(x.option
 function ixpTeamParseQuestionLine(line){const parts=String(line).split("|").map(s=>s.trim());const knownTypes=["short","long","number","yesno","select","multi"];let type="long",label,options=[];if(parts.length>1&&knownTypes.includes((parts[0]||"").toLowerCase())){type=parts[0].toLowerCase();label=parts[1]||"";options=(parts[2]||"").split(",").map(s=>s.trim()).filter(Boolean);}else{label=line.trim();}return {label,required:true,type,options}}
 function ixpTeamOpportunityEditor(o={}){const edit=!!o.id;const q=(o.applicationQuestions||[{label:"What makes you a good fit for this role?",required:true,type:"long"}]).map(ixpTeamQuestionToLine).join("\n");ixpTeamOpen(edit?"Edit opportunity":"Create opportunity",'<form id="ixptOppForm" class="ixpt-form"><div class="ixpt-two"><div class="ixpt-field"><label>Opportunity title *</label><input name="title" value="'+ixpTeamEsc(o.title||"")+'" required></div><div class="ixpt-field"><label>Role type *</label><input name="roleType" value="'+ixpTeamEsc(o.roleType||"")+'" placeholder="Social Media Manager" required></div><div class="ixpt-field"><label>Country</label><input name="country" value="'+ixpTeamEsc(o.country||"Nigeria")+'" required></div><div class="ixpt-field"><label>Minimum age</label><input name="minAge" type="number" value="'+ixpTeamEsc(o.minAge||"")+'"></div><div class="ixpt-field"><label>Maximum age</label><input name="maxAge" type="number" value="'+ixpTeamEsc(o.maxAge||"")+'"></div><div class="ixpt-field"><label>Maximum selected slots</label><input name="maxSelected" type="number" min="1" value="'+ixpTeamEsc(o.maxSelected||"")+'"></div><div class="ixpt-field"><label>Maximum applicants</label><input name="maxApplicants" type="number" min="1" value="'+ixpTeamEsc(o.maxApplicants||"")+'"></div><div class="ixpt-field"><label>Commission mode</label><select name="commissionMode"><option '+(o.commissionMode==="percentage"||!o.commissionMode?'selected':'')+' value="percentage">Percentage of verified payment</option><option '+(o.commissionMode==="fixed"?'selected':'')+' value="fixed">Fixed per verified payment</option><option '+(o.commissionMode==="custom"?'selected':'')+' value="custom">Custom</option></select></div><div class="ixpt-field"><label>Commission value</label><input name="commissionValue" type="number" value="'+ixpTeamEsc(o.commissionValue??10)+'"></div><div class="ixpt-field"><label>Status</label><select name="status"><option value="open" '+(o.status!=="closed"?'selected':'')+'>Open</option><option value="paused" '+(o.status==="paused"?'selected':'')+'>Paused</option><option value="closed" '+(o.status==="closed"?'selected':'')+'>Closed</option></select></div></div><div class="ixpt-field"><label>Short description *</label><textarea name="shortDescription" required>'+ixpTeamEsc(o.shortDescription||"")+'</textarea></div><div class="ixpt-field"><label>Full description</label><textarea name="description" rows="4">'+ixpTeamEsc(o.description||"")+'</textarea></div><div class="ixpt-field"><label>Responsibilities</label><textarea name="responsibilities" rows="5">'+ixpTeamEsc(o.responsibilities||"")+'</textarea></div><div class="ixpt-field"><label>Requirements & restrictions</label><textarea name="requirements" rows="5">'+ixpTeamEsc(o.requirements||"")+'</textarea></div><div class="ixpt-field"><label>Payment summary shown to applicants</label><input name="paymentSummary" value="'+ixpTeamEsc(o.paymentSummary||"")+'" placeholder="10% of verified client payment"></div><div class="ixpt-field"><label>Application questions — one per line</label><div style="font-size:11px;color:rgba(15,26,46,.6);margin-bottom:4px">Format: <code>type|Question text|option1,option2</code> (options only needed for select/multi). Types: short, long, number, yesno, select, multi. A line with no <code>|</code> is treated as a long-text question.</div><textarea name="questions" rows="5" placeholder="short|How many years of experience do you have?&#10;select|Which platforms do you manage?|Instagram,TikTok,Twitter,Facebook&#10;yesno|Do you have prior remote work experience?">'+ixpTeamEsc(q)+'</textarea></div><div class="ixpt-field"><label><input type="checkbox" name="published" '+(o.published!==false?'checked':'')+'> Publish this opportunity</label></div><button class="ixpt-btn primary">'+(edit?'Save changes':'Create opportunity')+'</button><div id="ixptOppMsg"></div></form>');ixpTeamEl("ixptOppForm").addEventListener("submit",async e=>{e.preventDefault();const fd=new FormData(e.target),title=String(fd.get("title")).trim(),slug=ixpTeamSlug(title),questions=String(fd.get("questions")||"").split("\n").map(x=>x.trim()).filter(Boolean).map(ixpTeamParseQuestionLine);const payload={title,slug,roleType:String(fd.get("roleType")),country:String(fd.get("country")||"Nigeria"),minAge:Number(fd.get("minAge"))||null,maxAge:Number(fd.get("maxAge"))||null,maxSelected:Number(fd.get("maxSelected"))||null,maxApplicants:Number(fd.get("maxApplicants"))||null,commissionMode:String(fd.get("commissionMode")),commissionValue:Number(fd.get("commissionValue"))||10,shortDescription:String(fd.get("shortDescription")),description:String(fd.get("description")||""),responsibilities:String(fd.get("responsibilities")||""),requirements:String(fd.get("requirements")||""),paymentSummary:String(fd.get("paymentSummary")||""),applicationQuestions:questions,published:e.target.published.checked,status:String(fd.get("status")),applicantCount:o.applicantCount||0,selectedCount:o.selectedCount||0,updatedAt:serverTimestamp()};try{if(edit)await updateDoc(doc(db,"teamOpportunities",o.id),payload);else{payload.createdAt=serverTimestamp();await addDoc(collection(db,"teamOpportunities"),payload)}ixpTeamClose();ixpTeamAdminTab("opps");ixpTeamToast(edit?"Opportunity updated":"Opportunity created")}catch(err){ixpTeamEl("ixptOppMsg").innerHTML=ixpTeamMsg(err.message||"Could not save opportunity","err")}})}
 function ixpTeamReviewApplication(a,o){if(!a)return;const profile=a.profile||{};ixpTeamOpen("Review application",'<div class="ixpt-detail-list">'+Object.entries(profile).map(([k,v])=>'<div class="ixpt-detail"><b>'+ixpTeamEsc(k)+'</b><br>'+ixpTeamEsc(v)+'</div>').join("")+'</div><div class="ixpt-section"><h3>Custom answers</h3><pre style="white-space:pre-wrap;font-size:12px">'+ixpTeamEsc(JSON.stringify(a.customAnswers||{},null,2))+'</pre></div><div class="ixpt-actions"><button class="ixpt-btn ghost" id="ixptShortlist">Shortlist</button><button class="ixpt-btn alt" id="ixptSelect">Select</button><button class="ixpt-btn ghost" id="ixptReject">Reject</button></div>');ixpTeamEl("ixptShortlist").onclick=()=>ixpTeamSetApplication(a,o,"shortlisted");ixpTeamEl("ixptSelect").onclick=()=>ixpTeamSetApplication(a,o,"selected");ixpTeamEl("ixptReject").onclick=()=>ixpTeamSetApplication(a,o,"rejected")}
-async function ixpTeamSetApplication(a,o,status){try{if(status==="selected"){const s=await getDocs(query(collection(db,"teamMembers"),where("uid","==",a.applicantUid),limit(1)));if(!s.empty){ixpTeamToast("This applicant is already a team member.");return}const referralCode=(ixpTeamSlug(a.profile?.username||a.profile?.fullName)+"-"+Math.random().toString(36).slice(2,7)).toUpperCase();const link=ixpTeamPublicUrl("ref-"+referralCode);await addDoc(collection(db,"teamMembers"),{uid:a.applicantUid,fullName:a.profile?.fullName||a.applicantEmail,email:a.applicantEmail,roleTitle:o?.title||a.opportunityTitle,roleType:o?.roleType||"",referralCode,referralLink:link,commissionMode:o?.commissionMode||"percentage",commissionValue:Number(o?.commissionValue||10),paymentSummary:o?.paymentSummary||"Custom",status:"active",payoutStatus:"unpaid",selectedAt:serverTimestamp()});await updateDoc(doc(db,"teamApplications",a.id),{status,updatedAt:serverTimestamp()});if(o)await updateDoc(doc(db,"teamOpportunities",o.id),{selectedCount:(Number(o.selectedCount)||0)+1});await ixpTeamLog("member_selected",a.id,{role:a.opportunityTitle});ixpTeamToast("Applicant selected. Their role and referral details are ready for your manual email.");}else{await updateDoc(doc(db,"teamApplications",a.id),{status,updatedAt:serverTimestamp()});ixpTeamToast("Application updated.")}ixpTeamClose();ixpTeamAdminTab("apps")}catch(e){ixpTeamToast(e.message||"Could not update application")}}
+async function ixpTeamSetApplication(a,o,status){
+  try{
+    if(status==="selected"){
+      if(!a?.applicantUid) throw new Error("Applicant account UID is missing.");
+      const memberRef=doc(db,"teamMembers",a.applicantUid);
+      const existing=await getDoc(memberRef);
+      if(existing.exists()){ ixpTeamToast("This applicant is already a Team Member."); return; }
+      const referralCode=(ixpTeamSlug(a.profile?.username||a.profile?.fullName)+"-"+a.applicantUid.slice(-6)).toUpperCase();
+      const link=ixpTeamPublicUrl(o?.slug||a.opportunitySlug,a.applicantUid,referralCode);
+      await setDoc(memberRef,{
+        uid:a.applicantUid,teamMemberId:a.applicantUid,fullName:a.profile?.fullName||a.applicantEmail,email:a.applicantEmail,
+        username:a.profile?.username||"",phone:a.profile?.phone||"",whatsapp:a.profile?.whatsapp||"",
+        country:a.profile?.country||"Nigeria",state:a.profile?.state||"",city:a.profile?.city||"",age:Number(a.profile?.age)||null,
+        gender:a.profile?.gender||"",skills:a.profile?.skills||"",experience:a.profile?.experience||"",
+        socialMedia:a.profile?.socialMedia||"",linkedin:a.profile?.linkedin||"",
+        bankName:a.profile?.bankName||"",accountName:a.profile?.accountName||"",accountNumber:a.profile?.accountNumber||"",
+        roleTitle:o?.title||a.opportunityTitle,roleType:o?.roleType||"",opportunityId:o?.id||a.opportunityId,opportunitySlug:o?.slug||a.opportunitySlug,
+        referralCode,referralLink:link,commissionMode:o?.commissionMode||"percentage",commissionValue:Number(o?.commissionValue??10),
+        paymentSummary:o?.paymentSummary||"Custom",paymentRules:o?.paymentRules||"",referralRules:o?.referralRules||"",
+        codeOfConduct:o?.codeOfConduct||"",status:"active",payoutStatus:"unpaid",selectedAt:serverTimestamp(),updatedAt:serverTimestamp()
+      });
+      await updateDoc(doc(db,"teamApplications",a.id),{status:"selected",updatedAt:serverTimestamp()});
+      await setDoc(doc(db,"users",a.applicantUid),{role:"teamMember",teamStatus:"active",teamRole:o?.title||a.opportunityTitle,teamOpportunityId:o?.id||a.opportunityId,teamOpportunitySlug:o?.slug||a.opportunitySlug,teamSelectedAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
+      if(o) await updateDoc(doc(db,"teamOpportunities",o.id),{selectedCount:(Number(o.selectedCount)||0)+1});
+      await ixpTeamLog("member_selected",a.id,{role:a.opportunityTitle,uid:a.applicantUid});
+      ixpTeamToast("Applicant selected. They can now log in with the email and password created during application.");
+    }else{
+      await updateDoc(doc(db,"teamApplications",a.id),{status,updatedAt:serverTimestamp()});
+      ixpTeamToast("Application updated.");
+    }
+    ixpTeamClose();ixpTeamAdminTab("apps");
+  }catch(e){ixpTeamToast(e.message||"Could not update application")}
+}
 function ixpTeamReviewProof(p){if(!p)return;ixpTeamOpen("Payment verification",'<div class="ixpt-detail-list"><div class="ixpt-detail"><b>Member</b><br>'+ixpTeamEsc(p.memberName)+'</div><div class="ixpt-detail"><b>Client</b><br>'+ixpTeamEsc(p.clientName)+'<br>'+ixpTeamEsc(p.clientEmail)+'</div><div class="ixpt-detail"><b>Amount</b><br>₦'+Number(p.amount||0).toLocaleString()+'</div><div class="ixpt-detail"><b>Plan</b><br>'+ixpTeamEsc(p.plan)+'</div></div>'+(p.screenshot?'<div class="ixpt-section"><img class="ixpt-proof" src="'+p.screenshot+'" alt="Payment proof"></div>':'')+'<div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptApproveProof">Approve & calculate commission</button><button class="ixpt-btn ghost" id="ixptHoldProof">Keep pending</button><button class="ixpt-btn ghost" id="ixptRejectProof">Reject</button><a class="ixpt-btn ghost" target="_blank" rel="noopener" href="https://wa.me/'+ixpTeamWaNumber(IXP_TEAM.adminWhatsApp)+'?text='+encodeURIComponent("Invoice X Pro Team: payment proof submitted by "+(p.memberName||"")+" for "+(p.clientName||"")+" — ₦"+Number(p.amount||0).toLocaleString()+". Please review in the dashboard.")+'">Open WhatsApp</a></div>');ixpTeamEl("ixptApproveProof").onclick=()=>ixpTeamApproveProof(p);ixpTeamEl("ixptHoldProof").onclick=()=>{ixpTeamClose()};ixpTeamEl("ixptRejectProof").onclick=()=>ixpTeamRejectProof(p)}
 async function ixpTeamApproveProof(p){try{const ms=await getDocs(query(collection(db,"teamMembers"),where("uid","==",p.memberUid),limit(1)));const m=ms.empty?null:ms.docs[0].data();if(!m)throw new Error("Team member not found.");const amount=Number(p.amount||0),commission=m.commissionMode==="fixed"?Number(m.commissionValue||0):amount*(Number(m.commissionValue??10)/100);const ref=await addDoc(collection(db,"teamReferrals"),{memberUid:p.memberUid,memberName:p.memberName,clientEmail:p.clientEmail,clientName:p.clientName,amountPaid:amount,paidAmount:amount,plan:p.plan,paymentVerified:true,commissionAmount:Math.round(commission*100)/100,commissionStatus:"approved",status:"approved",proofId:p.id,paymentProofId:p.id,verifiedBy:currentUser.uid,approvedBy:currentUser.uid,verifiedAt:serverTimestamp(),approvedAt:serverTimestamp(),createdAt:serverTimestamp()});await updateDoc(doc(db,"teamPaymentProofs",p.id),{status:"approved",commissionAmount:commission,verifiedBy:currentUser.uid,verifiedAt:serverTimestamp(),referralId:ref.id});await addDoc(collection(db,"notifications"),{userId:p.memberUid,title:"Payment verified 🎉",body:"Your client payment of ₦"+amount.toLocaleString()+" was verified. Commission added: ₦"+commission.toLocaleString()+".",createdAt:serverTimestamp(),read:false,type:"team-commission-approved"});ixpTeamToast("Payment approved and commission calculated.");ixpTeamClose();ixpTeamAdminTab("proofs")}catch(e){ixpTeamToast(e.message||"Could not approve payment")}}
 async function ixpTeamRejectProof(p){try{await updateDoc(doc(db,"teamPaymentProofs",p.id),{status:"rejected",verifiedBy:currentUser.uid,verifiedAt:serverTimestamp()});ixpTeamToast("Payment proof rejected.");ixpTeamClose();ixpTeamAdminTab("proofs")}catch(e){ixpTeamToast(e.message||"Could not reject proof")}}
-function ixpTeamShowPublic(slug=""){ixpTeamEl("landing")?.classList.add("hidden");ixpTeamEl("app-shell")?.classList.remove("active");ixpTeamEl("ixpTeamWorkspace")?.classList.add("hidden");ixpTeamEl("ixpTeamPublic")?.classList.remove("hidden");ixpTeamLoadPublic(slug)}
+function ixpTeamShowPublic(slug=""){
+  ixpTeamEl("landing")?.classList.add("hidden");ixpTeamEl("app-shell")?.classList.remove("active");
+  ixpTeamEl("ixpTeamWorkspace")?.classList.add("hidden");ixpTeamEl("ixpTeamPublic")?.classList.remove("hidden");
+  ixpTeamLoadPublic(slug);
+  setTimeout(()=>{
+    const hero=ixpTeamEl("ixptPublicHero");
+    if(hero && !ixpTeamEl("ixptTeamLoginButton")){
+      const b=document.createElement("div");b.className="ixpt-actions";b.style.marginTop="14px";
+      b.innerHTML='<button class="ixpt-btn ghost" id="ixptTeamLoginButton">Team Member Login</button>';
+      hero.appendChild(b);
+      ixpTeamEl("ixptTeamLoginButton").onclick=()=>{
+        ixpTeamOpen("Invoice X Pro Team Login",'<form id="ixptTeamLoginForm" class="ixpt-form"><div class="ixpt-alert">Selected Team Members use the same email and password they created during their application.</div><div class="ixpt-field"><label>Email *</label><input name="email" type="email" required autocomplete="username"></div><div class="ixpt-field"><label>Password *</label><input name="password" type="password" required autocomplete="current-password"></div><div id="ixptTeamLoginMsg"></div><button class="ixpt-btn primary">Login to Team dashboard</button><button type="button" class="ixpt-btn ghost" id="ixptTeamForgot" style="margin-top:8px">Forgot password?</button></form>');
+        ixpTeamEl("ixptTeamLoginForm").onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target),m=ixpTeamEl("ixptTeamLoginMsg");m.innerHTML="Signing in…";try{await signInWithEmailAndPassword(auth,String(fd.get("email")).trim(),String(fd.get("password")));m.innerHTML=ixpTeamMsg("Login successful. Opening your dashboard…");setTimeout(ixpTeamClose,500)}catch(err){m.innerHTML=ixpTeamMsg(err.message||"Login failed","err")}};
+        ixpTeamEl("ixptTeamForgot").onclick=async()=>{const email=ixpTeamEl("ixptTeamLoginForm").email.value.trim(),m=ixpTeamEl("ixptTeamLoginMsg");if(!email){m.innerHTML=ixpTeamMsg("Enter your email first.","err");return}try{await sendPasswordResetEmail(auth,email);m.innerHTML=ixpTeamMsg("Password reset email sent.")}catch(err){m.innerHTML=ixpTeamMsg(err.message||"Could not send reset email","err")}};
+      };
+    }
+  },100);
+}
 function ixpTeamShowWorkspace(){ixpTeamEl("ixpTeamPublic")?.classList.add("hidden");ixpTeamEl("ixpTeamWorkspace")?.classList.remove("hidden");ixpTeamEl("ixptWorkspaceSub").textContent=currentUserDoc?.fullName?"Welcome, "+currentUserDoc.fullName:"Manage your Invoice X Pro Team opportunities.";ixpTeamLoadClient();ixpTeamLoadMember();ixpTeamLoadAdmin()}
 ixpTeamEl("ixptPublicBack").onclick=()=>{ixpTeamEl("ixpTeamPublic").classList.add("hidden");if(currentUser)showAppShell(currentUserDoc?.role);else showLanding()};
 ixpTeamEl("ixptWorkspaceBack").onclick=()=>{ixpTeamEl("ixpTeamWorkspace").classList.add("hidden");showAppShell(currentUserDoc?.role)};
@@ -8204,307 +8442,60 @@ try{const teamParam=new URLSearchParams(location.search).get("team");if(teamPara
 // Also expose a direct global hook for existing dashboard code/buttons.
 window.openInvoiceXProTeam=ixpTeamShowPublic;
 
-// ===== FINAL INVOICE X PRO TEAM AUTH / APPLICATION OVERRIDES =====
-// NOTE: this used to live in its own separate, non-module <script> tag placed
-// after this module's closing tag. Because plain <script> tags cannot see
-// bindings declared inside a <script type="module"> tag (db, auth, doc,
-// getDoc, serverTimestamp, currentUser, ixpTeamEl, etc. are all module-scoped
-// and are never attached to window), every function below was throwing an
-// immediate ReferenceError the moment it ran — applications, selection, and
-// Team login were silently broken. Keeping this code inside the same module
-// script (instead of a second script tag) is what makes it actually work.
-(function(){
-  const teamReferralKey = "ixp_team_referral_attribution";
-  function teamAttr(){try{return JSON.parse(localStorage.getItem(teamReferralKey)||"null")}catch(e){return null}}
-  function saveTeamAttr(v){try{if(v)localStorage.setItem(teamReferralKey,JSON.stringify(v));}catch(e){}}
-  function clearTeamAttr(){try{localStorage.removeItem(teamReferralKey)}catch(e){}}
+// ===== TEAM REFERRAL ATTRIBUTION + LEAD TRACKING =====
+// (Everything below used to be duplicated inside a dead `window.ixpTeamX = ...`
+// override block. Those assignments never actually took effect for any call made
+// from elsewhere in this module -- a bare `ixpTeamX(...)` call always resolves to
+// the function declared earlier in this same module scope, never to a same-named
+// property stuck on `window`. The real, active versions now live inline above
+// (ixpTeamPublicUrl, ixpTeamApplicationForm, ixpTeamOpenOpportunity,
+// ixpTeamSubmitApplication, ixpTeamSetApplication, ixpTeamShowPublic,
+// ixpTeamLoadMember). Only genuinely new, additive logic remains here.
+const teamReferralKey="ixp_team_referral_attribution";
+function teamAttr(){try{return JSON.parse(localStorage.getItem(teamReferralKey)||"null")}catch(e){return null}}
+function saveTeamAttr(v){try{if(v)localStorage.setItem(teamReferralKey,JSON.stringify(v));}catch(e){}}
+function clearTeamAttr(){try{localStorage.removeItem(teamReferralKey)}catch(e){}}
 
-  // Referral links now carry both the opportunity and the selected Team Member UID.
-  window.ixpTeamPublicUrl=function(slug, ref){
-    let u=location.origin+location.pathname+"?team="+encodeURIComponent(slug||"");
-    if(ref) u+="&ref="+encodeURIComponent(ref);
-    return u;
-  };
-
-  // Capture Team referral attribution as soon as a referral URL is opened.
+// Capture Team referral attribution + record a lead click as soon as a referral
+// link (?team=slug&ref=memberUid&rc=referralCode) is opened. One lead per browser
+// session per member so refreshing the page doesn't spam duplicate lead records.
+(async function ixpTeamCaptureReferral(){
   try{
-    const qp=new URLSearchParams(location.search), team=qp.get("team"), ref=qp.get("ref");
-    if(team && ref) saveTeamAttr({teamSlug:team,memberUid:ref,capturedAt:Date.now()});
-  }catch(e){}
-
-  // Application form: applicants create their login during the application itself.
-  window.ixpTeamApplicationForm=function(o){
-    const prof=typeof ixpTeamProfile==='function'?ixpTeamProfile():{};
-    const q=(o.applicationQuestions||[]).map((x,i)=>{
-      const lbl='<label>'+ixpTeamEsc(x.label||('Question '+(i+1)))+(x.required!==false?' *':'')+'</label>';
-      const req=x.required!==false?'required':'';
-      const type=x.type||'long';
-      let control='';
-      if(type==='short') control='<input type="text" data-custom-q="'+i+'" '+req+'>';
-      else if(type==='number') control='<input type="number" data-custom-q="'+i+'" '+req+'>';
-      else if(type==='yesno') control='<select data-custom-q="'+i+'" '+req+'><option value="">Select…</option><option value="Yes">Yes</option><option value="No">No</option></select>';
-      else if(type==='select') control='<select data-custom-q="'+i+'" '+req+'><option value="">Select…</option>'+(x.options||[]).map(o2=>'<option value="'+ixpTeamEsc(o2)+'">'+ixpTeamEsc(o2)+'</option>').join("")+'</select>';
-      else if(type==='multi') control='<div class="ixpt-checkgroup">'+(x.options||[]).map((o2,oi)=>'<label style="display:inline-flex;align-items:center;gap:4px;margin:2px 8px 2px 0;font-weight:400"><input type="checkbox" data-custom-q="'+i+'" data-custom-q-multi="1" value="'+ixpTeamEsc(o2)+'"> '+ixpTeamEsc(o2)+'</label>').join("")+'</div>';
-      else control='<textarea data-custom-q="'+i+'" rows="3" '+req+'></textarea>';
-      return '<div class="ixpt-field">'+lbl+control+'</div>';
-    }).join("");
-    const field=(l,k,type='text',req=true,extra='')=>'<div class="ixpt-field"><label>'+l+(req?' *':'')+'</label><input name="'+k+'" type="'+type+'" value="'+ixpTeamEsc(prof[k]||'')+'" '+(req?'required':'')+' '+extra+'></div>';
-    return '<form id="ixptApplyForm" class="ixpt-form">'+
-      '<div class="ixpt-alert"><b>Create your Invoice X Pro Team login here.</b><br>You will not need to sign up again if you are selected. Use the same email and password to log in to your Team dashboard.</div>'+
-      '<div class="ixpt-two">'+
-      field('Full name','fullName')+
-      field('Username','username')+
-      field('Email','email','email',true,'autocomplete="username"')+
-      field('Password','password','password',true,'minlength="6" autocomplete="new-password"')+
-      field('Confirm password','confirmPassword','password',true,'minlength="6" autocomplete="new-password"')+
-      field('Phone number','phone','tel')+
-      field('WhatsApp number','whatsapp','tel')+
-      field('Country','country','text',true,'')+
-      field('State','state')+
-      field('City','city')+
-      field('Age','age','number',true,'min="1" max="120"')+
-      field('Gender','gender')+
-      field('Skills','skills')+
-      field('Experience','experience')+
-      field('Social media','socialMedia', 'text', false)+
-      field('LinkedIn (optional)','linkedin','url',false)
-      +'</div>'+
-      '<div class="ixpt-two">'+
-      field('Bank name','bankName')+
-      field('Account name','accountName')+
-      field('Account number','accountNumber','text',true,'inputmode="numeric" autocomplete="off"')+
-      '</div>'+
-      '<div class="ixpt-field"><label>Short introduction *</label><textarea name="introduction" rows="3" required></textarea></div>'+ 
-      '<div class="ixpt-field"><label>Why do you want this role? *</label><textarea name="whyRole" rows="3" required></textarea></div>'+ 
-      '<div class="ixpt-field"><label>References *</label><textarea name="references" rows="3" required></textarea></div>'+q+
-      '<label style="font-size:12px;display:block;margin:10px 0"><input type="checkbox" required> I confirm that the information is accurate and I agree to the rules of this opportunity.</label>'+ 
-      '<button class="ixpt-btn primary" type="submit" id="ixptSubmitApplicationBtn">Create account & submit application</button>'+ 
-      '<div id="ixptApplyMsg"></div></form>';
-  };
-
-  // Allow an unauthenticated visitor to apply directly from the public job page.
-  window.ixpTeamOpenOpportunity=function(o,admin=false){
-    const status=ixpTeamOpportunityStatus(o), link=ixpTeamPublicUrl(o.slug);
-    let body='<div class="ixpt-meta"><span class="ixpt-pill">'+ixpTeamEsc(o.roleType||"Opportunity")+'</span><span class="ixpt-pill">'+ixpTeamEsc(status)+'</span></div>'+ 
-      '<h2>'+ixpTeamEsc(o.title)+'</h2><p class="ixpt-sub">'+ixpTeamEsc(o.description||o.shortDescription||"")+'</p>'+ 
-      '<div class="ixpt-detail-list"><div class="ixpt-detail"><b>Location</b><br>'+ixpTeamEsc(o.country||"Nigeria")+'</div>'+ 
-      '<div class="ixpt-detail"><b>Slots</b><br>'+ixpTeamEsc(o.maxSelected||"Custom")+'</div>'+ 
-      '<div class="ixpt-detail"><b>Payment</b><br>'+ixpTeamEsc(o.paymentSummary||"See terms")+'</div>'+ 
-      '<div class="ixpt-detail"><b>Age</b><br>'+ixpTeamEsc((o.minAge||"Any")+" – "+(o.maxAge||"Any"))+'</div></div>'+ 
-      '<div class="ixpt-section"><h3>Responsibilities</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.responsibilities||"Not specified")+'</p></div>'+ 
-      '<div class="ixpt-section"><h3>Requirements & restrictions</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.requirements||"Not specified")+'</p></div>'+ 
-      '<div class="ixpt-section"><h3>Payment rules</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.paymentRules||o.paymentSummary||"See role terms")+'</p></div>'+ 
-      '<div class="ixpt-section"><h3>Referral rules</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.referralRules||"Commission is earned only on eligible verified client payments.")+'</p></div>'+ 
-      '<div class="ixpt-section"><h3>Code of conduct</h3><p style="white-space:pre-line;line-height:1.7;font-size:13px">'+ixpTeamEsc(o.codeOfConduct||"Act professionally, provide truthful information and follow Invoice X Pro policies.")+'</p></div>'+ 
-      '<div class="ixpt-section"><h3>Opportunity link</h3><div class="ixpt-copy">'+ixpTeamEsc(link)+'</div></div>';
-    if(!admin){
-      const can=typeof ixpTeamCanApply==='function' && currentUser ? ixpTeamCanApply(o,ixpTeamProfile()) : "";
-      if(can) body+='<div class="ixpt-actions"><div class="ixpt-msg err">'+ixpTeamEsc(can)+'</div></div>';
-      else body+='<div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptStartApply">Apply for this opportunity</button></div>';
-    }
-    ixpTeamOpen(o.title,body);
-    if(ixpTeamEl("ixptStartApply")) ixpTeamEl("ixptStartApply").onclick=()=>{
-      ixpTeamEl("ixptModalBody").innerHTML='<div class="ixpt-kicker">Application</div><h2>'+ixpTeamEsc(o.title)+'</h2>'+ixpTeamApplicationForm(o);
-      ixpTeamEl("ixptApplyForm").addEventListener("submit",e=>ixpTeamSubmitApplication(e,o));
-    };
-  };
-
-  window.ixpTeamSubmitApplication=async function(e,o){
-    e.preventDefault();
-    const f=e.target,msg=ixpTeamEl("ixptApplyMsg"),btn=ixpTeamEl("ixptSubmitApplicationBtn");
-    if(btn) btn.disabled=true;
-    msg.innerHTML="Creating your account and submitting application…";
-    try{
-      const fd=new FormData(f), data={};
-      for(const [k,v] of fd.entries()) data[k]=String(v).trim();
-      if(data.password!==data.confirmPassword) throw new Error("Passwords do not match.");
-      if(data.password.length<6) throw new Error("Password must be at least 6 characters.");
-      const rawPassword=data.password;
-      delete data.confirmPassword;
-      delete data.password;
-      const custom={};
-      f.querySelectorAll("[data-custom-q]").forEach(x=>{
-        const idx=x.dataset.customQ;
-        if(x.dataset.customQMulti){
-          if(!x.checked) return;
-          custom[idx]=custom[idx]?custom[idx]+", "+x.value:x.value;
-        }else{
-          custom[idx]=(x.value||"").trim();
-        }
-      });
-      const attribution=teamAttr();
-      let uid=currentUser?.uid||null;
-
-      // If the applicant is not logged in, create the Firebase Authentication account here.
-      if(!uid){
-        try{
-          const cred=await createUserWithEmailAndPassword(auth,data.email,rawPassword);
-          uid=cred.user.uid;
-        }catch(authErr){
-          if(authErr?.code==="auth/email-already-in-use"){
-            const cred=await signInWithEmailAndPassword(auth,data.email,rawPassword);
-            uid=cred.user.uid;
-          }else if(authErr?.code==="auth/weak-password"){
-            throw new Error("Please choose a stronger password (at least 6 characters).");
-          }else if(authErr?.code==="auth/invalid-email"){
-            throw new Error("Please enter a valid email address.");
-          }else if(authErr?.code==="auth/network-request-failed"){
-            throw new Error("Network error — please check your connection and try again.");
-          }else if(authErr?.code==="auth/too-many-requests"){
-            throw new Error("Too many attempts. Please wait a moment and try again.");
-          }else throw authErr;
-        }
-      }
-
-      // Existing account users keep their existing UID. Password is never written to Firestore.
-      const userPayload={
-        fullName:data.fullName,username:data.username,email:data.email,phone:data.phone,whatsapp:data.whatsapp,
-        country:data.country||"Nigeria",state:data.state,city:data.city,age:Number(data.age)||null,gender:data.gender,
-        skills:data.skills,experience:data.experience,socialMedia:data.socialMedia,linkedin:data.linkedin,
-        role:(currentUserDoc?.role && currentUserDoc.role!=="teamApplicant" ? currentUserDoc.role : "teamApplicant"),
-        teamApplicationStatus:"pending",updatedAt:serverTimestamp()
-      };
-      const existingUser=await getDoc(doc(db,"users",uid));
-      if(!existingUser.exists()){
-        await setDoc(doc(db,"users",uid),{...userPayload,createdAt:serverTimestamp()},{merge:true});
-      }else{
-        const old=existingUser.data()||{};
-        // Never touch an existing Admin/Rep/Client profile document — those roles
-        // have their own protected self-update rules, and their full application
-        // details are already safely stored on the teamApplications record itself.
-        if(!old.role || old.role==="teamApplicant" || old.role==="teamMember"){
-          await setDoc(doc(db,"users",uid),{...userPayload,role:old.role||userPayload.role,updatedAt:serverTimestamp()},{merge:true});
-        }
-      }
-
-      const existing=await getDocs(query(collection(db,"teamApplications"),where("opportunityId","==",o.id),where("applicantUid","==",uid),limit(1)));
-      if(!existing.empty){
-        msg.innerHTML=ixpTeamMsg("You have already applied for this opportunity.","err");
-        if(btn) btn.disabled=false;
-        return;
-      }
-      const application={
-        opportunityId:o.id,opportunitySlug:o.slug,opportunityTitle:o.title,applicantUid:uid,applicantEmail:data.email,
-        profile:data,customAnswers:custom,status:"pending",country:data.country||"Nigeria",
-        termsAccepted:true,termsAcceptedAt:serverTimestamp(),
-        referralMemberUid:(attribution?.teamSlug===o.slug?attribution.memberUid:null),
-        createdAt:serverTimestamp(),updatedAt:serverTimestamp()
-      };
-      const appRef=await addDoc(collection(db,"teamApplications"),application);
-      await updateDoc(doc(db,"teamOpportunities",o.id),{applicantCount:(Number(o.applicantCount)||0)+1});
-      try{await addDoc(collection(db,"notifications"),{userId:"ADMIN_BROADCAST",title:"New Team application",body:data.fullName+" applied for "+o.title+".",createdAt:serverTimestamp(),read:false,type:"team-application"});}catch(_){ }
-      try{await ixpTeamLog("application_submitted",o.id,{applicationId:appRef.id,title:o.title,applicantUid:uid});}catch(_){ }
-      msg.innerHTML=ixpTeamMsg("Application submitted successfully. Your Invoice X Pro login has been created. If selected, use this same email and password to access your Team dashboard.");
-      if(btn) btn.disabled=false;
-      setTimeout(ixpTeamClose,1800);
-    }catch(err){
-      console.error(err);
-      msg.innerHTML=ixpTeamMsg(err?.message||"Could not submit application.","err");
-      if(btn) btn.disabled=false;
-    }
-  };
-
-  // Deterministic Team Member record: teamMembers/{Firebase UID}.
-  window.ixpTeamSetApplication=async function(a,o,status){
-    try{
-      if(status==="selected"){
-        if(!a?.applicantUid) throw new Error("Applicant account UID is missing.");
-        const memberRef=doc(db,"teamMembers",a.applicantUid);
-        const existing=await getDoc(memberRef);
-        if(existing.exists()) { ixpTeamToast("This applicant is already a Team Member."); return; }
-        const referralCode=(ixpTeamSlug(a.profile?.username||a.profile?.fullName)+"-"+a.applicantUid.slice(-6)).toUpperCase();
-        const link=ixpTeamPublicUrl(o?.slug||a.opportunitySlug, a.applicantUid);
-        await setDoc(memberRef,{
-          uid:a.applicantUid,teamMemberId:a.applicantUid,fullName:a.profile?.fullName||a.applicantEmail,email:a.applicantEmail,
-          username:a.profile?.username||"",phone:a.profile?.phone||"",whatsapp:a.profile?.whatsapp||"",
-          country:a.profile?.country||"Nigeria",state:a.profile?.state||"",city:a.profile?.city||"",age:Number(a.profile?.age)||null,
-          gender:a.profile?.gender||"",skills:a.profile?.skills||"",experience:a.profile?.experience||"",
-          socialMedia:a.profile?.socialMedia||"",linkedin:a.profile?.linkedin||"",
-          bankName:a.profile?.bankName||"",accountName:a.profile?.accountName||"",accountNumber:a.profile?.accountNumber||"",
-          roleTitle:o?.title||a.opportunityTitle,roleType:o?.roleType||"",opportunityId:o?.id||a.opportunityId,opportunitySlug:o?.slug||a.opportunitySlug,
-          referralCode,referralLink:link,commissionMode:o?.commissionMode||"percentage",commissionValue:Number(o?.commissionValue??10),
-          paymentSummary:o?.paymentSummary||"Custom",paymentRules:o?.paymentRules||"",referralRules:o?.referralRules||"",
-          codeOfConduct:o?.codeOfConduct||"",status:"active",payoutStatus:"unpaid",selectedAt:serverTimestamp(),updatedAt:serverTimestamp()
-        });
-        await updateDoc(doc(db,"teamApplications",a.id),{status:"selected",updatedAt:serverTimestamp()});
-        await setDoc(doc(db,"users",a.applicantUid),{role:"teamMember",teamStatus:"active",teamRole:o?.title||a.opportunityTitle,teamOpportunityId:o?.id||a.opportunityId,teamOpportunitySlug:o?.slug||a.opportunitySlug,teamSelectedAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
-        if(o) await updateDoc(doc(db,"teamOpportunities",o.id),{selectedCount:(Number(o.selectedCount)||0)+1});
-        await ixpTeamLog("member_selected",a.id,{role:a.opportunityTitle,uid:a.applicantUid});
-        ixpTeamToast("Applicant selected. They can now log in with the email and password created during application.");
-      }else{
-        await updateDoc(doc(db,"teamApplications",a.id),{status,updatedAt:serverTimestamp()});
-        ixpTeamToast("Application updated.");
-      }
-      ixpTeamClose();ixpTeamAdminTab("apps");
-    }catch(e){ixpTeamToast(e.message||"Could not update application")}
-  };
-
-  // Add explicit Team Login card to the public Team page.
-  const oldPublic=window.ixpTeamShowPublic;
-  window.ixpTeamShowPublic=function(slug=""){
-    if(typeof oldPublic==='function') oldPublic(slug);
-    setTimeout(()=>{
-      const hero=ixpTeamEl("ixptPublicHero");
-      if(hero && !ixpTeamEl("ixptTeamLoginButton")){
-        const b=document.createElement("div");b.className="ixpt-actions";b.style.marginTop="14px";
-        b.innerHTML='<button class="ixpt-btn ghost" id="ixptTeamLoginButton">Team Member Login</button>';
-        hero.appendChild(b);
-        ixpTeamEl("ixptTeamLoginButton").onclick=()=>{
-          ixpTeamOpen("Invoice X Pro Team Login",'<form id="ixptTeamLoginForm" class="ixpt-form"><div class="ixpt-alert">Selected Team Members use the same email and password they created during their application.</div><div class="ixpt-field"><label>Email *</label><input name="email" type="email" required autocomplete="username"></div><div class="ixpt-field"><label>Password *</label><input name="password" type="password" required autocomplete="current-password"></div><div id="ixptTeamLoginMsg"></div><button class="ixpt-btn primary">Login to Team dashboard</button><button type="button" class="ixpt-btn ghost" id="ixptTeamForgot" style="margin-top:8px">Forgot password?</button></form>');
-          ixpTeamEl("ixptTeamLoginForm").onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target),m=ixpTeamEl("ixptTeamLoginMsg");m.innerHTML="Signing in…";try{await signInWithEmailAndPassword(auth,String(fd.get("email")).trim(),String(fd.get("password")));m.innerHTML=ixpTeamMsg("Login successful. Opening your dashboard…");setTimeout(ixpTeamClose,500)}catch(err){m.innerHTML=ixpTeamMsg(err.message||"Login failed","err")}};
-          ixpTeamEl("ixptTeamForgot").onclick=async()=>{const email=ixpTeamEl("ixptTeamLoginForm").email.value.trim(),m=ixpTeamEl("ixptTeamLoginMsg");if(!email){m.innerHTML=ixpTeamMsg("Enter your email first.","err");return}try{await sendPasswordResetEmail(auth,email);m.innerHTML=ixpTeamMsg("Password reset email sent.")}catch(err){m.innerHTML=ixpTeamMsg(err.message||"Could not send reset email","err")}};
-        };
-      }
-    },100);
-  };
-
-  // Make the selected/pending Team account route into its respective workspace.
-  const originalShowAppShell=window.showAppShell;
-  // onAuthStateChanged is already registered in the original app, so we attach a second listener
-  // specifically for Team accounts. This does not replace existing Admin/Rep/Client routing.
-  onAuthStateChanged(auth, async user=>{
-    if(!user || window.__isVerifyMode) return;
-    try{
-      const us=await getDoc(doc(db,"users",user.uid));
-      if(!us.exists()) return;
-      const d=us.data();
-      if(d.role!=="teamMember" && d.role!=="teamApplicant") return;
-      currentUser=user;currentUserDoc=d;
-      if(typeof originalShowAppShell==='function') originalShowAppShell("client");
-      setTimeout(()=>{
-        if(typeof ixpTeamShowWorkspace==='function') ixpTeamShowWorkspace();
-        const sub=ixpTeamEl("ixptWorkspaceSub");
-        if(sub) sub.textContent=d.role==="teamMember"?"Welcome, "+(d.fullName||user.email)+" — "+(d.teamRole||"Team Member"):"Welcome, "+(d.fullName||user.email)+" — Application pending review";
-      },250);
-    }catch(e){console.warn("Team auth routing",e)}
-  });
-
-  // Ensure Team member dashboard loads from the deterministic UID document.
-  window.ixpTeamLoadMember=async function(){
-    const root=ixpTeamEl("ixptMemberTeam");if(!root||!currentUser){if(root)root.innerHTML="";return;}
-    try{
-      const uid=currentUser.uid;
-      const mSnap=await getDoc(doc(db,"teamMembers",uid));
-      const aSnap=await getDocs(query(collection(db,"teamApplications"),where("applicantUid","==",uid)));
-      const rSnap=await getDocs(query(collection(db,"teamReferrals"),where("memberUid","==",uid)));
-      const pSnap=await getDocs(query(collection(db,"teamPaymentProofs"),where("memberUid","==",uid)));
-      const member=mSnap.exists()?{id:mSnap.id,...mSnap.data()}:null;
-      const apps=[],refs=[],proofs=[];aSnap.forEach(d=>apps.push({id:d.id,...d.data()}));rSnap.forEach(d=>refs.push({id:d.id,...d.data()}));pSnap.forEach(d=>proofs.push({id:d.id,...d.data()}));
-      if(!member){
-        const pending=apps.find(x=>x.status==="pending")||apps[apps.length-1];
-        root.innerHTML='<div class="ixpt-card"><div class="ixpt-kicker">Application status</div><h2>Pending Review</h2><p class="ixpt-sub">Your application for '+ixpTeamEsc(pending?.opportunityTitle||currentUserDoc?.teamRole||"Invoice X Pro Team")+' is still being reviewed.</p><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Login account</b><br>Your email and password are already active. You do not need to sign up again.</div><div class="ixpt-detail"><b>Status</b><br>Pending Review</div></div></div>';
-        return;
-      }
-      const earned=refs.filter(x=>x.commissionStatus==="approved").reduce((s,x)=>s+Number(x.commissionAmount||0),0);
-      root.innerHTML='<div class="ixpt-card"><div class="ixpt-kicker">Your role</div><h2>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</h2><p class="ixpt-sub">Welcome, '+ixpTeamEsc(member.fullName||currentUser.email)+'. This is your Team dashboard.</p><div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+refs.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+refs.filter(x=>x.paymentVerified).length+'</b><span>Verified paid</span></div><div class="ixpt-stat"><b>₦'+earned.toLocaleString()+'</b><span>Approved earnings</span></div></div><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Role</b><br>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</div><div class="ixpt-detail"><b>Referral code</b><br>'+ixpTeamEsc(member.referralCode||"—")+'</div><div class="ixpt-detail"><b>Referral link</b><div class="ixpt-copy">'+ixpTeamEsc(member.referralLink||"")+'</div></div><div class="ixpt-detail"><b>Payment rules</b><br>'+ixpTeamEsc(member.paymentRules||member.paymentSummary||"Custom")+'</div><div class="ixpt-detail"><b>Referral rules</b><br>'+ixpTeamEsc(member.referralRules||"Commission is earned only after eligible payment verification.")+'</div></div><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCopyReferral">Copy referral link</button><button class="ixpt-btn ghost" id="ixptSubmitProof">Submit client payment proof</button></div></div><div class="ixpt-card" style="margin-top:16px"><h3>My applications</h3>'+(apps.length?'<div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applied</th></tr></thead><tbody>'+apps.map(x=>'<tr><td>'+ixpTeamEsc(x.opportunityTitle)+'</td><td>'+ixpTeamEsc(x.status)+'</td><td>'+ixpTeamDate(x.createdAt)+'</td></tr>').join("")+'</tbody></table></div>':'<div class="ixpt-empty">No applications yet.</div>')+'</div>';
-      ixpTeamEl("ixptCopyReferral").onclick=async()=>{try{await navigator.clipboard.writeText(member.referralLink||"");ixpTeamToast("Referral link copied.")}catch(e){ixpTeamToast("Could not copy link.")}};
-      ixpTeamEl("ixptSubmitProof").onclick=()=>ixpTeamProofForm(member);
-    }catch(e){root.innerHTML=ixpTeamMsg(e.message||"Could not load Team dashboard","err")}
-  };
-
-  // Make the Admin WhatsApp shortcut use the configurable Team setting when available.
-  window.ixpTeamReviewProof=window.ixpTeamReviewProof||function(){};
+    const qp=new URLSearchParams(location.search), team=qp.get("team"), ref=qp.get("ref"), rc=qp.get("rc");
+    if(!team || !ref) return;
+    saveTeamAttr({teamSlug:team,memberUid:ref,referralCode:rc||null,capturedAt:Date.now()});
+    if(!rc) return; // can't safely write a lead without the referral code the rule verifies against
+    const sessionKey="ixp_team_lead_"+ref+"_"+team;
+    if(sessionStorage.getItem(sessionKey)) return;
+    if(currentUser && currentUser.uid===ref) return; // don't track a member clicking their own link
+    await addDoc(collection(db,"teamReferralLeads"),{
+      teamMemberUid:ref,teamMemberId:ref,referralCode:rc,opportunitySlug:team,
+      anonymous:true,status:"visitor",source:document.referrer||"direct",
+      landingUrl:location.href,createdAt:serverTimestamp()
+    });
+    sessionStorage.setItem(sessionKey,"1");
+  }catch(e){ /* rule mismatch or offline -- never block the page for this */ }
 })();
+
+// Route a signed-in Team account (applicant or member) straight into the Team
+// workspace. This is a second, additive onAuthStateChanged listener -- it does
+// not replace or interfere with the existing Admin/Rep/Client routing.
+onAuthStateChanged(auth, async user=>{
+  if(!user || window.__isVerifyMode) return;
+  try{
+    const us=await getDoc(doc(db,"users",user.uid));
+    if(!us.exists()) return;
+    const d=us.data();
+    if(d.role!=="teamMember" && d.role!=="teamApplicant") return;
+    currentUser=user;currentUserDoc=d;
+    showAppShell("client");
+    setTimeout(()=>{
+      ixpTeamShowWorkspace();
+      const sub=ixpTeamEl("ixptWorkspaceSub");
+      if(sub) sub.textContent=d.role==="teamMember"?"Welcome, "+(d.fullName||user.email)+" — "+(d.teamRole||"Team Member"):"Welcome, "+(d.fullName||user.email)+" — Application pending review";
+    },250);
+  }catch(e){console.warn("Team auth routing",e)}
+});
 </script>
 
 </body>
