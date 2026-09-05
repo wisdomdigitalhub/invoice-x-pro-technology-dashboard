@@ -1077,6 +1077,7 @@
       <div id="suClientFields">
         <div class="field"><label>Business name</label><input type="text" id="suBusinessName" /></div>
         <div class="field"><label>Business address</label><input type="text" id="suAddress" /></div>
+        <div class="field"><label>Referral code (optional)</label><input type="text" id="suReferralCode" placeholder="Have a representative's code? Enter it here" style="text-transform:uppercase" /></div>
       </div>
       <div id="suRepFields" class="hidden">
         <div class="field"><label>Full name</label><input type="text" id="suFullName" /></div>
@@ -2818,6 +2819,7 @@ function openSignUp(role){
   $("signUpOverlay").classList.remove("hidden");
   $("signUpMsg").className = "form-msg";
   $("signUpForm").reset();
+  if($("suReferralCode") && pendingReferralRep) $("suReferralCode").value = pendingReferralRep.accountCode;
 }
 function closeSignUp(){ $("signUpOverlay").classList.add("hidden"); }
 function updateSignUpUI(){
@@ -2846,6 +2848,23 @@ $("signUpOverlay").addEventListener("click", (e)=>{ if(e.target.id === "signUpOv
 $("suRoleClientBtn").addEventListener("click", ()=>{ signUpRole = "client"; updateSignUpUI(); });
 $("suRoleRepBtn").addEventListener("click", ()=>{ signUpRole = "rep"; updateSignUpUI(); });
 $("switchToLoginBtn").addEventListener("click", ()=>{ closeSignUp(); openModal(signUpRole === "rep" ? "rep" : "client"); });
+$("suReferralCode")?.addEventListener("blur", async ()=>{
+  const code = $("suReferralCode").value.trim().toUpperCase();
+  const banner = $("suReferralBanner");
+  if(!code){ if(!pendingReferralRep) banner.classList.add("hidden"); return; }
+  try{
+    const q = query(collection(db, "users"), where("role","==","rep"), where("accountCode","==",code), limit(1));
+    const snap = await getDocs(q);
+    if(!snap.empty){
+      const d = snap.docs[0];
+      banner.textContent = `Referred by ${d.data().fullName || d.data().email || "your representative"} — you'll get instant access to your dashboard.`;
+      banner.classList.remove("hidden");
+    }else{
+      banner.textContent = "Referral code not recognized — double-check it, or leave the field blank.";
+      banner.classList.remove("hidden");
+    }
+  }catch(err){ /* silent — this is just live feedback, submit-time check still validates */ }
+});
 
 $("signUpForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
@@ -2854,6 +2873,33 @@ $("signUpForm").addEventListener("submit", async (e)=>{
   setFormMsg($("signUpMsg"), "", "");
   const email = $("suEmail").value.trim();
   const password = $("suPassword").value;
+
+  // A manually-typed referral code (entered by hand, not via a ?ref= link)
+  // always wins if present — it's an explicit action by the person signing
+  // up. It must resolve to a real representative or signup is blocked with
+  // a clear message, so a mistyped code never silently signs someone up
+  // with no referral instead of the one they meant to enter.
+  let referralRep = pendingReferralRep;
+  if(signUpRole === "client"){
+    const manualCode = ($("suReferralCode")?.value || "").trim().toUpperCase();
+    if(manualCode){
+      try{
+        const mq = query(collection(db, "users"), where("role","==","rep"), where("accountCode","==",manualCode), limit(1));
+        const msnap = await getDocs(mq);
+        if(msnap.empty){
+          setFormMsg($("signUpMsg"), "That referral code was not found. Please check it, or leave the field blank to sign up without one.", "error");
+          btn.disabled = false; btn.textContent = "Create account";
+          return;
+        }
+        const md = msnap.docs[0];
+        referralRep = { id: md.id, fullName: md.data().fullName || md.data().email || "your representative", accountCode: manualCode };
+      }catch(err){
+        setFormMsg($("signUpMsg"), "Could not verify that referral code right now. Please try again.", "error");
+        btn.disabled = false; btn.textContent = "Create account";
+        return;
+      }
+    }
+  }
   try{
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const uid = cred.user.uid;
@@ -2905,15 +2951,15 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         createdBy: "self-signup",
         createdAt: serverTimestamp()
       };
-      if(pendingReferralRep){
-        clientDoc.referredByRepId = pendingReferralRep.id;
-        clientDoc.referredByRepName = pendingReferralRep.fullName;
-        clientDoc.referralCode = pendingReferralRep.accountCode;
+      if(referralRep){
+        clientDoc.referredByRepId = referralRep.id;
+        clientDoc.referredByRepName = referralRep.fullName;
+        clientDoc.referralCode = referralRep.accountCode;
         clientDoc.referredAt = serverTimestamp();
       }
       await setDoc(doc(db, "users", uid), clientDoc);
-      if(pendingReferralRep){
-        sendNotification(pendingReferralRep.id, "New referral 🎉",
+      if(referralRep){
+        sendNotification(referralRep.id, "New referral 🎉",
           `${clientDoc.businessName || email} signed up through your referral link. You'll earn a commission when they go Premium.`, "referral-signup");
       }
       setFormMsg($("signUpMsg"), "Account created! Taking you in…", "success");
