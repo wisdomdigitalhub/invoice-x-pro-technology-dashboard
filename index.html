@@ -1336,7 +1336,7 @@
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Name</th><th>Code</th><th>Branch</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Name</th><th>Code</th><th>Branch</th><th>Status</th><th>Wallet</th><th>Actions</th></tr></thead>
           <tbody id="repTableBody"></tbody>
         </table>
       </div>
@@ -1956,6 +1956,17 @@
         <div class="stat-card"><div class="label">Premium customers</div><div class="value" id="repPremiumClientCount">0</div></div>
         <div class="stat-card"><div class="label">Total commission</div><div class="value brass" id="repReferralCommission">₦0</div></div>
         <div class="stat-card"><div class="label">Available wallet</div><div class="value" id="repReferralWallet">₦0</div></div>
+      </div>
+      <div class="form-msg info" style="display:block;margin-top:14px">Your wallet balance is paid out by bank transfer during the final 7 calendar days of each month, only if you have at least one referred client with a verified payment.</div>
+      <div class="panel" style="margin-top:14px;padding:16px;border:1px solid #e5ded0;border-radius:14px">
+        <h4 style="margin:0 0 8px">Payout bank details</h4>
+        <form id="repBankForm" style="display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr">
+          <input id="repBankName" placeholder="Bank name" required>
+          <input id="repAccountName" placeholder="Account name" required>
+          <input id="repAccountNumber" placeholder="Account number" required inputmode="numeric" autocomplete="off">
+          <button class="btn-sm confirm" type="submit" style="grid-column:1/-1">Save bank details</button>
+          <div class="form-msg" id="repBankMsg" style="grid-column:1/-1"></div>
+        </form>
       </div>
       <div class="table-wrap" style="margin-top:14px;">
         <table>
@@ -3194,10 +3205,12 @@ function renderRepTable(reps){
       <td class="mono">${escapeHtml(r.accountCode||"—")}</td>
       <td>${escapeHtml(r.branch||"—")}</td>
       <td><span class="status-chip ${r.status==="accepted"?"approved":"pending"}">${r.status||"pending"}</span></td>
+      <td>₦${(Number(r.wallet)||0).toLocaleString()}</td>
       <td style="white-space:nowrap;">
         ${r.status === "accepted"
           ? `<button class="btn-sm reject" data-uid="${r.id}" data-action="hold">Hold</button>`
           : `<button class="btn-sm confirm" data-uid="${r.id}" data-action="accept">Accept</button>`}
+        <button class="btn-sm confirm" data-uid="${r.id}" data-action="pay">Pay commission</button>
         <button class="btn-sm reject" data-uid="${r.id}" data-action="delete">Delete</button>
       </td>`;
     tbody.appendChild(tr);
@@ -3206,6 +3219,7 @@ function renderRepTable(reps){
     btn.addEventListener("click", async ()=>{
       const uid = btn.dataset.uid;
       const action = btn.dataset.action;
+      if(action === "pay"){ ixpAdminPayRep(window.__repsById?.[uid]); return; }
       if(action === "delete"){
         const rep = window.__repsById?.[uid];
         if(!confirm(`Delete ${rep?.fullName || "this representative"}? This removes their login access immediately. Their referral link stops working, but clients they already referred and their past commission history stay on record. Note: this only removes their Invoice X Pro profile — their original sign-in email/password (Firebase Auth account) can't be deleted from this app and would need to be removed from the Firebase console if you want it fully gone.`)) return;
@@ -3465,6 +3479,27 @@ function initRepDashboard(uid, data){
   loadClientsForRep(uid);
   loadMaterialsForRep();
   loadReferralEarningsForRep(uid, data);
+  if($("repBankName")) $("repBankName").value = data.bankName || "";
+  if($("repAccountName")) $("repAccountName").value = data.accountName || "";
+  if($("repAccountNumber")) $("repAccountNumber").value = data.accountNumber || "";
+  const repBankForm = $("repBankForm");
+  if(repBankForm && !repBankForm.dataset.wired){
+    repBankForm.dataset.wired = "1";
+    repBankForm.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const msg = $("repBankMsg");
+      msg.textContent = "Saving…";
+      try{
+        await updateDoc(doc(db,"users",uid), {
+          bankName: $("repBankName").value.trim(),
+          accountName: $("repAccountName").value.trim(),
+          accountNumber: $("repAccountNumber").value.trim(),
+          updatedAt: serverTimestamp()
+        });
+        setFormMsg(msg, "Bank details saved.", "success");
+      }catch(err){ setFormMsg(msg, err.message || "Could not save bank details.", "error"); }
+    });
+  }
 }
 
 // ---------- Referral Earnings (self-signup referral link → Premium commission) ----------
@@ -8030,6 +8065,56 @@ function ixpTeamPayoutWindow(d=new Date()){
   const y=d.getFullYear(),m=d.getMonth(),lastDay=ixpTeamLastDayOfMonth(y,m),start=lastDay-6;
   return {year:y,month:m,lastDay,start,inWindow:d.getDate()>=start,label:new Date(y,m,1).toLocaleString("en-US",{month:"long",year:"numeric"}),monthKey:y+"-"+String(m+1).padStart(2,"0")};
 }
+// Representative commission payout — reuses the same last-7-days-of-month
+// window and deterministic per-month payout ID pattern as the Team payroll,
+// but writes to repPayouts and clears the rep's own `wallet` field, since the
+// existing Representative referral system stores its running balance there.
+async function ixpAdminPayRep(rep){
+  if(!rep){ toast("Representative not found."); return; }
+  const win=ixpTeamPayoutWindow();
+  const wallet=Number(rep.wallet)||0;
+  const body='<div class="ixpt-detail-list">'+
+    '<div class="ixpt-detail"><b>Representative</b><br>'+ixpTeamEsc(rep.fullName||rep.email)+'</div>'+
+    '<div class="ixpt-detail"><b>Wallet balance due</b><br>₦'+wallet.toLocaleString()+'</div>'+
+    '<div class="ixpt-detail"><b>Bank name</b><br>'+ixpTeamEsc(rep.bankName||"Not provided yet")+'</div>'+
+    '<div class="ixpt-detail"><b>Account name</b><br>'+ixpTeamEsc(rep.accountName||"Not provided yet")+'</div>'+
+    '<div class="ixpt-detail"><b>Account number</b><br>'+ixpTeamEsc(rep.accountNumber||"Not provided yet")+'</div>'+
+    '</div>'+
+    (win.inWindow
+      ?'<div class="ixpt-msg ok">You are inside the payout window: day '+win.start+'–'+win.lastDay+' of '+win.label+'. Payouts are due now.</div>'
+      :'<div class="ixpt-msg">Payout window for '+win.label+' opens on day '+win.start+' (the final 7 calendar days of the month).</div>')+
+    '<div class="ixpt-actions">'+
+    (wallet<=0?'<div class="ixpt-empty">Nothing owed — this representative has no referred client with a verified payment yet.</div>'
+      :'<button class="ixpt-btn primary" id="ixptPayRepConfirm">Mark ₦'+wallet.toLocaleString()+' as paid</button>')+
+    '</div><div id="ixptPayRepMsg"></div>';
+  ixpTeamOpen("Pay representative commission",body);
+  if(ixpTeamEl("ixptPayRepConfirm")) ixpTeamEl("ixptPayRepConfirm").onclick=async()=>{
+    const msg=ixpTeamEl("ixptPayRepMsg");msg.innerHTML="Recording payout…";
+    try{
+      const repRef=doc(db,"users",rep.id);
+      const payoutRef=doc(db,"repPayouts",rep.id+"_"+win.monthKey);
+      const amountPaid=await runTransaction(db, async(tx)=>{
+        const repSnap=await tx.get(repRef);
+        const current=Number(repSnap.data()?.wallet)||0;
+        if(current<=0) return 0;
+        const existing=await tx.get(payoutRef);
+        const alreadyRecorded=existing.exists()?Number(existing.data().amount||0):0;
+        tx.set(payoutRef,{
+          repId:rep.id,repName:rep.fullName||rep.email||"",amount:alreadyRecorded+current,
+          currency:"NGN",month:win.month+1,year:win.year,method:"BANK TRANSFER",
+          bankName:repSnap.data()?.bankName||"",accountName:repSnap.data()?.accountName||"",accountNumber:repSnap.data()?.accountNumber||"",
+          status:"paid",paidAt:serverTimestamp(),processedBy:currentUser?.uid||"admin",updatedAt:serverTimestamp()
+        },{merge:true});
+        tx.update(repRef,{wallet:0});
+        return current;
+      });
+      if(amountPaid<=0){ msg.innerHTML=ixpTeamMsg("Nothing to pay — balance already cleared.","err"); return; }
+      sendNotification(rep.id,"💸 Commission paid","₦"+amountPaid.toLocaleString()+" has been sent to your bank account for "+win.label+".","rep-payout-paid");
+      toast("₦"+amountPaid.toLocaleString()+" marked as paid to "+(rep.fullName||rep.email)+".");
+      ixpTeamClose();
+    }catch(err){ msg.innerHTML=ixpTeamMsg(err.message||"Could not record payout","err"); }
+  };
+}
 function ixpTeamDate(v){try{if(!v)return "—"; if(v.toDate)return v.toDate().toLocaleDateString(); return new Date(v).toLocaleDateString();}catch(e){return "—"}}
 function ixpTeamToast(m){try{toast(m)}catch(e){alert(m)}}
 function ixpTeamMsg(text,type="ok"){return '<div class="ixpt-msg '+type+'">'+ixpTeamEsc(text)+'</div>'}
@@ -8418,7 +8503,12 @@ async function ixpTeamFetchAll(){const cols=["teamOpportunities","teamApplicatio
 async function ixpTeamAdminTab(tab){const root=ixpTeamEl("ixptAdminTab");root.innerHTML='<div class="ixpt-empty">Loading…</div>';try{const d=await ixpTeamFetchAll();if(tab==="overview"){const pending=d.teamPaymentProofs.filter(x=>x.status==="pending").length;root.innerHTML='<div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+d.teamOpportunities.length+'</b><span>Opportunities</span></div><div class="ixpt-stat"><b>'+d.teamApplications.length+'</b><span>Applications</span></div><div class="ixpt-stat"><b>'+d.teamMembers.length+'</b><span>Team members</span></div><div class="ixpt-stat"><b>'+d.teamReferrals.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+pending+'</b><span>Proofs pending</span></div><div class="ixpt-stat"><b>₦'+d.teamPayouts.reduce((s,x)=>s+Number(x.amount||0),0).toLocaleString()+'</b><span>Total recorded payouts</span></div></div><div class="ixpt-card"><h3>Quick actions</h3><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCreateOpp">Create opportunity</button><button class="ixpt-btn ghost" id="ixptRefreshAdmin">Refresh</button></div></div>';ixpTeamEl("ixptCreateOpp").onclick=()=>ixpTeamOpportunityEditor();ixpTeamEl("ixptRefreshAdmin").onclick=()=>ixpTeamAdminTab("overview");return}
 if(tab==="opps"){root.innerHTML='<div class="ixpt-card"><div class="ixpt-top"><h3>Opportunities</h3><button class="ixpt-btn alt" id="ixptCreateOpp2">+ New opportunity</button></div><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applicants</th><th>Slots</th><th>Commission</th><th>Link</th><th></th></tr></thead><tbody>'+d.teamOpportunities.map(o=>'<tr><td><b>'+ixpTeamEsc(o.title)+'</b><br><small>'+ixpTeamEsc(o.roleType||"")+'</small></td><td>'+ixpTeamEsc(ixpTeamOpportunityStatus(o))+'</td><td>'+Number(o.applicantCount||0)+'</td><td>'+ixpTeamEsc(o.maxSelected||"—")+'</td><td>'+ixpTeamEsc(o.commissionMode||"10%")+'</td><td><button class="ixpt-btn ghost" data-copy-o="'+ixpTeamEsc(o.slug)+'">Copy</button></td><td><button class="ixpt-btn primary" data-edit-o="'+o.id+'">Edit</button></td></tr>').join("")+'</tbody></table></div></div>';ixpTeamEl("ixptCreateOpp2").onclick=()=>ixpTeamOpportunityEditor();root.querySelectorAll("[data-copy-o]").forEach(b=>b.onclick=async()=>{await navigator.clipboard?.writeText(ixpTeamPublicUrl(b.dataset.copyO));ixpTeamToast("Link copied")});root.querySelectorAll("[data-edit-o]").forEach(b=>b.onclick=()=>ixpTeamOpportunityEditor(d.teamOpportunities.find(x=>x.id===b.dataset.editO)));return}
 if(tab==="apps"){root.innerHTML='<div class="ixpt-card"><h3>All applications</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Applicant</th><th>Opportunity</th><th>Status</th><th>Applied</th><th></th></tr></thead><tbody>'+d.teamApplications.map(a=>'<tr><td><b>'+ixpTeamEsc(a.profile?.fullName||a.applicantEmail)+'</b><br>'+ixpTeamEsc(a.profile?.phone||"")+'</td><td>'+ixpTeamEsc(a.opportunityTitle)+'</td><td>'+ixpTeamEsc(a.status)+'</td><td>'+ixpTeamDate(a.createdAt)+'</td><td><button class="ixpt-btn primary" data-app="'+a.id+'">Review</button></td></tr>').join("")+'</tbody></table></div></div>';root.querySelectorAll("[data-app]").forEach(b=>b.onclick=()=>ixpTeamReviewApplication(d.teamApplications.find(x=>x.id===b.dataset.app),d.teamOpportunities.find(o=>o.id===d.teamApplications.find(x=>x.id===b.dataset.app)?.opportunityId)));return}
-if(tab==="members"){root.innerHTML='<div class="ixpt-card"><h3>Selected team members</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Name</th><th>Role</th><th>Referrals</th><th>Approved earnings</th><th>Status</th></tr></thead><tbody>'+d.teamMembers.map(m=>{const rr=d.teamReferrals.filter(r=>r.memberUid===m.uid);const earn=rr.filter(r=>r.commissionStatus==="approved").reduce((s,r)=>s+Number(r.commissionAmount||0),0);return '<tr><td>'+ixpTeamEsc(m.fullName||m.email)+'</td><td>'+ixpTeamEsc(m.roleTitle)+'</td><td>'+rr.length+'</td><td>₦'+earn.toLocaleString()+'</td><td>'+ixpTeamEsc(m.status||"active")+'</td></tr>'}).join("")+'</tbody></table></div></div>';return}
+if(tab==="members"){root.innerHTML='<div class="ixpt-card"><h3>Selected team members</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Name</th><th>Role</th><th>Referrals</th><th>Approved earnings</th><th>Status</th><th>Bank details</th><th></th></tr></thead><tbody>'+d.teamMembers.map(m=>{const rr=d.teamReferrals.filter(r=>r.memberUid===m.uid);const earn=rr.filter(r=>r.commissionStatus==="approved").reduce((s,r)=>s+Number(r.commissionAmount||0),0);return '<tr><td>'+ixpTeamEsc(m.fullName||m.email)+'</td><td>'+ixpTeamEsc(m.roleTitle)+'</td><td>'+rr.length+'</td><td>₦'+earn.toLocaleString()+'</td><td>'+ixpTeamEsc(m.status||"active")+'</td><td>'+(m.accountNumber?'<span class="ixpt-pill live">On file</span>':'<span class="ixpt-pill">Missing</span>')+'</td><td><button class="ixpt-btn ghost" data-view-bank="'+m.uid+'" style="padding:4px 10px;font-size:12px">View bank details</button></td></tr>'}).join("")+'</tbody></table></div></div>';
+  root.querySelectorAll("[data-view-bank]").forEach(btn=>btn.onclick=()=>{
+    const m=d.teamMembers.find(x=>x.uid===btn.dataset.viewBank);
+    ixpTeamOpen("Bank details — "+(m.fullName||m.email),'<div class="ixpt-detail-list"><div class="ixpt-detail"><b>Bank name</b><br>'+ixpTeamEsc(m.bankName||"Not submitted yet")+'</div><div class="ixpt-detail"><b>Account name</b><br>'+ixpTeamEsc(m.accountName||"Not submitted yet")+'</div><div class="ixpt-detail"><b>Account number</b><br>'+ixpTeamEsc(m.accountNumber||"Not submitted yet")+'</div><div class="ixpt-detail"><b>Payout status</b><br>'+ixpTeamEsc(m.payoutStatus||"unpaid")+'</div></div>');
+  });
+  return}
 if(tab==="leads"){const leads=(d.teamReferralLeads||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));root.innerHTML='<div class="ixpt-card"><h3>Referral leads</h3><p class="ixpt-sub">Every time someone opens a Team Member referral link, it is logged here.</p>'+(leads.length?'<div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Team member</th><th>Opportunity</th><th>Referral code</th><th>Status</th><th>Source</th><th>Clicked</th></tr></thead><tbody>'+leads.map(l=>{const m=d.teamMembers.find(x=>x.uid===l.teamMemberUid);return '<tr><td>'+ixpTeamEsc(m?.fullName||l.teamMemberUid)+'</td><td>'+ixpTeamEsc(l.opportunitySlug||"")+'</td><td>'+ixpTeamEsc(l.referralCode||"")+'</td><td>'+ixpTeamEsc(l.status||"visitor")+'</td><td>'+ixpTeamEsc(l.source||"direct")+'</td><td>'+ixpTeamDate(l.createdAt)+'</td></tr>'}).join("")+'</tbody></table></div>':'<div class="ixpt-empty">No referral link clicks recorded yet.</div>')+'</div>';return}
 if(tab==="tasks"){
   const tasks=(d.teamTasks||[]).slice().sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
