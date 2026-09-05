@@ -1335,6 +1335,8 @@
         <h3>Representatives</h3>
         <span class="hint" id="repListHint">—</span>
       </div>
+      <div class="form-msg info" style="display:block;margin-bottom:10px">If representatives were created before referral codes started working publicly, click this once to fix their existing codes.</div>
+      <button type="button" class="btn-sm confirm" id="syncRepProfilesBtn" style="margin-bottom:14px">Sync referral codes</button>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Name</th><th>Code</th><th>Branch</th><th>Status</th><th>Wallet</th><th>Actions</th></tr></thead>
@@ -2804,11 +2806,10 @@ let pendingReferralRep = null;
     const params = new URLSearchParams(window.location.search);
     const refCode = params.get("ref");
     if(!refCode) return;
-    const q = query(collection(db, "users"), where("role","==","rep"), where("accountCode","==",refCode), limit(1));
-    const snap = await getDocs(q);
-    if(!snap.empty){
-      const d = snap.docs[0];
-      pendingReferralRep = { id: d.id, fullName: d.data().fullName || d.data().email || "your representative", accountCode: refCode };
+    const snap = await getDoc(doc(db, "repProfiles", refCode));
+    if(snap.exists()){
+      const data = snap.data();
+      pendingReferralRep = { id: data.uid, fullName: data.fullName || "your representative", accountCode: refCode };
       openSignUp("client");
     }
   }catch(err){ console.error("Referral lookup failed:", err); }
@@ -2853,11 +2854,10 @@ $("suReferralCode")?.addEventListener("blur", async ()=>{
   const banner = $("suReferralBanner");
   if(!code){ if(!pendingReferralRep) banner.classList.add("hidden"); return; }
   try{
-    const q = query(collection(db, "users"), where("role","==","rep"), where("accountCode","==",code), limit(1));
-    const snap = await getDocs(q);
-    if(!snap.empty){
-      const d = snap.docs[0];
-      banner.textContent = `Referred by ${d.data().fullName || d.data().email || "your representative"} — you'll get instant access to your dashboard.`;
+    const snap = await getDoc(doc(db, "repProfiles", code));
+    if(snap.exists()){
+      const data = snap.data();
+      banner.textContent = `Referred by ${data.fullName || "your representative"} — you'll get instant access to your dashboard.`;
       banner.classList.remove("hidden");
     }else{
       banner.textContent = "Referral code not recognized — double-check it, or leave the field blank.";
@@ -2884,15 +2884,14 @@ $("signUpForm").addEventListener("submit", async (e)=>{
     const manualCode = ($("suReferralCode")?.value || "").trim().toUpperCase();
     if(manualCode){
       try{
-        const mq = query(collection(db, "users"), where("role","==","rep"), where("accountCode","==",manualCode), limit(1));
-        const msnap = await getDocs(mq);
-        if(msnap.empty){
+        const msnap = await getDoc(doc(db, "repProfiles", manualCode));
+        if(!msnap.exists()){
           setFormMsg($("signUpMsg"), "That referral code was not found. Please check it, or leave the field blank to sign up without one.", "error");
           btn.disabled = false; btn.textContent = "Create account";
           return;
         }
-        const md = msnap.docs[0];
-        referralRep = { id: md.id, fullName: md.data().fullName || md.data().email || "your representative", accountCode: manualCode };
+        const mdata = msnap.data();
+        referralRep = { id: mdata.uid, fullName: mdata.fullName || "your representative", accountCode: manualCode };
       }catch(err){
         setFormMsg($("signUpMsg"), "Could not verify that referral code right now. Please try again.", "error");
         btn.disabled = false; btn.textContent = "Create account";
@@ -2920,6 +2919,15 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         createdBy: "self-signup",
         createdAt: serverTimestamp()
       });
+      const repDocForProfile = await getDoc(doc(db, "users", uid));
+      const repAccountCode = repDocForProfile.data()?.accountCode;
+      if(repAccountCode){
+        try{
+          await setDoc(doc(db, "repProfiles", repAccountCode), {
+            uid, fullName: $("suFullName").value.trim() || email, accountCode: repAccountCode
+          });
+        }catch(profileErr){ console.error("repProfiles write failed:", profileErr); }
+      }
       sendNotification("ADMIN_BROADCAST", "New representative sign-up",
         `${$("suFullName").value.trim() || email} signed up and is already active.`, "rep-signup");
       setFormMsg($("signUpMsg"), "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro. Don't forget to join the Representatives WhatsApp group from your dashboard.", "success");
@@ -3287,6 +3295,22 @@ function renderRepTable(reps){
   });
 }
 
+$("syncRepProfilesBtn")?.addEventListener("click", async ()=>{
+  const btn = $("syncRepProfilesBtn");
+  btn.disabled = true; btn.textContent = "Syncing…";
+  try{
+    const reps = Object.values(window.__repsById || {});
+    let count = 0;
+    for(const r of reps){
+      if(!r.accountCode) continue;
+      await setDoc(doc(db, "repProfiles", r.accountCode), { uid: r.id, fullName: r.fullName || r.email || "", accountCode: r.accountCode });
+      count++;
+    }
+    toast(`Synced ${count} representative referral code${count===1?"":"s"}.`);
+  }catch(err){ toast("Could not sync referral codes."); }
+  btn.disabled = false; btn.textContent = "Sync referral codes";
+});
+
 $("createRepForm").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const btn = $("createRepBtn");
@@ -3330,6 +3354,9 @@ $("createRepForm").addEventListener("submit", async (e)=>{
       createdAt: serverTimestamp(),
       ...(generatedPassword ? { demoPassword: password } : {})
     });
+    try{
+      await setDoc(doc(db, "repProfiles", accountCode), { uid, fullName: fullName || email, accountCode });
+    }catch(profileErr){ console.error("repProfiles write failed:", profileErr); }
 
     // Verify the write actually landed before telling the admin it worked —
     // catches silent permission issues instead of showing a false success.
