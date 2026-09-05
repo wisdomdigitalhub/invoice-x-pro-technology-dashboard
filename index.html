@@ -8101,9 +8101,16 @@ function ixpTeamApplicationForm(o){
     return '<div class="ixpt-field">'+lbl+control+'</div>';
   }).join("");
   const isKnown=!!(currentUser && prof.email);
+  const blockedRole=currentUserDoc?.role==="client"?"Client":currentUserDoc?.role==="admin"?"Admin":currentUserDoc?.role==="rep"?"Representative":null;
+  if(blockedRole==="Client"){
+    return '<div class="ixpt-msg err">Team applications are separate from Client accounts. This email is already registered as an Invoice X Pro Client account. You cannot apply for a Team position using an existing Client account.</div>';
+  }
+  if(blockedRole){
+    return '<div class="ixpt-msg err">This account is registered as an Invoice X Pro '+blockedRole+' account. Team applications require a separate Team account — please use a different email to apply.</div>';
+  }
   const field=(l,k,type='text',req=true,extra='')=>'<div class="ixpt-field"><label>'+l+(req?' *':'')+'</label><input name="'+k+'" type="'+type+'" value="'+ixpTeamEsc(prof[k]||'')+'" '+(req?'required':'')+' '+extra+'></div>';
   return '<form id="ixptApplyForm" class="ixpt-form">'+
-    '<div class="ixpt-alert">'+(isKnown?'You are already signed in, so we will use your existing account for this application.':'<b>Create your Invoice X Pro Team login here.</b><br>You will not need to sign up again if you are selected. Use the same email and password to log in to your Team dashboard.')+'</div>'+
+    '<div class="ixpt-alert">'+(isKnown?'You are already signed in with a Team account, so we will use it for this application.':'<b>Create your Invoice X Pro Team login here.</b><br>Your Team account is separate from an Invoice X Pro Client account. You will not need to sign up again if you are selected — use the same email and password to log in to your Team dashboard.')+'</div>'+
     '<div class="ixpt-two">'+
     field('Full name','fullName')+
     field('Username','username')+
@@ -8122,14 +8129,10 @@ function ixpTeamApplicationForm(o){
     field('Social media','socialMedia','text',false)+
     field('LinkedIn (optional)','linkedin','url',false)
     +'</div>'+
-    '<div class="ixpt-two">'+
-    field('Bank name','bankName')+
-    field('Account name','accountName')+
-    field('Account number','accountNumber','text',true,'inputmode="numeric" autocomplete="off"')+
-    '</div>'+
     '<div class="ixpt-field"><label>Short introduction *</label><textarea name="introduction" rows="3" required></textarea></div>'+
     '<div class="ixpt-field"><label>Why do you want this role? *</label><textarea name="whyRole" rows="3" required></textarea></div>'+
     '<div class="ixpt-field"><label>References *</label><textarea name="references" rows="3" required></textarea></div>'+q+
+    '<div class="ixpt-alert">Bank details are collected only after you are selected as a Team Member — not during application.</div>'+
     '<label style="font-size:12px;display:block;margin:10px 0"><input type="checkbox" required> I confirm that the information is accurate and I agree to the rules of this opportunity.</label>'+
     '<button class="ixpt-btn primary" type="submit" id="ixptSubmitApplicationBtn">'+(isKnown?'Submit application':'Create account & submit application')+'</button>'+
     '<div id="ixptApplyMsg"></div></form>';
@@ -8151,13 +8154,22 @@ function ixpTeamOpenOpportunity(o,admin=false){
   if(!admin){
     // Anyone can start an application — logged in or not. Only capacity/status block it here;
     // age/country are validated against the real form data at submit time.
-    const reason=ixpTeamCanApply(o,currentUser?ixpTeamProfile():null);
-    body+='<div class="ixpt-actions">'+(reason?'<div class="ixpt-msg err">'+ixpTeamEsc(reason)+'</div>':'<button class="ixpt-btn alt" id="ixptStartApply">Apply for this opportunity</button>')+'</div>';
+    const clientBlocked=currentUserDoc?.role==="client";
+    const otherRoleBlocked=currentUserDoc?.role==="admin"||currentUserDoc?.role==="rep";
+    const reason=clientBlocked?"":otherRoleBlocked?"":ixpTeamCanApply(o,currentUser?ixpTeamProfile():null);
+    if(clientBlocked){
+      body+='<div class="ixpt-actions"><div class="ixpt-msg err">Team applications are separate from Client accounts. This email is already registered as an Invoice X Pro Client account. You cannot apply for a Team position using an existing Client account.</div></div>';
+    }else if(otherRoleBlocked){
+      body+='<div class="ixpt-actions"><div class="ixpt-msg err">This account is registered as an Invoice X Pro '+(currentUserDoc.role==="admin"?"Admin":"Representative")+' account. Team applications require a separate Team account.</div></div>';
+    }else{
+      body+='<div class="ixpt-actions">'+(reason?'<div class="ixpt-msg err">'+ixpTeamEsc(reason)+'</div>':'<button class="ixpt-btn alt" id="ixptStartApply">Apply for this opportunity</button>')+'</div>';
+    }
   }
   ixpTeamOpen(o.title,body);
   if(ixpTeamEl("ixptStartApply")) ixpTeamEl("ixptStartApply").onclick=()=>{
     ixpTeamEl("ixptModalBody").innerHTML='<div class="ixpt-kicker">Application</div><h2>'+ixpTeamEsc(o.title)+'</h2>'+ixpTeamApplicationForm(o);
-    ixpTeamEl("ixptApplyForm").addEventListener("submit",e=>ixpTeamSubmitApplication(e,o));
+    const formEl=ixpTeamEl("ixptApplyForm");
+    if(formEl) formEl.addEventListener("submit",e=>ixpTeamSubmitApplication(e,o));
   };
 }
 async function ixpTeamSubmitApplication(e,o){
@@ -8166,6 +8178,11 @@ async function ixpTeamSubmitApplication(e,o){
   if(btn) btn.disabled=true;
   msg.innerHTML=currentUser?"Submitting…":"Creating your account and submitting application…";
   try{
+    if(currentUser && (currentUserDoc?.role==="client"||currentUserDoc?.role==="admin"||currentUserDoc?.role==="rep")){
+      throw new Error(currentUserDoc.role==="client"
+        ?"Team applications are separate from Client accounts. This email is already registered as an Invoice X Pro Client account. You cannot apply for a Team position using an existing Client account."
+        :"This account is registered as an Invoice X Pro "+(currentUserDoc.role==="admin"?"Admin":"Representative")+" account. Team applications require a separate Team account.");
+    }
     const fd=new FormData(f),data={};
     for(const [k,v] of fd.entries()) data[k]=String(v).trim();
 
@@ -8197,7 +8214,28 @@ async function ixpTeamSubmitApplication(e,o){
         uid=cred.user.uid;
       }catch(authErr){
         if(authErr?.code==="auth/email-already-in-use"){
-          const cred=await signInWithEmailAndPassword(auth,data.email,rawPassword);
+          // Do NOT blindly continue: sign in only to verify identity, then check the
+          // resulting role before allowing anything to be written under this account.
+          let cred;
+          try{
+            cred=await signInWithEmailAndPassword(auth,data.email,rawPassword);
+          }catch(signInErr){
+            if(signInErr?.code==="auth/wrong-password" || signInErr?.code==="auth/invalid-credential"){
+              throw new Error("An account with this email already exists but the password doesn't match. If this is your existing account, use the correct password or reset it from Team Member Login. Team applications cannot be created from an existing Client account.");
+            }
+            throw signInErr;
+          }
+          const existingSnap=await getDoc(doc(db,"users",cred.user.uid));
+          const existingRole=existingSnap.exists()?existingSnap.data().role:null;
+          if(existingRole==="client"){
+            await signOut(auth);
+            throw new Error("Team applications are separate from Client accounts. This email is already registered as an Invoice X Pro Client account. You cannot apply for a Team position using an existing Client account.");
+          }
+          if(existingRole==="admin" || existingRole==="rep"){
+            await signOut(auth);
+            throw new Error("This email is already registered as an Invoice X Pro "+(existingRole==="admin"?"Admin":"Representative")+" account. Team applications require a separate account.");
+          }
+          // teamApplicant / teamMember / no role yet -> safe to resume as this account.
           uid=cred.user.uid;
         }else if(authErr?.code==="auth/weak-password"){
           throw new Error("Please choose a stronger password (at least 6 characters).");
@@ -8278,9 +8316,22 @@ async function ixpTeamLoadMember(){
     let leadCount=0;
     try{const lSnap=await getDocs(query(collection(db,"teamReferralLeads"),where("teamMemberUid","==",uid)));leadCount=lSnap.size;}catch(e){}
     const earned=refs.filter(x=>x.commissionStatus==="approved").reduce((s,x)=>s+Number(x.commissionAmount||0),0);
-    root.innerHTML='<div class="ixpt-card"><div class="ixpt-kicker">Your role</div><h2>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</h2><p class="ixpt-sub">Welcome, '+ixpTeamEsc(member.fullName||currentUser.email)+'. This is your Team dashboard.</p><div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+leadCount+'</b><span>Link clicks</span></div><div class="ixpt-stat"><b>'+refs.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+refs.filter(x=>x.paymentVerified).length+'</b><span>Verified paid</span></div><div class="ixpt-stat"><b>₦'+earned.toLocaleString()+'</b><span>Approved earnings</span></div></div><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Role</b><br>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</div><div class="ixpt-detail"><b>Referral code</b><br>'+ixpTeamEsc(member.referralCode||"—")+'</div><div class="ixpt-detail"><b>Referral link</b><div class="ixpt-copy">'+ixpTeamEsc(member.referralLink||"")+'</div></div><div class="ixpt-detail"><b>Payment rules</b><br>'+ixpTeamEsc(member.paymentRules||member.paymentSummary||"Custom")+'</div><div class="ixpt-detail"><b>Referral rules</b><br>'+ixpTeamEsc(member.referralRules||"Commission is earned only after eligible payment verification.")+'</div></div><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCopyReferral">Copy referral link</button><button class="ixpt-btn ghost" id="ixptSubmitProof">Submit client payment proof</button></div></div><div class="ixpt-card" style="margin-top:16px"><h3>My applications</h3>'+(apps.length?'<div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applied</th></tr></thead><tbody>'+apps.map(x=>'<tr><td>'+ixpTeamEsc(x.opportunityTitle)+'</td><td>'+ixpTeamEsc(x.status)+'</td><td>'+ixpTeamDate(x.createdAt)+'</td></tr>').join("")+'</tbody></table></div>':'<div class="ixpt-empty">No applications yet.</div>')+'</div>';
+    const needsBank=!member.accountNumber;
+    root.innerHTML=(needsBank?'<div class="ixpt-card" style="border:1px solid #f5b400"><h3>Complete your payout details</h3><p class="ixpt-sub">Bank details are required before you can be paid. They are private — only you and Admin can see them.</p><form id="ixptBankForm" class="ixpt-form"><div class="ixpt-two"><div class="ixpt-field"><label>Bank name *</label><input name="bankName" required></div><div class="ixpt-field"><label>Account name *</label><input name="accountName" required></div><div class="ixpt-field"><label>Account number *</label><input name="accountNumber" required inputmode="numeric" autocomplete="off"></div></div><div id="ixptBankMsg"></div><button class="ixpt-btn primary">Save bank details</button></form></div>':'')+
+    '<div class="ixpt-card" style="margin-top:'+(needsBank?'16px':'0')+'"><div class="ixpt-kicker">Your role</div><h2>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</h2><p class="ixpt-sub">Welcome, '+ixpTeamEsc(member.fullName||currentUser.email)+'. This is your Team dashboard.</p><div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+leadCount+'</b><span>Link clicks</span></div><div class="ixpt-stat"><b>'+refs.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+refs.filter(x=>x.paymentVerified).length+'</b><span>Verified paid</span></div><div class="ixpt-stat"><b>₦'+earned.toLocaleString()+'</b><span>Approved earnings</span></div></div><div class="ixpt-detail-list"><div class="ixpt-detail"><b>Role</b><br>'+ixpTeamEsc(member.roleTitle||"Team Member")+'</div><div class="ixpt-detail"><b>Referral code</b><br>'+ixpTeamEsc(member.referralCode||"—")+'</div><div class="ixpt-detail"><b>Referral link</b><div class="ixpt-copy">'+ixpTeamEsc(member.referralLink||"")+'</div></div><div class="ixpt-detail"><b>Payment rules</b><br>'+ixpTeamEsc(member.paymentRules||member.paymentSummary||"Custom")+'</div><div class="ixpt-detail"><b>Referral rules</b><br>'+ixpTeamEsc(member.referralRules||"Commission is earned only after eligible payment verification.")+'</div></div><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCopyReferral">Copy referral link</button><button class="ixpt-btn ghost" id="ixptSubmitProof">Submit client payment proof</button></div></div><div class="ixpt-card" style="margin-top:16px"><h3>My applications</h3>'+(apps.length?'<div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applied</th><th></th></tr></thead><tbody>'+apps.map(x=>'<tr><td>'+ixpTeamEsc(x.opportunityTitle)+'</td><td>'+ixpTeamEsc(x.status)+'</td><td>'+ixpTeamDate(x.createdAt)+'</td><td>'+((x.status==="pending"||x.status==="shortlisted"||x.status==="under_review")?'<button class="ixpt-btn ghost" data-withdraw-app="'+x.id+'" style="padding:4px 10px;font-size:12px">Withdraw</button>':'')+'</td></tr>').join("")+'</tbody></table></div>':'<div class="ixpt-empty">No applications yet.</div>')+'</div>';
     ixpTeamEl("ixptCopyReferral").onclick=async()=>{try{await navigator.clipboard.writeText(member.referralLink||"");ixpTeamToast("Referral link copied.")}catch(e){ixpTeamToast("Could not copy link.")}};
     ixpTeamEl("ixptSubmitProof").onclick=()=>ixpTeamProofForm(member);
+    if(ixpTeamEl("ixptBankForm")) ixpTeamEl("ixptBankForm").addEventListener("submit",async ev=>{
+      ev.preventDefault();const bfd=new FormData(ev.target),bmsg=ixpTeamEl("ixptBankMsg");bmsg.innerHTML="Saving…";
+      try{
+        await updateDoc(doc(db,"teamMembers",uid),{bankName:String(bfd.get("bankName")).trim(),accountName:String(bfd.get("accountName")).trim(),accountNumber:String(bfd.get("accountNumber")).trim(),updatedAt:serverTimestamp()});
+        ixpTeamToast("Bank details saved.");ixpTeamLoadMember();
+      }catch(err){bmsg.innerHTML=ixpTeamMsg(err.message||"Could not save bank details","err")}
+    });
+    root.querySelectorAll("[data-withdraw-app]").forEach(btn=>btn.onclick=async()=>{
+      if(!confirm("Withdraw this application?")) return;
+      try{await updateDoc(doc(db,"teamApplications",btn.dataset.withdrawApp),{status:"withdrawn",updatedAt:serverTimestamp()});ixpTeamToast("Application withdrawn.");ixpTeamLoadMember();}catch(err){ixpTeamToast(err.message||"Could not withdraw application")}
+    });
   }catch(e){root.innerHTML=ixpTeamMsg(e.message||"Could not load Team dashboard","err")}
 }
 function ixpTeamProofForm(member){ixpTeamOpen("Verify a client payment",'<form id="ixptProofForm" class="ixpt-form"><div class="ixpt-field"><label>Client email *</label><input name="clientEmail" type="email" required></div><div class="ixpt-field"><label>Client name/business *</label><input name="clientName" required></div><div class="ixpt-field"><label>Amount paid (₦) *</label><input name="amount" type="number" min="1" required></div><div class="ixpt-field"><label>Plan *</label><input name="plan" placeholder="Monthly / Yearly / Custom" required></div><div class="ixpt-field"><label>Payment reference (if available)</label><input name="paymentReference"></div><div class="ixpt-field"><label>Payment screenshot *</label><input id="ixptProofFile" type="file" accept="image/*" required></div><div id="ixptProofMsg"></div><button class="ixpt-btn primary">Submit proof</button></form>');ixpTeamEl("ixptProofForm").addEventListener("submit",async e=>{e.preventDefault();const msg=ixpTeamEl("ixptProofMsg"),file=ixpTeamEl("ixptProofFile").files[0];if(!file){msg.innerHTML=ixpTeamMsg("Please choose a screenshot.","err");return}try{msg.innerHTML="Compressing screenshot…";const proof=await compressImageFile(file,350000),fd=new FormData(e.target),amount=Number(fd.get("amount"));await addDoc(collection(db,"teamPaymentProofs"),{memberUid:currentUser.uid,memberName:currentUserDoc?.fullName||currentUser.email,opportunityId:member?.opportunityId||null,clientEmail:String(fd.get("clientEmail")).trim(),clientName:String(fd.get("clientName")).trim(),amount,plan:String(fd.get("plan")).trim(),paymentReference:String(fd.get("paymentReference")||"").trim(),screenshot:proof,status:"pending",createdAt:serverTimestamp(),whatsapp:IXP_TEAM.adminWhatsApp});await addDoc(collection(db,"notifications"),{userId:"ADMIN_BROADCAST",title:"Team payment proof submitted",body:(currentUserDoc?.fullName||currentUser.email)+" submitted a payment proof for ₦"+amount.toLocaleString()+". Open Team → Payment Proofs to review.",createdAt:serverTimestamp(),read:false,type:"team-payment-proof"});msg.innerHTML=ixpTeamMsg("Submitted for admin verification. You will only earn after approval.");await ixpTeamLog("payment_proof_submitted",currentUser.uid,{amount,clientEmail:String(fd.get("clientEmail"))});setTimeout(ixpTeamClose,1000)}catch(err){msg.innerHTML=ixpTeamMsg(err.message||"Could not submit proof","err")}})}
@@ -8359,7 +8410,7 @@ function ixpTeamRecordPayoutForm(m,approvedAmount,win){
 function ixpTeamQuestionToLine(x){const type=x.type||"long";const opts=(x.options||[]).join(",");return type+"|"+(x.label||"")+(["select","multi"].includes(type)?"|"+opts:"")}
 function ixpTeamParseQuestionLine(line){const parts=String(line).split("|").map(s=>s.trim());const knownTypes=["short","long","number","yesno","select","multi"];let type="long",label,options=[];if(parts.length>1&&knownTypes.includes((parts[0]||"").toLowerCase())){type=parts[0].toLowerCase();label=parts[1]||"";options=(parts[2]||"").split(",").map(s=>s.trim()).filter(Boolean);}else{label=line.trim();}return {label,required:true,type,options}}
 function ixpTeamOpportunityEditor(o={}){const edit=!!o.id;const q=(o.applicationQuestions||[{label:"What makes you a good fit for this role?",required:true,type:"long"}]).map(ixpTeamQuestionToLine).join("\n");ixpTeamOpen(edit?"Edit opportunity":"Create opportunity",'<form id="ixptOppForm" class="ixpt-form"><div class="ixpt-two"><div class="ixpt-field"><label>Opportunity title *</label><input name="title" value="'+ixpTeamEsc(o.title||"")+'" required></div><div class="ixpt-field"><label>Role type *</label><input name="roleType" value="'+ixpTeamEsc(o.roleType||"")+'" placeholder="Social Media Manager" required></div><div class="ixpt-field"><label>Country</label><input name="country" value="'+ixpTeamEsc(o.country||"Nigeria")+'" required></div><div class="ixpt-field"><label>Minimum age</label><input name="minAge" type="number" value="'+ixpTeamEsc(o.minAge||"")+'"></div><div class="ixpt-field"><label>Maximum age</label><input name="maxAge" type="number" value="'+ixpTeamEsc(o.maxAge||"")+'"></div><div class="ixpt-field"><label>Maximum selected slots</label><input name="maxSelected" type="number" min="1" value="'+ixpTeamEsc(o.maxSelected||"")+'"></div><div class="ixpt-field"><label>Maximum applicants</label><input name="maxApplicants" type="number" min="1" value="'+ixpTeamEsc(o.maxApplicants||"")+'"></div><div class="ixpt-field"><label>Commission mode</label><select name="commissionMode"><option '+(o.commissionMode==="percentage"||!o.commissionMode?'selected':'')+' value="percentage">Percentage of verified payment</option><option '+(o.commissionMode==="fixed"?'selected':'')+' value="fixed">Fixed per verified payment</option><option '+(o.commissionMode==="custom"?'selected':'')+' value="custom">Custom</option></select></div><div class="ixpt-field"><label>Commission value</label><input name="commissionValue" type="number" value="'+ixpTeamEsc(o.commissionValue??10)+'"></div><div class="ixpt-field"><label>Status</label><select name="status"><option value="open" '+(o.status!=="closed"?'selected':'')+'>Open</option><option value="paused" '+(o.status==="paused"?'selected':'')+'>Paused</option><option value="closed" '+(o.status==="closed"?'selected':'')+'>Closed</option></select></div></div><div class="ixpt-field"><label>Short description *</label><textarea name="shortDescription" required>'+ixpTeamEsc(o.shortDescription||"")+'</textarea></div><div class="ixpt-field"><label>Full description</label><textarea name="description" rows="4">'+ixpTeamEsc(o.description||"")+'</textarea></div><div class="ixpt-field"><label>Responsibilities</label><textarea name="responsibilities" rows="5">'+ixpTeamEsc(o.responsibilities||"")+'</textarea></div><div class="ixpt-field"><label>Requirements & restrictions</label><textarea name="requirements" rows="5">'+ixpTeamEsc(o.requirements||"")+'</textarea></div><div class="ixpt-field"><label>Payment summary shown to applicants</label><input name="paymentSummary" value="'+ixpTeamEsc(o.paymentSummary||"")+'" placeholder="10% of verified client payment"></div><div class="ixpt-field"><label>Application questions — one per line</label><div style="font-size:11px;color:rgba(15,26,46,.6);margin-bottom:4px">Format: <code>type|Question text|option1,option2</code> (options only needed for select/multi). Types: short, long, number, yesno, select, multi. A line with no <code>|</code> is treated as a long-text question.</div><textarea name="questions" rows="5" placeholder="short|How many years of experience do you have?&#10;select|Which platforms do you manage?|Instagram,TikTok,Twitter,Facebook&#10;yesno|Do you have prior remote work experience?">'+ixpTeamEsc(q)+'</textarea></div><div class="ixpt-field"><label><input type="checkbox" name="published" '+(o.published!==false?'checked':'')+'> Publish this opportunity</label></div><button class="ixpt-btn primary">'+(edit?'Save changes':'Create opportunity')+'</button><div id="ixptOppMsg"></div></form>');ixpTeamEl("ixptOppForm").addEventListener("submit",async e=>{e.preventDefault();const fd=new FormData(e.target),title=String(fd.get("title")).trim(),slug=ixpTeamSlug(title),questions=String(fd.get("questions")||"").split("\n").map(x=>x.trim()).filter(Boolean).map(ixpTeamParseQuestionLine);const payload={title,slug,roleType:String(fd.get("roleType")),country:String(fd.get("country")||"Nigeria"),minAge:Number(fd.get("minAge"))||null,maxAge:Number(fd.get("maxAge"))||null,maxSelected:Number(fd.get("maxSelected"))||null,maxApplicants:Number(fd.get("maxApplicants"))||null,commissionMode:String(fd.get("commissionMode")),commissionValue:Number(fd.get("commissionValue"))||10,shortDescription:String(fd.get("shortDescription")),description:String(fd.get("description")||""),responsibilities:String(fd.get("responsibilities")||""),requirements:String(fd.get("requirements")||""),paymentSummary:String(fd.get("paymentSummary")||""),applicationQuestions:questions,published:e.target.published.checked,status:String(fd.get("status")),applicantCount:o.applicantCount||0,selectedCount:o.selectedCount||0,updatedAt:serverTimestamp()};try{if(edit)await updateDoc(doc(db,"teamOpportunities",o.id),payload);else{payload.createdAt=serverTimestamp();await addDoc(collection(db,"teamOpportunities"),payload)}ixpTeamClose();ixpTeamAdminTab("opps");ixpTeamToast(edit?"Opportunity updated":"Opportunity created")}catch(err){ixpTeamEl("ixptOppMsg").innerHTML=ixpTeamMsg(err.message||"Could not save opportunity","err")}})}
-function ixpTeamReviewApplication(a,o){if(!a)return;const profile=a.profile||{};ixpTeamOpen("Review application",'<div class="ixpt-detail-list">'+Object.entries(profile).map(([k,v])=>'<div class="ixpt-detail"><b>'+ixpTeamEsc(k)+'</b><br>'+ixpTeamEsc(v)+'</div>').join("")+'</div><div class="ixpt-section"><h3>Custom answers</h3><pre style="white-space:pre-wrap;font-size:12px">'+ixpTeamEsc(JSON.stringify(a.customAnswers||{},null,2))+'</pre></div><div class="ixpt-actions"><button class="ixpt-btn ghost" id="ixptShortlist">Shortlist</button><button class="ixpt-btn alt" id="ixptSelect">Select</button><button class="ixpt-btn ghost" id="ixptReject">Reject</button></div>');ixpTeamEl("ixptShortlist").onclick=()=>ixpTeamSetApplication(a,o,"shortlisted");ixpTeamEl("ixptSelect").onclick=()=>ixpTeamSetApplication(a,o,"selected");ixpTeamEl("ixptReject").onclick=()=>ixpTeamSetApplication(a,o,"rejected")}
+function ixpTeamReviewApplication(a,o){if(!a)return;const profile=a.profile||{};ixpTeamOpen("Review application",'<div class="ixpt-detail-list">'+Object.entries(profile).map(([k,v])=>'<div class="ixpt-detail"><b>'+ixpTeamEsc(k)+'</b><br>'+ixpTeamEsc(v)+'</div>').join("")+'</div><div class="ixpt-section"><h3>Custom answers</h3><pre style="white-space:pre-wrap;font-size:12px">'+ixpTeamEsc(JSON.stringify(a.customAnswers||{},null,2))+'</pre></div><div class="ixpt-actions"><button class="ixpt-btn ghost" id="ixptUnderReview">Under review</button><button class="ixpt-btn ghost" id="ixptShortlist">Shortlist</button><button class="ixpt-btn alt" id="ixptSelect">Select</button><button class="ixpt-btn ghost" id="ixptReject">Reject</button></div>');ixpTeamEl("ixptUnderReview").onclick=()=>ixpTeamSetApplication(a,o,"under_review");ixpTeamEl("ixptShortlist").onclick=()=>ixpTeamSetApplication(a,o,"shortlisted");ixpTeamEl("ixptSelect").onclick=()=>ixpTeamSetApplication(a,o,"selected");ixpTeamEl("ixptReject").onclick=()=>ixpTeamSetApplication(a,o,"rejected")}
 async function ixpTeamSetApplication(a,o,status){
   try{
     if(status==="selected"){
