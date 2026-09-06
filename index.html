@@ -2801,6 +2801,7 @@ let signUpRole = "client";
 // actual permanent link is written to the client's own user document at
 // signup time and is never re-derived from this value afterward.
 let pendingReferralRep = null;
+let pendingReferralKind = null; // "rep" | "team"
 (async function captureReferralParam(){
   try{
     const params = new URLSearchParams(window.location.search);
@@ -2810,6 +2811,15 @@ let pendingReferralRep = null;
     if(snap.exists()){
       const data = snap.data();
       pendingReferralRep = { id: data.uid, fullName: data.fullName || "your representative", accountCode: refCode };
+      pendingReferralKind = "rep";
+      openSignUp("client");
+      return;
+    }
+    const teamSnap = await getDoc(doc(db, "teamReferralCodes", refCode));
+    if(teamSnap.exists()){
+      const data = teamSnap.data();
+      pendingReferralRep = { id: data.uid, fullName: data.fullName || "your Team referrer", accountCode: refCode };
+      pendingReferralKind = "team";
       openSignUp("client");
     }
   }catch(err){ console.error("Referral lookup failed:", err); }
@@ -2859,6 +2869,13 @@ $("suReferralCode")?.addEventListener("blur", async ()=>{
       const data = snap.data();
       banner.textContent = `Referred by ${data.fullName || "your representative"} — you'll get instant access to your dashboard.`;
       banner.classList.remove("hidden");
+      return;
+    }
+    const teamSnap = await getDoc(doc(db, "teamReferralCodes", code));
+    if(teamSnap.exists()){
+      const data = teamSnap.data();
+      banner.textContent = `Referred by ${data.fullName || "your Team referrer"} — you'll get instant access to your dashboard.`;
+      banner.classList.remove("hidden");
     }else{
       banner.textContent = "Referral code not recognized — double-check it, or leave the field blank.";
       banner.classList.remove("hidden");
@@ -2880,18 +2897,27 @@ $("signUpForm").addEventListener("submit", async (e)=>{
   // a clear message, so a mistyped code never silently signs someone up
   // with no referral instead of the one they meant to enter.
   let referralRep = pendingReferralRep;
+  let referralKind = pendingReferralKind;
   if(signUpRole === "client"){
     const manualCode = ($("suReferralCode")?.value || "").trim().toUpperCase();
     if(manualCode){
       try{
         const msnap = await getDoc(doc(db, "repProfiles", manualCode));
-        if(!msnap.exists()){
-          setFormMsg($("signUpMsg"), "That referral code was not found. Please check it, or leave the field blank to sign up without one.", "error");
-          btn.disabled = false; btn.textContent = "Create account";
-          return;
+        if(msnap.exists()){
+          const mdata = msnap.data();
+          referralRep = { id: mdata.uid, fullName: mdata.fullName || "your representative", accountCode: manualCode };
+          referralKind = "rep";
+        }else{
+          const tsnap = await getDoc(doc(db, "teamReferralCodes", manualCode));
+          if(!tsnap.exists()){
+            setFormMsg($("signUpMsg"), "That referral code was not found. Please check it, or leave the field blank to sign up without one.", "error");
+            btn.disabled = false; btn.textContent = "Create account";
+            return;
+          }
+          const tdata = tsnap.data();
+          referralRep = { id: tdata.uid, fullName: tdata.fullName || "your Team referrer", accountCode: manualCode };
+          referralKind = "team";
         }
-        const mdata = msnap.data();
-        referralRep = { id: mdata.uid, fullName: mdata.fullName || "your representative", accountCode: manualCode };
       }catch(err){
         setFormMsg($("signUpMsg"), "Could not verify that referral code right now. Please try again.", "error");
         btn.disabled = false; btn.textContent = "Create account";
@@ -2959,7 +2985,12 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         createdBy: "self-signup",
         createdAt: serverTimestamp()
       };
-      if(referralRep){
+      if(referralRep && referralKind === "team"){
+        clientDoc.referredByTeamMemberUid = referralRep.id;
+        clientDoc.referredByTeamMemberName = referralRep.fullName;
+        clientDoc.referralCode = referralRep.accountCode;
+        clientDoc.referredAt = serverTimestamp();
+      }else if(referralRep){
         clientDoc.referredByRepId = referralRep.id;
         clientDoc.referredByRepName = referralRep.fullName;
         clientDoc.referralCode = referralRep.accountCode;
@@ -4310,6 +4341,65 @@ async function creditReferralCommissionForPremium(paymentRequestId, clientUid, p
 let unsubAwards = null, unsubPrizes = null, unsubAmbassadors = null;
 let unsubRankings = null, unsubCertsAdmin = null, unsubCertsRep = null;
 
+// Credits a Team Member's referral commission the moment — and ONLY the
+// moment — a client they referred to a business signup (via their Team
+// referral code, entered the same way a Representative's code is) completes
+// a verified Premium payment. Mirrors creditReferralCommissionForPremium
+// exactly, but writes into the existing teamReferrals collection so the
+// money shows up in that member's normal Team dashboard earnings,
+// leaderboard points, and the existing Team Payroll (last-7-days-of-month)
+// flow — no separate payout system needed. Deterministic id on the referral
+// record (based on the paymentRequestId) makes this idempotent even if
+// "Approve" is clicked more than once.
+async function creditTeamReferralForPremium(paymentRequestId, clientUid, premiumAmount, clientDisplayName){
+  const referralRef = doc(db, "teamReferrals", "premium-" + paymentRequestId);
+  const clientUserRef = doc(db, "users", clientUid);
+  return await runTransaction(db, async (tx)=>{
+    const referralSnap = await tx.get(referralRef);
+    if(referralSnap.exists()){
+      return { credited: false, reason: "already-credited" };
+    }
+    const clientSnap = await tx.get(clientUserRef);
+    const clientData = clientSnap.exists() ? clientSnap.data() : {};
+    // The client's own permanent referredByTeamMemberUid decides who gets
+    // paid — never whoever happens to be logged in when this runs.
+    const memberUid = clientData.referredByTeamMemberUid;
+    if(!memberUid){
+      return { credited: false, reason: "no-referral" };
+    }
+    const memberRef = doc(db, "teamMembers", memberUid);
+    const memberSnap = await tx.get(memberRef);
+    if(!memberSnap.exists() || memberSnap.data().status !== "active"){
+      return { credited: false, reason: "member-not-found-or-inactive" };
+    }
+    const memberData = memberSnap.data();
+    const rate = Number(memberData.commissionValue ?? 10) || 0;
+    const amount = memberData.commissionMode === "fixed"
+      ? rate
+      : Math.round((Number(premiumAmount) || 0) * rate / 100);
+    tx.set(referralRef, {
+      memberUid,
+      memberName: memberData.fullName || memberData.email || "the Team Member",
+      clientEmail: clientData.email || "",
+      clientName: clientDisplayName || clientData.businessName || clientData.fullName || "—",
+      amountPaid: Number(premiumAmount) || 0,
+      paidAmount: Number(premiumAmount) || 0,
+      plan: "Business Premium signup referral",
+      paymentVerified: true,
+      commissionAmount: Math.round(amount * 100) / 100,
+      commissionStatus: "approved",
+      status: "approved",
+      proofId: "premium-" + paymentRequestId,
+      paymentProofId: "premium-" + paymentRequestId,
+      verifiedBy: currentUser?.uid || "admin",
+      approvedBy: currentUser?.uid || "admin",
+      verifiedAt: serverTimestamp(),
+      approvedAt: serverTimestamp(),
+      createdAt: serverTimestamp()
+    });
+    return { credited: true, memberUid, memberName: memberData.fullName || memberData.email || "the Team Member", amount };
+  });
+}
 function computeBadge(verifiedCount){
   let earned = "none";
   for(const tier of BADGE_TIERS){
@@ -7194,6 +7284,20 @@ function renderPremiumTableAdmin(items){
                 `${record.customerName} completed a Premium payment — ₦${creditResult.amount.toLocaleString()} has been credited to your wallet.`, "referral-commission");
             }
           }catch(commErr){ console.error("Referral commission crediting failed:", commErr); }
+
+          // A client can only ever be referred by a Representative OR a Team
+          // Member (never both — see the signup form), so this is always the
+          // other, independent branch. Same idempotent, admin-approval-only
+          // trigger as the rep path above.
+          try{
+            const teamCreditResult = await creditTeamReferralForPremium(id, record.uid, record.amount, record.customerName);
+            if(teamCreditResult.credited){
+              toast(`₦${teamCreditResult.amount.toLocaleString()} referral commission credited to ${teamCreditResult.memberName} (Team).`);
+              sendNotification(teamCreditResult.memberUid, "💰 Referral commission earned",
+                `${record.customerName} completed a Premium payment — ₦${teamCreditResult.amount.toLocaleString()} has been added to your Team earnings.`, "team-commission-approved");
+              try{ await ixpTeamUpdateLeaderboardStats(teamCreditResult.memberUid); }catch(_){ }
+            }
+          }catch(teamCommErr){ console.error("Team referral commission crediting failed:", teamCommErr); }
         }catch(err){ console.error(err); toast("Could not approve payment."); }
         return;
       }
@@ -8576,7 +8680,20 @@ async function ixpTeamFetchAll(){const cols=["teamOpportunities","teamApplicatio
 async function ixpTeamAdminTab(tab){const root=ixpTeamEl("ixptAdminTab");root.innerHTML='<div class="ixpt-empty">Loading…</div>';try{const d=await ixpTeamFetchAll();if(tab==="overview"){const pending=d.teamPaymentProofs.filter(x=>x.status==="pending").length;root.innerHTML='<div class="ixpt-statgrid"><div class="ixpt-stat"><b>'+d.teamOpportunities.length+'</b><span>Opportunities</span></div><div class="ixpt-stat"><b>'+d.teamApplications.length+'</b><span>Applications</span></div><div class="ixpt-stat"><b>'+d.teamMembers.length+'</b><span>Team members</span></div><div class="ixpt-stat"><b>'+d.teamReferrals.length+'</b><span>Referrals</span></div><div class="ixpt-stat"><b>'+pending+'</b><span>Proofs pending</span></div><div class="ixpt-stat"><b>₦'+d.teamPayouts.reduce((s,x)=>s+Number(x.amount||0),0).toLocaleString()+'</b><span>Total recorded payouts</span></div></div><div class="ixpt-card"><h3>Quick actions</h3><div class="ixpt-actions"><button class="ixpt-btn alt" id="ixptCreateOpp">Create opportunity</button><button class="ixpt-btn ghost" id="ixptRefreshAdmin">Refresh</button></div></div>';ixpTeamEl("ixptCreateOpp").onclick=()=>ixpTeamOpportunityEditor();ixpTeamEl("ixptRefreshAdmin").onclick=()=>ixpTeamAdminTab("overview");return}
 if(tab==="opps"){root.innerHTML='<div class="ixpt-card"><div class="ixpt-top"><h3>Opportunities</h3><button class="ixpt-btn alt" id="ixptCreateOpp2">+ New opportunity</button></div><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Opportunity</th><th>Status</th><th>Applicants</th><th>Slots</th><th>Commission</th><th>Link</th><th></th></tr></thead><tbody>'+d.teamOpportunities.map(o=>'<tr><td><b>'+ixpTeamEsc(o.title)+'</b><br><small>'+ixpTeamEsc(o.roleType||"")+'</small></td><td>'+ixpTeamEsc(ixpTeamOpportunityStatus(o))+'</td><td>'+Number(o.applicantCount||0)+'</td><td>'+ixpTeamEsc(o.maxSelected||"—")+'</td><td>'+ixpTeamEsc(o.commissionMode||"10%")+'</td><td><button class="ixpt-btn ghost" data-copy-o="'+ixpTeamEsc(o.slug)+'">Copy</button></td><td><button class="ixpt-btn primary" data-edit-o="'+o.id+'">Edit</button></td></tr>').join("")+'</tbody></table></div></div>';ixpTeamEl("ixptCreateOpp2").onclick=()=>ixpTeamOpportunityEditor();root.querySelectorAll("[data-copy-o]").forEach(b=>b.onclick=async()=>{await navigator.clipboard?.writeText(ixpTeamPublicUrl(b.dataset.copyO));ixpTeamToast("Link copied")});root.querySelectorAll("[data-edit-o]").forEach(b=>b.onclick=()=>ixpTeamOpportunityEditor(d.teamOpportunities.find(x=>x.id===b.dataset.editO)));return}
 if(tab==="apps"){root.innerHTML='<div class="ixpt-card"><h3>All applications</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Applicant</th><th>Opportunity</th><th>Status</th><th>Applied</th><th></th></tr></thead><tbody>'+d.teamApplications.map(a=>'<tr><td><b>'+ixpTeamEsc(a.profile?.fullName||a.applicantEmail)+'</b><br>'+ixpTeamEsc(a.profile?.phone||"")+'</td><td>'+ixpTeamEsc(a.opportunityTitle)+'</td><td>'+ixpTeamEsc(a.status)+'</td><td>'+ixpTeamDate(a.createdAt)+'</td><td><button class="ixpt-btn primary" data-app="'+a.id+'">Review</button></td></tr>').join("")+'</tbody></table></div></div>';root.querySelectorAll("[data-app]").forEach(b=>b.onclick=()=>ixpTeamReviewApplication(d.teamApplications.find(x=>x.id===b.dataset.app),d.teamOpportunities.find(o=>o.id===d.teamApplications.find(x=>x.id===b.dataset.app)?.opportunityId)));return}
-if(tab==="members"){root.innerHTML='<div class="ixpt-card"><h3>Selected team members</h3><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Name</th><th>Role</th><th>Referrals</th><th>Approved earnings</th><th>Status</th><th>Bank details</th><th></th></tr></thead><tbody>'+d.teamMembers.map(m=>{const rr=d.teamReferrals.filter(r=>r.memberUid===m.uid);const earn=rr.filter(r=>r.commissionStatus==="approved").reduce((s,r)=>s+Number(r.commissionAmount||0),0);return '<tr><td>'+ixpTeamEsc(m.fullName||m.email)+'</td><td>'+ixpTeamEsc(m.roleTitle)+'</td><td>'+rr.length+'</td><td>₦'+earn.toLocaleString()+'</td><td>'+ixpTeamEsc(m.status||"active")+'</td><td>'+(m.accountNumber?'<span class="ixpt-pill live">On file</span>':'<span class="ixpt-pill">Missing</span>')+'</td><td><button class="ixpt-btn ghost" data-view-bank="'+m.uid+'" style="padding:4px 10px;font-size:12px">View bank details</button></td></tr>'}).join("")+'</tbody></table></div></div>';
+if(tab==="members"){root.innerHTML='<div class="ixpt-card"><div class="ixpt-top"><h3>Selected team members</h3><button class="ixpt-btn ghost" id="ixptSyncTeamCodes">Sync referral codes</button></div><div class="form-msg info" style="display:block;margin:8px 0">If members were selected before referral codes worked in business signup, click this once to fix their existing codes.</div><div class="ixpt-table-wrap"><table class="ixpt-table"><thead><tr><th>Name</th><th>Role</th><th>Referrals</th><th>Approved earnings</th><th>Status</th><th>Bank details</th><th></th></tr></thead><tbody>'+d.teamMembers.map(m=>{const rr=d.teamReferrals.filter(r=>r.memberUid===m.uid);const earn=rr.filter(r=>r.commissionStatus==="approved").reduce((s,r)=>s+Number(r.commissionAmount||0),0);return '<tr><td>'+ixpTeamEsc(m.fullName||m.email)+'</td><td>'+ixpTeamEsc(m.roleTitle)+'</td><td>'+rr.length+'</td><td>₦'+earn.toLocaleString()+'</td><td>'+ixpTeamEsc(m.status||"active")+'</td><td>'+(m.accountNumber?'<span class="ixpt-pill live">On file</span>':'<span class="ixpt-pill">Missing</span>')+'</td><td><button class="ixpt-btn ghost" data-view-bank="'+m.uid+'" style="padding:4px 10px;font-size:12px">View bank details</button></td></tr>'}).join("")+'</tbody></table></div></div>';
+  ixpTeamEl("ixptSyncTeamCodes").onclick=async()=>{
+    const b=ixpTeamEl("ixptSyncTeamCodes");b.disabled=true;b.textContent="Syncing…";
+    try{
+      let count=0;
+      for(const m of d.teamMembers){
+        if(!m.referralCode) continue;
+        await setDoc(doc(db,"teamReferralCodes",m.referralCode),{uid:m.uid,fullName:m.fullName||m.email||"",referralCode:m.referralCode});
+        count++;
+      }
+      ixpTeamToast("Synced "+count+" Team Member referral code"+(count===1?"":"s")+".");
+    }catch(err){ ixpTeamToast(err.message||"Could not sync referral codes"); }
+    b.disabled=false;b.textContent="Sync referral codes";
+  };
   root.querySelectorAll("[data-view-bank]").forEach(btn=>btn.onclick=()=>{
     const m=d.teamMembers.find(x=>x.uid===btn.dataset.viewBank);
     ixpTeamOpen("Bank details — "+(m.fullName||m.email),'<div class="ixpt-detail-list"><div class="ixpt-detail"><b>Bank name</b><br>'+ixpTeamEsc(m.bankName||"Not submitted yet")+'</div><div class="ixpt-detail"><b>Account name</b><br>'+ixpTeamEsc(m.accountName||"Not submitted yet")+'</div><div class="ixpt-detail"><b>Account number</b><br>'+ixpTeamEsc(m.accountNumber||"Not submitted yet")+'</div><div class="ixpt-detail"><b>Payout status</b><br>'+ixpTeamEsc(m.payoutStatus||"unpaid")+'</div></div>');
@@ -8699,6 +8816,9 @@ async function ixpTeamSetApplication(a,o,status){
         codeOfConduct:o?.codeOfConduct||"",status:"active",payoutStatus:"unpaid",selectedAt:serverTimestamp(),updatedAt:serverTimestamp()
       });
       await updateDoc(doc(db,"teamApplications",a.id),{status:"selected",updatedAt:serverTimestamp()});
+      try{
+        await setDoc(doc(db,"teamReferralCodes",referralCode),{uid:a.applicantUid,fullName:a.profile?.fullName||a.applicantEmail,referralCode});
+      }catch(codeErr){ console.error("teamReferralCodes write failed:", codeErr); }
       await setDoc(doc(db,"users",a.applicantUid),{role:"teamMember",teamStatus:"active",teamRole:o?.title||a.opportunityTitle,teamOpportunityId:o?.id||a.opportunityId,teamOpportunitySlug:o?.slug||a.opportunitySlug,teamSelectedAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
       if(o) await updateDoc(doc(db,"teamOpportunities",o.id),{selectedCount:(Number(o.selectedCount)||0)+1});
       await ixpTeamLog("member_selected",a.id,{role:a.opportunityTitle,uid:a.applicantUid});
