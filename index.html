@@ -560,6 +560,21 @@
   .premium-status-msg{ font-size:14px; line-height:1.6; }
   .premium-thumb{ width:52px; height:52px; object-fit:cover; border-radius:6px; cursor:pointer; border:1px solid var(--line); }
 
+  /* ===== Credit system: Buy Credits + Credit History (light-panel variants of .pkg-option) ===== */
+  .credit-pkg-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-top:14px; }
+  .credit-pkg-option{ background:var(--paper-2); border:1.5px solid var(--line); border-radius:14px; padding:18px 14px; text-align:center; }
+  .credit-pkg-option.active{ border-color:var(--brass-light); background:rgba(217,174,108,0.14); }
+  .credit-pkg-option .pkg-name{ font-family:'Fraunces',serif; font-weight:700; font-size:17px; color:var(--ink); }
+  .credit-pkg-option .pkg-price{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; color:var(--brass); margin:6px 0 12px; }
+  .credit-history-row{ border-bottom:1px solid var(--line); padding:12px 0; font-size:13.5px; }
+  .credit-history-row:last-child{ border-bottom:none; }
+  .chr-top{ display:flex; justify-content:space-between; gap:10px; font-weight:700; }
+  .chr-amount.pos{ color:var(--confirm); }
+  .chr-amount.neg{ color:var(--reject); }
+  .chr-date{ color:rgba(15,26,46,0.5); font-weight:400; font-size:12px; }
+  .chr-desc{ margin-top:3px; color:rgba(15,26,46,0.75); }
+  .chr-balance{ margin-top:2px; font-size:12px; color:rgba(15,26,46,0.5); }
+
   .logo-uploader{ display:flex; align-items:center; gap:14px; margin-bottom:16px; }
   .logo-uploader-preview{
     width:56px; height:56px; border-radius:50%; border:2px dashed var(--line); flex-shrink:0;
@@ -1465,6 +1480,65 @@
       <div class="empty-state hidden" id="premiumEmptyStateAdmin">No premium payment submissions yet.</div>
     </div>
 
+    <!-- ============== CREDIT MANAGEMENT ============== -->
+    <div class="panel" id="creditManagementAdminPanel">
+      <div class="panel-head">
+        <h3>Credit Management</h3>
+        <span class="hint">Overview of the credit-based document system</span>
+      </div>
+      <div class="cards-row">
+        <div class="stat-card"><div class="label">Credits purchased (approved)</div><div class="value" id="creditStatTotalPurchased">0</div></div>
+        <div class="stat-card"><div class="label">Purchase revenue</div><div class="value" id="creditStatRevenue">₦0</div></div>
+        <div class="stat-card"><div class="label">Outstanding client credits</div><div class="value" id="creditStatOutstanding">0</div></div>
+        <div class="stat-card"><div class="label">Pending purchases</div><div class="value brass" id="creditStatPending">0</div></div>
+      </div>
+      <div class="cards-row" style="margin-top:10px;">
+        <div class="stat-card"><div class="label">Approved purchases</div><div class="value" id="creditStatApproved">0</div></div>
+        <div class="stat-card"><div class="label">Rejected purchases</div><div class="value" id="creditStatRejected">0</div></div>
+        <div class="stat-card"><div class="label">Credits used (est.)</div><div class="value" id="creditStatUsed">0</div></div>
+      </div>
+
+      <div class="panel-head" style="margin-top:24px;">
+        <h3>Add credits (support / bonus)</h3>
+        <span class="hint">Requires a reason. Recorded as an ADMIN_ADJUSTMENT ledger entry — never a silent balance edit.</span>
+      </div>
+      <form id="adminAddCreditsForm">
+        <div class="grid-2">
+          <div class="field"><label>Client email</label><input type="email" id="adminCreditClientEmail" required placeholder="client@business.com" /></div>
+          <div class="field"><label>Credits to add</label><input type="number" id="adminCreditAmount" min="1" required /></div>
+          <div class="field" style="grid-column:1/-1;"><label>Reason</label><input type="text" id="adminCreditReason" required placeholder="e.g. Customer compensation" /></div>
+        </div>
+        <button type="submit" class="btn-primary" id="adminAddCreditsBtn" style="max-width:220px;">Add credits</button>
+        <div class="form-msg" id="adminAddCreditsMsg"></div>
+      </form>
+    </div>
+
+    <!-- ============== CREDIT PURCHASES ============== -->
+    <div class="panel" id="creditPurchasesAdminPanel">
+      <div class="panel-head">
+        <h3>Credit Purchases</h3>
+        <span class="hint">Client credit top-ups — approve to add credits to their wallet</span>
+      </div>
+      <div class="grid-2" style="margin-bottom:14px;">
+        <div class="field"><label>Search</label><input type="search" id="creditPurchaseSearch" placeholder="Name, email or reference" /></div>
+        <div class="field"><label>Status</label>
+          <select id="creditPurchaseStatusFilter">
+            <option value="">All statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Customer</th><th>Email</th><th>Package</th><th>Amount</th><th>Reference</th><th>Proof</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="creditPurchaseTableBodyAdmin"></tbody>
+        </table>
+      </div>
+      <div class="empty-state hidden" id="creditPurchaseEmptyStateAdmin">No credit purchases yet.</div>
+    </div>
+
     <div class="panel" id="clientPromotionsAdminPanel">
       <div class="panel-head">
         <h3>Client Promotions</h3>
@@ -2145,6 +2219,7 @@
     </div>
 
     <div id="planStatusCard"></div>
+    <div id="creditSummaryCard" style="margin-top:14px;"></div>
 
     <!-- Premium upgrade page -->
     <div class="subpanel" data-panel="premiumUpgradeTab" id="premiumUpgradePanel">
@@ -2235,7 +2310,62 @@
     <div class="subnav" id="clientDocSubnav">
       <button type="button" data-tab="clientInvoiceTab" class="active">Invoice</button>
       <button type="button" data-tab="clientReceiptTab">Receipt</button>
+      <button type="button" data-tab="clientCreditsTab">Credits</button>
       <button type="button" data-tab="clientSettingsTab">Settings</button>
+    </div>
+
+    <!-- Credits: buy credits, purchase history, credit history -->
+    <div class="subpanel" data-panel="clientCreditsTab" id="clientCreditsPanel">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Buy Credits</h3>
+          <span class="hint">Top up your balance. Credits never expire and roll over — buying more always adds to what you have.</span>
+        </div>
+        <div class="credit-pkg-grid" id="creditPackagesGrid"></div>
+
+        <div class="hidden" id="creditPurchaseFormWrap" style="margin-top:18px;">
+          <div class="bank-card">
+            <div class="panel-head" style="margin-bottom:8px;"><h3>Pay directly to our account</h3></div>
+            <div class="bank-row"><span class="bank-label">Bank</span><span class="bank-value">OPay</span></div>
+            <div class="bank-row"><span class="bank-label">Account name</span><span class="bank-value">Daniel C Princewill</span></div>
+            <div class="bank-row"><span class="bank-label">Account number</span><span class="bank-value">9041498427</span></div>
+          </div>
+
+          <div class="panel" style="margin-top:14px;">
+            <div class="panel-head"><h3>Upload payment proof</h3><span class="hint">JPG or PNG, up to 5MB</span></div>
+            <div class="upload-drop" id="creditUploadDropZone">
+              <div id="creditUploadPromptText">Tap to choose a screenshot of your payment</div>
+              <img class="upload-preview hidden" id="creditUploadPreviewImg" />
+              <input type="file" id="creditProofFileInput" accept="image/png,image/jpeg,image/jpg" class="hidden" />
+            </div>
+            <div class="form-msg" id="creditUploadMsg"></div>
+
+            <form id="creditPurchaseForm" style="margin-top:20px;">
+              <div class="grid-2">
+                <div class="field"><label>Package</label><input type="text" id="creditSelectedPkgLabel" readonly /></div>
+                <div class="field"><label>Amount to pay (₦)</label><input type="number" id="creditSelectedAmount" readonly /></div>
+                <div class="field"><label>Bank used to pay</label><input type="text" id="creditBankUsed" required /></div>
+                <div class="field"><label>Payment date</label><input type="date" id="creditPaymentDate" required /></div>
+                <div class="field"><label>Transaction reference (optional)</label><input type="text" id="creditTxnRef" /></div>
+              </div>
+              <button type="submit" class="btn-primary" id="creditPurchaseSubmitBtn" style="max-width:240px;">Submit for verification</button>
+              <div class="form-msg" id="creditPurchaseMsg"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:18px;">
+        <div class="panel-head"><h3>Purchase History</h3><span class="hint">Your credit top-up submissions</span></div>
+        <div id="creditPurchaseHistoryList"></div>
+        <div class="empty-state hidden" id="creditPurchaseHistoryEmpty">No credit purchases yet.</div>
+      </div>
+
+      <div class="panel" style="margin-top:18px;">
+        <div class="panel-head"><h3>Credit History</h3><span class="hint">How your balance has changed</span></div>
+        <div id="creditHistoryList"></div>
+        <div class="empty-state hidden" id="creditHistoryEmpty">No credit activity yet.</div>
+      </div>
     </div>
 
     <!-- Invoice -->
@@ -3249,6 +3379,7 @@ function initAdminDashboard(){
   loadCommissionRates();
   loadPremiumPricing();
   loadPremiumRequestsForAdmin();
+  loadCreditPurchasesForAdmin();
   loadClientPromotionsForAdmin();
   initRecognitionModuleAdmin();
   loadFeedbackForAdmin();
@@ -5620,6 +5751,7 @@ function initClientDashboard(clientRecordId, clientRecord){
   initInvoiceGenerator();
   initReceiptGenerator();
   initPremiumSystem(currentUser.uid);
+  initCreditSystem(currentUser.uid);
   initSignatureSettings();
   $("invShowSignature")?.addEventListener("change", updateInvoicePreview);
   $("rcpShowSignature")?.addEventListener("change", updateReceiptPreview);
@@ -5682,15 +5814,15 @@ function initInvoiceGenerator(){
       return;
     }
     if(!canCreateDocument("invoice")){
-      showPremiumUpgrade();
+      showBuyCredits();
       return;
     }
     const btn = $("invGenerateBtn");
     btn.disabled = true; btn.textContent = "Generating…";
-    const ok = await consumeDocumentCredit("invoice");
+    const ok = await consumeDocumentCredit("invoice", { documentId: invNo });
     btn.disabled = false; btn.textContent = "Generate invoice";
     if(!ok){
-      showPremiumUpgrade();
+      showBuyCredits();
       return;
     }
     invSessionConsumed = true;
@@ -5814,15 +5946,15 @@ function initReceiptGenerator(){
       return;
     }
     if(!canCreateDocument("receipt")){
-      showPremiumUpgrade();
+      showBuyCredits();
       return;
     }
     const btn = $("rcpGenerateBtn");
     btn.disabled = true; btn.textContent = "Generating…";
-    const ok = await consumeDocumentCredit("receipt");
+    const ok = await consumeDocumentCredit("receipt", { documentId: $("rcpNoOut").textContent || "" });
     btn.disabled = false; btn.textContent = "Generate receipt";
     if(!ok){
-      showPremiumUpgrade();
+      showBuyCredits();
       return;
     }
     rcpSessionConsumed = true;
@@ -6186,6 +6318,25 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
 // No email service is used by this version.
 const STARTING_CREDITS = 1000;      // every new client starts with this many
 const CREDIT_COST_PER_DOC = 50;     // deducted for each invoice/receipt generated
+
+// ===================== CREDIT PACKAGES & DOCUMENT COSTS =====================
+// Centralized so new packages/document types can be added without touching
+// the purchase or consumption logic elsewhere. firestore.rules independently
+// re-validates these same values server-side (creditPackage() / the
+// DOCUMENT_CREATION amount check) — keep both in sync when you change these.
+const CREDIT_PACKAGES = {
+  credit_10000: { credits: 10000, price: 1500, currency: "NGN", label: "10,000 Credits" },
+  credit_20000: { credits: 20000, price: 3000, currency: "NGN", label: "20,000 Credits" }
+};
+const DOCUMENT_CREDIT_COSTS = { invoice: CREDIT_COST_PER_DOC, receipt: CREDIT_COST_PER_DOC }; // add future document types here
+const LOW_CREDIT_THRESHOLD = 500;
+let selectedCreditPackageId = null;
+let currentCreditProofDataUrl = null;
+let creditUIWired = false;
+let unsubMyCreditTx = null;
+let unsubMyCreditPurchases = null;
+let unsubCreditPurchasesAdmin = null;
+let creditPurchasesAdminCache = [];
 const CREDIT_EXPIRY_DAYS = 90;      // credits stop working after this many days, even if unused
 // Premium duration depends on which billing period was approved — a monthly
 // plan must NEVER get the yearly duration or vice versa. Both are read from
@@ -6243,6 +6394,7 @@ function initPremiumSystem(uid){
     currentUserDoc = snap.data(); // keep live — this is what unlocks Premium instantly on approval
     renderPlanStatusCard();
     renderBusinessLogo();
+    renderCreditSummary();
   });
 
   if(unsubPaymentRequest) unsubPaymentRequest();
@@ -6386,14 +6538,20 @@ function renderPlanStatusCard(){
 function canCreateDocument(docType){
   if(isPremiumActiveFor(docType)) return true;
   if(creditsExpired()) return false;
-  return (Number(currentUserDoc?.credits) || 0) >= CREDIT_COST_PER_DOC;
+  const cost = DOCUMENT_CREDIT_COSTS[docType] || CREDIT_COST_PER_DOC;
+  return (Number(currentUserDoc?.credits) || 0) >= cost;
 }
 
 // Atomically checks-and-deducts so two rapid clicks (or two tabs) can never
-// spend below zero or bypass the expiry check.
-async function consumeDocumentCredit(docType){
+// spend below zero or bypass the expiry check. Also writes the matching
+// DOCUMENT_CREATION ledger entry in the SAME transaction, so a balance
+// change and its ledger record are never created independently — either
+// both happen or neither does. meta.documentId/meta.description are
+// optional, purely for the Credit History display.
+async function consumeDocumentCredit(docType, meta={}){
   if(isPremiumActiveFor(docType)) return true;
   const uid = currentUser.uid;
+  const cost = DOCUMENT_CREDIT_COSTS[docType] || CREDIT_COST_PER_DOC;
   try{
     const result = await runTransaction(db, async (tx)=>{
       const ref = doc(db, "users", uid);
@@ -6405,14 +6563,24 @@ async function consumeDocumentCredit(docType){
         if(Date.now() > expiryDate.getTime()) return false;
       }
       const credits = Number(data.credits) || 0;
-      if(credits < CREDIT_COST_PER_DOC) return false;
-      const remaining = credits - CREDIT_COST_PER_DOC;
-      tx.update(ref, { credits: remaining });
+      if(credits < cost) return false;
+      const remaining = credits - cost;
+      const totalUsed = (Number(data.totalUsed) || 0) + cost;
+      tx.update(ref, { credits: remaining, totalUsed });
+      const txRef = doc(collection(db, "creditTransactions"));
+      const docLabel = docType.charAt(0).toUpperCase() + docType.slice(1);
+      tx.set(txRef, {
+        uid, type: "DOCUMENT_CREATION", amount: -cost,
+        balanceBefore: credits, balanceAfter: remaining,
+        documentType: docType, documentId: meta.documentId || null,
+        description: meta.description || `Created ${docLabel}${meta.documentId ? " " + meta.documentId : ""}`,
+        status: "Completed", createdAt: serverTimestamp(), createdBy: uid
+      });
       return { ok: true, remaining };
     });
-    if(result && result.remaining < CREDIT_COST_PER_DOC){
+    if(result && result.remaining < LOW_CREDIT_THRESHOLD){
       sendNotification(uid, "Low on credits",
-        `You have ${result.remaining} credits left — not enough for another document. Upgrade to Premium to keep going.`, "low-credits");
+        `You have ${result.remaining} credits left. Buy more credits or upgrade to Premium to keep going.`, "low-credits");
     }
     return result ? result.ok : false;
   }catch(err){ console.error(err); return false; }
@@ -6432,6 +6600,198 @@ function showPremiumUpgrade(){
 function showPremiumSuccessScreen(){
   document.querySelectorAll('#clientDash .subpanel').forEach(p=> p.classList.remove('active'));
   $("premiumSuccessPanel").classList.add("active");
+}
+
+// ===================== BUY CREDITS =====================
+
+function showBuyCredits(){
+  document.querySelectorAll('#clientDash .subpanel').forEach(p=> p.classList.remove('active'));
+  $("clientCreditsPanel").classList.add("active");
+  $("clientDocSubnav").classList.add("hidden");
+  renderCreditSummary();
+  renderBuyCreditsPackages();
+}
+
+// Always-visible balance card (mirrors renderPlanStatusCard) — shown above
+// the document tabs so the balance, an estimate of remaining documents, and
+// a low-credit warning are visible without navigating anywhere.
+function renderCreditSummary(){
+  const card = $("creditSummaryCard");
+  if(!card || !currentUserDoc) return;
+  const credits = Number(currentUserDoc.credits) || 0;
+  const totalPurchased = Number(currentUserDoc.totalPurchased) || 0;
+  const totalUsed = Number(currentUserDoc.totalUsed) || 0;
+  const costPerDoc = DOCUMENT_CREDIT_COSTS.invoice || CREDIT_COST_PER_DOC;
+  const estimatedDocs = Math.floor(credits / costPerDoc);
+  const low = credits <= LOW_CREDIT_THRESHOLD;
+  card.innerHTML = `
+    <div class="plan-card ${low ? 'plan-rejected' : 'plan-free'}">
+      <div>
+        <div class="plan-title">💳 ${credits.toLocaleString()} Credits</div>
+        <div class="plan-sub">${low ? "You're running low on credits. " : ""}Enough for up to ${estimatedDocs.toLocaleString()} more document${estimatedDocs===1?"":"s"} at ${costPerDoc} credits each. This is only an estimate.</div>
+        <div class="plan-sub" style="margin-top:4px;">Total purchased: ${totalPurchased.toLocaleString()} · Total used: ${totalUsed.toLocaleString()}</div>
+      </div>
+      <button type="button" class="btn-sm approve" id="creditBuyMoreBtn">Buy Credits</button>
+    </div>`;
+  $("creditBuyMoreBtn")?.addEventListener("click", showBuyCredits);
+}
+
+function renderBuyCreditsPackages(){
+  const wrap = $("creditPackagesGrid");
+  if(!wrap) return;
+  wrap.innerHTML = "";
+  Object.entries(CREDIT_PACKAGES).forEach(([id, pkg])=>{
+    const div = document.createElement("div");
+    div.className = "credit-pkg-option" + (selectedCreditPackageId === id ? " active" : "");
+    div.innerHTML = `
+      <div class="pkg-name">${pkg.credits.toLocaleString()} Credits</div>
+      <div class="pkg-price">₦${pkg.price.toLocaleString()}</div>
+      <button type="button" class="btn-sm confirm" data-pkg-id="${id}">Buy Credits</button>`;
+    div.querySelector("button").addEventListener("click", ()=> selectCreditPackage(id));
+    wrap.appendChild(div);
+  });
+}
+
+function selectCreditPackage(id){
+  const pkg = CREDIT_PACKAGES[id];
+  if(!pkg) return;
+  selectedCreditPackageId = id;
+  renderBuyCreditsPackages();
+  $("creditPurchaseFormWrap").classList.remove("hidden");
+  $("creditSelectedPkgLabel").value = `${pkg.credits.toLocaleString()} Credits`;
+  $("creditSelectedAmount").value = pkg.price;
+  $("creditPaymentDate").value = new Date().toISOString().slice(0,10);
+  $("creditPurchaseFormWrap").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function resetCreditPurchaseForm(){
+  selectedCreditPackageId = null;
+  currentCreditProofDataUrl = null;
+  $("creditPurchaseFormWrap")?.classList.add("hidden");
+  $("creditPurchaseForm")?.reset();
+  if($("creditUploadPreviewImg")){ $("creditUploadPreviewImg").classList.add("hidden"); $("creditUploadPreviewImg").src = ""; }
+  $("creditUploadPromptText")?.classList.remove("hidden");
+  setFormMsg($("creditPurchaseMsg"), "", "");
+  renderBuyCreditsPackages();
+}
+
+async function submitCreditPurchase(e){
+  e.preventDefault();
+  if(!selectedCreditPackageId){ setFormMsg($("creditPurchaseMsg"), "Please choose a package first.", "error"); return; }
+  const pkg = CREDIT_PACKAGES[selectedCreditPackageId];
+  if(!currentCreditProofDataUrl){ setFormMsg($("creditPurchaseMsg"), "Please upload your payment screenshot first.", "error"); return; }
+  const btn = $("creditPurchaseSubmitBtn");
+  btn.disabled = true; btn.textContent = "Submitting…";
+  setFormMsg($("creditPurchaseMsg"), "", "");
+  try{
+    // Credits are NEVER added here — this only files a Pending request.
+    // They're added only once Admin verifies the payment (see
+    // handleCreditPurchaseAction's "approve" branch).
+    await addDoc(collection(db, "creditPurchases"), {
+      uid: currentUser.uid,
+      customerName: currentUserDoc?.businessName || currentUserDoc?.fullName || currentUser.email,
+      email: currentUser.email,
+      packageId: selectedCreditPackageId,
+      credits: pkg.credits,
+      amount: pkg.price,
+      currency: pkg.currency,
+      status: "Pending",
+      paymentReference: $("creditTxnRef").value.trim() || null,
+      bankUsed: $("creditBankUsed").value.trim(),
+      paymentDate: $("creditPaymentDate").value,
+      proof: currentCreditProofDataUrl,
+      createdAt: serverTimestamp()
+    });
+    sendNotification(currentUser.uid, "Credit purchase submitted",
+      `Your purchase of ${pkg.credits.toLocaleString()} credits (₦${pkg.price.toLocaleString()}) has been submitted for verification.`, "credit-purchase-submitted");
+    toast("Purchase submitted — awaiting verification.");
+    resetCreditPurchaseForm();
+  }catch(err){
+    console.error(err);
+    setFormMsg($("creditPurchaseMsg"), err.message || "Could not submit. Please try again.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Submit for verification";
+  }
+}
+
+function wireBuyCreditsUI(){
+  if(creditUIWired) return;
+  creditUIWired = true;
+  $("creditUploadDropZone")?.addEventListener("click", ()=> $("creditProofFileInput").click());
+  $("creditProofFileInput")?.addEventListener("change", async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      currentCreditProofDataUrl = await compressImageFile(file, 300 * 1024);
+      $("creditUploadPreviewImg").src = currentCreditProofDataUrl;
+      $("creditUploadPreviewImg").classList.remove("hidden");
+      $("creditUploadPromptText").classList.add("hidden");
+    }catch(err){
+      console.error(err);
+      setFormMsg($("creditUploadMsg"), "Could not process that image. Try a smaller screenshot.", "error");
+    }
+  });
+  $("creditPurchaseForm")?.addEventListener("submit", submitCreditPurchase);
+}
+
+function renderCreditHistory(items){
+  const list = $("creditHistoryList");
+  if(!list) return;
+  list.innerHTML = "";
+  $("creditHistoryEmpty")?.classList.toggle("hidden", items.length > 0);
+  for(const t of items){
+    const amount = Number(t.amount) || 0;
+    const positive = amount > 0;
+    const row = document.createElement("div");
+    row.className = "credit-history-row";
+    row.innerHTML = `
+      <div class="chr-top">
+        <span>${escapeHtml(t.description || t.type || "")}</span>
+        <span class="chr-amount ${positive ? 'pos' : 'neg'}">${positive ? '+' : ''}${amount.toLocaleString()} Credits</span>
+      </div>
+      <div class="chr-date">${fmtDate(t.createdAt)}</div>
+      <div class="chr-balance">Balance: ${Number(t.balanceAfter || 0).toLocaleString()}</div>`;
+    list.appendChild(row);
+  }
+}
+
+function renderCreditPurchaseHistory(items){
+  const list = $("creditPurchaseHistoryList");
+  if(!list) return;
+  list.innerHTML = "";
+  $("creditPurchaseHistoryEmpty")?.classList.toggle("hidden", items.length > 0);
+  for(const p of items){
+    const statusClass = p.status === "Approved" ? "approved" : (p.status === "Rejected" ? "rejected" : "pending");
+    const row = document.createElement("div");
+    row.className = "credit-history-row";
+    row.innerHTML = `
+      <div class="chr-top">
+        <span>${Number(p.credits || 0).toLocaleString()} Credits — ₦${Number(p.amount || 0).toLocaleString()}</span>
+        <span class="status-chip ${statusClass}">${escapeHtml(p.status || "Pending")}</span>
+      </div>
+      <div class="chr-date">${p.paymentDate ? escapeHtml(p.paymentDate) : fmtDate(p.createdAt)}${p.paymentReference ? " · Ref: " + escapeHtml(p.paymentReference) : ""}</div>`;
+    list.appendChild(row);
+  }
+}
+
+function initCreditSystem(uid){
+  if(unsubMyCreditTx) unsubMyCreditTx();
+  const txQ = query(collection(db, "creditTransactions"), where("uid", "==", uid), orderBy("createdAt", "desc"), limit(50));
+  unsubMyCreditTx = onSnapshot(txQ, (snap)=>{
+    const items = []; snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+    renderCreditHistory(items);
+  }, (err)=> console.error(err));
+
+  if(unsubMyCreditPurchases) unsubMyCreditPurchases();
+  const puQ = query(collection(db, "creditPurchases"), where("uid", "==", uid), orderBy("createdAt", "desc"), limit(50));
+  unsubMyCreditPurchases = onSnapshot(puQ, (snap)=>{
+    const items = []; snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+    renderCreditPurchaseHistory(items);
+  }, (err)=> console.error(err));
+
+  wireBuyCreditsUI();
+  renderCreditSummary();
+  renderBuyCreditsPackages();
 }
 
 function hidePremiumPanels(){
@@ -7306,6 +7666,203 @@ function renderPremiumTableAdmin(items){
     });
   });
 }
+
+// ===================== ADMIN: CREDIT PURCHASES & MANAGEMENT =====================
+
+function loadCreditPurchasesForAdmin(){
+  if(unsubCreditPurchasesAdmin) unsubCreditPurchasesAdmin();
+  const q = query(collection(db, "creditPurchases"), orderBy("createdAt", "desc"));
+  unsubCreditPurchasesAdmin = onSnapshot(q, (snap)=>{
+    creditPurchasesAdminCache = [];
+    snap.forEach(d=> creditPurchasesAdminCache.push({ id: d.id, ...d.data() }));
+    renderCreditPurchasesAdmin();
+    renderCreditManagementStats();
+  }, (err)=> console.error(err));
+}
+
+// Purchased/revenue/pending/approved/rejected come from creditPurchases
+// (already loaded above). Outstanding balance and usage come from the
+// admin client directory listener, which already holds every client's
+// users/{uid} doc — reusing it here avoids a second, expensive read of
+// every client's data just for these two numbers.
+function renderCreditManagementStats(){
+  const approved = creditPurchasesAdminCache.filter(p=> p.status === "Approved");
+  const pending = creditPurchasesAdminCache.filter(p=> p.status === "Pending");
+  const rejected = creditPurchasesAdminCache.filter(p=> p.status === "Rejected");
+  const totalPurchased = approved.reduce((s,p)=> s + (Number(p.credits) || 0), 0);
+  const revenue = approved.reduce((s,p)=> s + (Number(p.amount) || 0), 0);
+  if($("creditStatTotalPurchased")) $("creditStatTotalPurchased").textContent = totalPurchased.toLocaleString();
+  if($("creditStatRevenue")) $("creditStatRevenue").textContent = ngn(revenue);
+  if($("creditStatPending")) $("creditStatPending").textContent = String(pending.length);
+  if($("creditStatApproved")) $("creditStatApproved").textContent = String(approved.length);
+  if($("creditStatRejected")) $("creditStatRejected").textContent = String(rejected.length);
+  const outstanding = (adminClientDirectoryCache || []).reduce((s,c)=> s + (Number(c.credits) || 0), 0);
+  const used = (adminClientDirectoryCache || []).reduce((s,c)=> s + (Number(c.totalUsed) || 0), 0);
+  if($("creditStatOutstanding")) $("creditStatOutstanding").textContent = outstanding.toLocaleString();
+  if($("creditStatUsed")) $("creditStatUsed").textContent = used.toLocaleString();
+}
+
+function renderCreditPurchasesAdmin(){
+  const tbody = $("creditPurchaseTableBodyAdmin");
+  if(!tbody) return;
+  const search = ($("creditPurchaseSearch")?.value || "").trim().toLowerCase();
+  const statusFilter = $("creditPurchaseStatusFilter")?.value || "";
+  const items = creditPurchasesAdminCache.filter(r=>{
+    if(statusFilter && r.status !== statusFilter) return false;
+    if(!search) return true;
+    return [r.customerName, r.email, r.paymentReference].some(v=> String(v || "").toLowerCase().includes(search));
+  });
+  tbody.innerHTML = "";
+  $("creditPurchaseEmptyStateAdmin")?.classList.toggle("hidden", items.length > 0);
+
+  for(const r of items){
+    const pkg = CREDIT_PACKAGES[r.packageId];
+    const statusClass = r.status === "Approved" ? "approved" : (r.status === "Rejected" ? "rejected" : "pending");
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.customerName || "—")}</td>
+      <td>${escapeHtml(r.email || "—")}</td>
+      <td>${escapeHtml(pkg ? pkg.label : (r.credits ? Number(r.credits).toLocaleString() + " Credits" : "—"))}</td>
+      <td class="mono">${ngn(r.amount)}</td>
+      <td>${escapeHtml(r.paymentReference || "—")}</td>
+      <td>${r.proof ? `<img class="premium-thumb" src="${r.proof}" data-action="view" />` : "—"}</td>
+      <td>${escapeHtml(r.paymentDate || fmtDate(r.createdAt))}</td>
+      <td><span class="status-chip ${statusClass}">${escapeHtml(r.status || "Pending")}</span></td>
+      <td style="white-space:nowrap;">
+        <button type="button" class="btn-sm confirm" data-action="approve" data-id="${r.id}" ${r.status !== "Pending" ? "disabled" : ""}>Approve</button>
+        <button type="button" class="btn-sm reject" data-action="reject" data-id="${r.id}" ${r.status !== "Pending" ? "disabled" : ""}>Reject</button>
+      </td>`;
+    const thumb = tr.querySelector('img[data-action="view"]');
+    if(thumb){
+      thumb.addEventListener("click", ()=>{
+        $("lightboxImg").src = r.proof;
+        $("screenshotLightbox").classList.remove("hidden");
+      });
+    }
+    tbody.appendChild(tr);
+  }
+
+  tbody.querySelectorAll("button[data-action]").forEach(btn=>{
+    btn.addEventListener("click", ()=> handleCreditPurchaseAction(btn.dataset.action, btn.dataset.id, btn));
+  });
+}
+$("creditPurchaseSearch")?.addEventListener("input", renderCreditPurchasesAdmin);
+$("creditPurchaseStatusFilter")?.addEventListener("change", renderCreditPurchasesAdmin);
+
+// Approve/reject each run inside a Firestore transaction that re-reads the
+// purchase itself and only proceeds while it's still "Pending" — this is
+// the duplicate-approval guard: a second click (or a second admin) sees
+// status !== "Pending" inside the transaction and does nothing, regardless
+// of how stale the button's disabled state in the browser might be.
+async function handleCreditPurchaseAction(action, id, btn){
+  const record = creditPurchasesAdminCache.find(r=> r.id === id);
+  if(!record) return;
+  if(btn) btn.disabled = true;
+  try{
+    if(action === "approve"){
+      const result = await runTransaction(db, async (tx)=>{
+        const purchaseRef = doc(db, "creditPurchases", id);
+        const purchaseSnap = await tx.get(purchaseRef);
+        if(!purchaseSnap.exists()) throw new Error("Purchase not found.");
+        const purchase = purchaseSnap.data();
+        if(purchase.status !== "Pending") return { already: true };
+        const userRef = doc(db, "users", purchase.uid);
+        const userSnap = await tx.get(userRef);
+        const userData = userSnap.data() || {};
+        const before = Number(userData.credits) || 0;
+        const credits = Number(purchase.credits) || 0;
+        const after = before + credits;
+        const totalPurchased = (Number(userData.totalPurchased) || 0) + credits;
+        tx.update(userRef, { credits: after, totalPurchased });
+        tx.update(purchaseRef, { status: "Approved", verifiedAt: serverTimestamp(), verifiedBy: currentUser?.uid || "admin" });
+        const txRef = doc(collection(db, "creditTransactions"));
+        tx.set(txRef, {
+          uid: purchase.uid, type: "PURCHASE", amount: credits,
+          balanceBefore: before, balanceAfter: after,
+          packageId: purchase.packageId || null, paymentId: id,
+          description: `Credit purchase approved — ${credits.toLocaleString()} credits`,
+          status: "Completed", createdAt: serverTimestamp(), createdBy: currentUser?.uid || "admin"
+        });
+        return { already: false, credits, after, uid: purchase.uid, customerName: purchase.customerName };
+      });
+      if(result.already){
+        toast("This purchase was already processed.");
+      }else{
+        toast(`${result.credits.toLocaleString()} credits added to ${result.customerName || "client"}.`);
+        sendNotification(result.uid, "Credit purchase approved",
+          `${result.credits.toLocaleString()} credits have been added to your account. New balance: ${result.after.toLocaleString()} credits.`, "credit-purchase-approved");
+      }
+    }else if(action === "reject"){
+      const purchaseRef = doc(db, "creditPurchases", id);
+      const result = await runTransaction(db, async (tx)=>{
+        const snap = await tx.get(purchaseRef);
+        if(!snap.exists()) throw new Error("Purchase not found.");
+        const purchase = snap.data();
+        if(purchase.status !== "Pending") return { already: true };
+        tx.update(purchaseRef, { status: "Rejected", rejectedAt: serverTimestamp(), rejectedBy: currentUser?.uid || "admin" });
+        return { already: false, uid: purchase.uid };
+      });
+      if(result.already){
+        toast("This purchase was already processed.");
+      }else{
+        toast("Purchase rejected.");
+        sendNotification(result.uid, "Credit purchase rejected",
+          "We could not verify your credit purchase payment. Please check your details or contact support.", "credit-purchase-rejected");
+      }
+    }
+  }catch(err){
+    console.error(err);
+    toast(err.message || "Could not process this action.");
+  }finally{
+    renderCreditPurchasesAdmin();
+  }
+}
+
+// Admin bonus/support credit grant — always requires a reason, always logs
+// an ADMIN_ADJUSTMENT ledger entry inside the same transaction as the
+// balance change (see section 21/22 of the spec: never a silent edit).
+$("adminAddCreditsForm")?.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const email = $("adminCreditClientEmail").value.trim().toLowerCase();
+  const amount = Number($("adminCreditAmount").value);
+  const reason = $("adminCreditReason").value.trim();
+  const msgEl = $("adminAddCreditsMsg");
+  setFormMsg(msgEl, "", "");
+  if(!amount || amount <= 0){ setFormMsg(msgEl, "Enter a valid credit amount.", "error"); return; }
+  if(!reason){ setFormMsg(msgEl, "A reason is required.", "error"); return; }
+  const client = (adminClientDirectoryCache || []).find(c=> (c.email || "").toLowerCase() === email);
+  if(!client){ setFormMsg(msgEl, "No client found with that email. Check the Client Directory above.", "error"); return; }
+  const btn = $("adminAddCreditsBtn");
+  btn.disabled = true; btn.textContent = "Adding…";
+  try{
+    const result = await runTransaction(db, async (tx)=>{
+      const userRef = doc(db, "users", client.id);
+      const userSnap = await tx.get(userRef);
+      const userData = userSnap.data() || {};
+      const before = Number(userData.credits) || 0;
+      const after = before + amount;
+      tx.update(userRef, { credits: after });
+      const txRef = doc(collection(db, "creditTransactions"));
+      tx.set(txRef, {
+        uid: client.id, type: "ADMIN_ADJUSTMENT", amount,
+        balanceBefore: before, balanceAfter: after,
+        reason, description: reason,
+        status: "Completed", createdAt: serverTimestamp(), createdBy: currentUser?.uid || "admin"
+      });
+      return { after };
+    });
+    toast(`${amount.toLocaleString()} credits added to ${client.businessName || client.email}.`);
+    sendNotification(client.id, "Credits added to your account",
+      `${amount.toLocaleString()} bonus credits have been added to your account. New balance: ${result.after.toLocaleString()} credits.`, "credit-admin-adjustment");
+    setFormMsg(msgEl, "Credits added successfully.", "success");
+    e.target.reset();
+  }catch(err){
+    console.error(err);
+    setFormMsg(msgEl, err.message || "Could not add credits.", "error");
+  }finally{
+    btn.disabled = false; btn.textContent = "Add credits";
+  }
+});
 
 $("closeScreenshotLightbox").addEventListener("click", ()=> $("screenshotLightbox").classList.add("hidden"));
 $("screenshotLightbox").addEventListener("click", (e)=>{
