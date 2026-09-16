@@ -562,10 +562,14 @@
 
   /* ===== Credit system: Buy Credits + Credit History (light-panel variants of .pkg-option) ===== */
   .credit-pkg-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-top:14px; }
-  .credit-pkg-option{ background:var(--paper-2); border:1.5px solid var(--line); border-radius:14px; padding:18px 14px; text-align:center; }
+  .credit-pkg-option{ position:relative; background:var(--paper-2); border:1.5px solid var(--line); border-radius:14px; padding:22px 14px 18px; text-align:center; }
   .credit-pkg-option.active{ border-color:var(--brass-light); background:rgba(217,174,108,0.14); }
+  .credit-pkg-option.popular{ border-color:var(--brass); box-shadow:0 0 0 1px var(--brass); }
+  .credit-pkg-option .pkg-badge{ position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:var(--brass); color:var(--paper-2); font-size:10.5px; font-weight:700; letter-spacing:.02em; padding:3px 10px; border-radius:999px; white-space:nowrap; }
   .credit-pkg-option .pkg-name{ font-family:'Fraunces',serif; font-weight:700; font-size:17px; color:var(--ink); }
-  .credit-pkg-option .pkg-price{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; color:var(--brass); margin:6px 0 12px; }
+  .credit-pkg-option .pkg-credits{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink); opacity:.75; margin-top:4px; }
+  .credit-pkg-option .pkg-price{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; color:var(--brass); margin:6px 0 2px; }
+  .credit-pkg-option .pkg-docs{ font-size:12px; color:var(--ink); opacity:.65; margin-bottom:12px; }
   .credit-history-row{ border-bottom:1px solid var(--line); padding:12px 0; font-size:13.5px; }
   .credit-history-row:last-child{ border-bottom:none; }
   .chr-top{ display:flex; justify-content:space-between; gap:10px; font-weight:700; }
@@ -6325,8 +6329,12 @@ const CREDIT_COST_PER_DOC = 50;     // deducted for each invoice/receipt generat
 // re-validates these same values server-side (creditPackage() / the
 // DOCUMENT_CREATION amount check) — keep both in sync when you change these.
 const CREDIT_PACKAGES = {
-  credit_10000: { credits: 10000, price: 1500, currency: "NGN", label: "10,000 Credits" },
-  credit_20000: { credits: 20000, price: 3000, currency: "NGN", label: "20,000 Credits" }
+  starter:      { credits: 1000,  price: 2000,  currency: "NGN", label: "Starter",      docs: 20 },
+  standard:     { credits: 2500,  price: 4500,  currency: "NGN", label: "Standard",     docs: 50 },
+  business:     { credits: 5000,  price: 8000,  currency: "NGN", label: "Business",     docs: 100,  popular: true },
+  professional: { credits: 10000, price: 14000, currency: "NGN", label: "Professional", docs: 200 },
+  premium:      { credits: 25000, price: 30000, currency: "NGN", label: "Premium",      docs: 500 },
+  enterprise:   { credits: 50000, price: 50000, currency: "NGN", label: "Enterprise",   docs: 1000 }
 };
 const DOCUMENT_CREDIT_COSTS = { invoice: CREDIT_COST_PER_DOC, receipt: CREDIT_COST_PER_DOC }; // add future document types here
 const LOW_CREDIT_THRESHOLD = 500;
@@ -6642,10 +6650,13 @@ function renderBuyCreditsPackages(){
   wrap.innerHTML = "";
   Object.entries(CREDIT_PACKAGES).forEach(([id, pkg])=>{
     const div = document.createElement("div");
-    div.className = "credit-pkg-option" + (selectedCreditPackageId === id ? " active" : "");
+    div.className = "credit-pkg-option" + (selectedCreditPackageId === id ? " active" : "") + (pkg.popular ? " popular" : "");
     div.innerHTML = `
-      <div class="pkg-name">${pkg.credits.toLocaleString()} Credits</div>
+      ${pkg.popular ? '<div class="pkg-badge">⭐ Most Popular</div>' : ""}
+      <div class="pkg-name">${pkg.label}</div>
+      <div class="pkg-credits">${pkg.credits.toLocaleString()} credits</div>
       <div class="pkg-price">₦${pkg.price.toLocaleString()}</div>
+      <div class="pkg-docs">${pkg.docs.toLocaleString()} documents</div>
       <button type="button" class="btn-sm confirm" data-pkg-id="${id}">Buy Credits</button>`;
     div.querySelector("button").addEventListener("click", ()=> selectCreditPackage(id));
     wrap.appendChild(div);
@@ -6658,7 +6669,7 @@ function selectCreditPackage(id){
   selectedCreditPackageId = id;
   renderBuyCreditsPackages();
   $("creditPurchaseFormWrap").classList.remove("hidden");
-  $("creditSelectedPkgLabel").value = `${pkg.credits.toLocaleString()} Credits`;
+  $("creditSelectedPkgLabel").value = `${pkg.label} — ${pkg.credits.toLocaleString()} Credits (${pkg.docs.toLocaleString()} docs)`;
   $("creditSelectedAmount").value = pkg.price;
   $("creditPaymentDate").value = new Date().toISOString().slice(0,10);
   $("creditPurchaseFormWrap").scrollIntoView({ behavior: "smooth", block: "start" });
