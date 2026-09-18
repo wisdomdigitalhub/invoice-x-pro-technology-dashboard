@@ -2271,6 +2271,12 @@
         <div class="bank-row"><span class="bank-label">Account name</span><span class="bank-value">Daniel C Princewill</span></div>
         <div class="bank-row"><span class="bank-label">Account number</span><span class="bank-value" id="premBankAccNo">9041498427</span></div>
         <button type="button" class="copy-btn" id="copyBankAccBtn">Copy account number</button>
+        <div class="bank-row" style="margin-top:14px;padding-top:14px;">
+          <span class="bank-label">Bank</span><span class="bank-value">Grooming Microfinance Bank</span>
+        </div>
+        <div class="bank-row"><span class="bank-label">Account name</span><span class="bank-value">Ebubechukwu Wisdom Daniel</span></div>
+        <div class="bank-row"><span class="bank-label">Account number</span><span class="bank-value">1107325365</span></div>
+        <button type="button" class="copy-btn" id="copyGroomingBankAccBtn">Copy account number</button>
       </div>
 
       <div class="panel">
@@ -2333,6 +2339,11 @@
             <div class="bank-row"><span class="bank-label">Bank</span><span class="bank-value">OPay</span></div>
             <div class="bank-row"><span class="bank-label">Account name</span><span class="bank-value">Daniel C Princewill</span></div>
             <div class="bank-row"><span class="bank-label">Account number</span><span class="bank-value">9041498427</span></div>
+            <div class="bank-row" style="margin-top:14px;padding-top:14px;">
+              <span class="bank-label">Bank</span><span class="bank-value">Grooming Microfinance Bank</span>
+            </div>
+            <div class="bank-row"><span class="bank-label">Account name</span><span class="bank-value">Ebubechukwu Wisdom Daniel</span></div>
+            <div class="bank-row"><span class="bank-label">Account number</span><span class="bank-value">1107325365</span></div>
           </div>
 
           <div class="panel" style="margin-top:14px;">
@@ -6816,6 +6827,12 @@ $("copyBankAccBtn").addEventListener("click", ()=>{
   navigator.clipboard?.writeText("9041498427")
     .then(()=> toast("Account number copied."))
     .catch(()=> toast("Could not copy — copy it manually: 9041498427"));
+});
+
+$("copyGroomingBankAccBtn").addEventListener("click", ()=>{
+  navigator.clipboard?.writeText("1107325365")
+    .then(()=> toast("Grooming Microfinance Bank account number copied."))
+    .catch(()=> toast("Could not copy — copy it manually: 1107325365"));
 });
 
 // ---------- Premium pricing (admin-configurable, monthly + yearly) ----------
