@@ -81,35 +81,6 @@
   }
   .nav-cta:hover{transform:translateY(-1px); box-shadow:0 10px 24px rgba(15,26,46,0.25);}
 
-  /* ===== Public homepage navigation ===== */
-  .nav-actions{display:flex;align-items:center;gap:10px;}
-  .nav-menu-btn{display:none;border:1px solid var(--line);background:var(--paper-2);color:var(--ink);width:44px;height:44px;border-radius:12px;font-size:22px;font-weight:700;align-items:center;justify-content:center;}
-  .public-menu{position:absolute;right:5vw;top:78px;width:min(320px,calc(100vw - 30px));background:var(--paper-2);border:1px solid var(--line);border-radius:18px;padding:10px;box-shadow:0 20px 45px rgba(15,26,46,.16);display:none;}
-  .public-menu.open{display:block;}
-  .public-menu a,.public-menu button{width:100%;display:flex;align-items:center;gap:10px;padding:13px 14px;border:0;border-radius:11px;background:transparent;color:var(--ink);text-decoration:none;font-weight:600;font-size:14px;text-align:left;}
-  .public-menu a:hover,.public-menu button:hover{background:rgba(184,134,62,.10);}
-  .public-menu .menu-divider{height:1px;background:var(--line);margin:7px 4px;}
-  .hero-copy{max-width:720px;}
-  .hero .lead{max-width:62ch !important;}
-  .hero-kicker{display:inline-flex;align-items:center;gap:8px;margin-top:2px;color:rgba(15,26,46,.62);font-size:13px;font-weight:600;}
-  @media (max-width:900px){
-    .nav-actions{gap:7px;}
-    .nav-actions .nav-cta{padding:10px 14px;font-size:13px;}
-    .nav-menu-btn{display:flex;}
-    .nav-actions > .public-nav-link{display:none;}
-    .public-menu{top:74px;}
-  }
-  @media (max-width:680px){
-    .nav{padding:15px 4vw;}
-    .logo-text{font-size:17px;}
-    .logo-badge{width:36px;height:36px;}
-    .nav-actions .nav-cta{padding:9px 11px;font-size:12px;}
-    .nav-actions .rep-login-top{padding:9px 9px;font-size:11px;}
-    .hero{padding:16vw 5vw 12vw;grid-template-columns:1fr;gap:34px;}
-    .hero h1{font-size:clamp(2.35rem,12vw,3.5rem);}
-    .hero-stats{gap:20px;flex-wrap:wrap;}
-  }
-
   .hero{
     position:relative; overflow:hidden;
     padding:9vw 5vw 6vw; display:grid; grid-template-columns:1.15fr 0.85fr; gap:4vw; align-items:center;
@@ -947,37 +918,29 @@
       <span class="logo-badge">IX</span>
       <span class="logo-text">Invoice<span>X</span> Pro</span>
     </button>
-    <div class="nav-actions">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <button class="nav-cta hidden" id="installAppBtn" style="background:var(--brass); color:#1c1206;">Install App</button>
       <button class="nav-cta" id="signUpNavBtn" style="background:var(--brass); color:#1c1206;">Sign Up</button>
       <button class="nav-cta" id="clientLoginNavBtn" style="background:none; color:var(--ink); border:1.5px solid var(--line);">Client Login</button>
-      <button class="nav-cta rep-login-top" id="repLoginNavBtn">Representative Login</button>
-      <button class="nav-menu-btn" id="publicMenuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="publicMenu">☰</button>
-    </div>
-    <div class="public-menu" id="publicMenu" aria-hidden="true">
-      <a href="#ixpAboutSection">About Invoice X Pro</a>
-      <a href="#ixpFeaturesSection">Features</a>
-      <a href="#ixpHowItWorksSection">How It Works</a>
-      <a href="#ixptLandingJobsSection">Team Opportunities</a>
-      <a href="#partnershipMentorshipTitle">Partnerships &amp; Mentorship</a>
-      <a href="#showcaseTitle">Our Partners</a>
-      <button type="button" id="menuInstallAppBtn">📱 Install App</button>
+      <button class="nav-cta" id="repLoginNavBtn">Representative Login</button>
+      <a class="nav-cta" href="#partnershipMentorshipTitle" style="background:var(--brass); color:#1c1206; text-decoration:none;">Partnerships</a>
+      <a class="nav-cta" href="#showcaseTitle" style="background:none; color:var(--ink); border:1.5px solid var(--line); text-decoration:none;">Our Partners</a>
     </div>
   </nav>
 
   <section class="hero">
-    <div class="hero-copy">
-      <span class="eyebrow">Business management, made simple</span>
-      <h1>Run your business with <em>clarity.</em></h1>
-      <p class="lead">Invoice X Pro is a business management platform that helps you create professional invoices and receipts, manage customers and business records, track payments, and keep your everyday business activities organized — all from your phone or computer.</p>
-      <div class="hero-kicker">Built for small businesses, freelancers, shops, service providers and growing companies.</div>
-      <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:24px;">
-        <button class="btn-brass" id="heroStartFreeBtn">Start Free</button>
-        <a class="btn-brass" href="#ixpFeaturesSection" style="background:var(--ink);text-decoration:none;display:inline-flex;align-items:center;">Explore Features</a>
+    <div>
+      <span class="eyebrow">Field sales, ledgered properly</span>
+      <h1>Every client, <em>every payment</em>, accounted for.</h1>
+      <p class="lead">Invoice X Pro gives your representatives a clean way to submit new clients, and gives your office a clear checkpoint: nothing is approved until payment is confirmed.</p>
+      <div style="display:flex; gap:14px; flex-wrap:wrap;">
+        <button class="btn-brass" id="repLoginHeroBtn">Representative sign in</button>
+        <button class="btn-brass" id="ixptHeroJoinTeamBtn" style="background:var(--ink)">Join Our Team</button>
       </div>
       <div class="hero-stats">
-        <div class="hero-stat"><b>Invoices</b><span>Create professionally</span></div>
-        <div class="hero-stat"><b>Receipts</b><span>Record payments</span></div>
-        <div class="hero-stat"><b>Business</b><span>Stay organized</span></div>
+        <div class="hero-stat"><b>2-step</b><span>Approval checkpoint</span></div>
+        <div class="hero-stat"><b>100%</b><span>Payment-gated</span></div>
+        <div class="hero-stat"><b>Live</b><span>Rep &amp; wallet sync</span></div>
       </div>
     </div>
     <div class="ledger-card">
@@ -998,30 +961,6 @@
     </div>
   </section>
 
-  <section class="features" id="ixpAboutSection">
-    <div class="section-head">
-      <span class="eyebrow">What is Invoice X Pro?</span>
-      <h2>One place for the everyday work of your business.</h2>
-      <p>Instead of keeping invoices in one place, customer details somewhere else, and payment records in notebooks or chats, Invoice X Pro brings essential business management tools together in one platform.</p>
-    </div>
-  </section>
-
-  <section class="features" id="ixpFeaturesSection">
-    <div class="section-head">
-      <span class="eyebrow">Core tools</span>
-      <h2>Everything you need to stay organized.</h2>
-      <p>Create, track and manage the records that keep your business moving.</p>
-    </div>
-    <div class="features-grid">
-      <div class="feature-card"><span class="num">01</span><h3>Professional Invoices</h3><p>Create clear invoices with your business and customer details, products or services, prices, discounts and payment information.</p></div>
-      <div class="feature-card"><span class="num">02</span><h3>Digital Receipts</h3><p>Record completed payments and provide customers with professional receipts they can keep for their records.</p></div>
-      <div class="feature-card"><span class="num">03</span><h3>Customer Records</h3><p>Keep customer information and transaction history organized so you can find what you need when you need it.</p></div>
-      <div class="feature-card"><span class="num">04</span><h3>Payment Tracking</h3><p>Keep an eye on paid, pending and outstanding payments instead of relying on memory or scattered messages.</p></div>
-      <div class="feature-card"><span class="num">05</span><h3>Business Records</h3><p>Keep important business information organized in one place and reduce unnecessary paperwork and confusion.</p></div>
-      <div class="feature-card"><span class="num">06</span><h3>Phone &amp; Computer Ready</h3><p>Use Invoice X Pro wherever you work with a responsive experience designed for modern devices.</p></div>
-    </div>
-  </section>
-
   <section class="features" id="ixptLandingJobsSection">
     <div class="section-head">
       <span class="eyebrow">Careers</span>
@@ -1032,7 +971,7 @@
     <div style="text-align:center;margin-top:18px"><button class="btn-brass" id="ixptLandingViewAll">View all Team opportunities</button></div>
   </section>
 
-  <section class="features" id="ixpHowItWorksSection">
+  <section class="features">
     <div class="section-head">
       <span class="eyebrow">How it works</span>
       <h2>A straight line from client to commission.</h2>
@@ -2991,38 +2930,6 @@ function updateRoleUI(){
     }
   });
 })();
-// Public homepage hamburger menu
-const publicMenuBtn = $("publicMenuBtn");
-const publicMenu = $("publicMenu");
-if(publicMenuBtn && publicMenu){
-  publicMenuBtn.addEventListener("click", (e)=>{
-    e.stopPropagation();
-    const open = publicMenu.classList.toggle("open");
-    publicMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
-    publicMenu.setAttribute("aria-hidden", open ? "false" : "true");
-  });
-  publicMenu.querySelectorAll("a").forEach(link=>link.addEventListener("click", ()=>{
-    publicMenu.classList.remove("open");
-    publicMenuBtn.setAttribute("aria-expanded","false");
-    publicMenu.setAttribute("aria-hidden","true");
-  }));
-  document.addEventListener("click", (e)=>{
-    if(!publicMenu.contains(e.target) && !publicMenuBtn.contains(e.target)){
-      publicMenu.classList.remove("open");
-      publicMenuBtn.setAttribute("aria-expanded","false");
-      publicMenu.setAttribute("aria-hidden","true");
-    }
-  });
-}
-$("menuInstallAppBtn")?.addEventListener("click", ()=>{
-  publicMenu?.classList.remove("open");
-  publicMenuBtn?.setAttribute("aria-expanded","false");
-  $("installAppBtn")?.click();
-});
-$("heroStartFreeBtn")?.addEventListener("click", ()=>{
-  if($("signUpNavBtn")) $("signUpNavBtn").click();
-});
-
 $("clientLoginNavBtn").addEventListener("click", ()=> openModal("client"));
 $("repLoginNavBtn").addEventListener("click", ()=> openModal("rep"));
 $("repLoginHeroBtn").addEventListener("click", ()=> openModal("rep"));
