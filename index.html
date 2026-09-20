@@ -982,13 +982,26 @@
   .lp-faq-item.open .lp-faq-a{max-height:240px;}
   .lp-faq-a p{font-size:14px; line-height:1.6; color:rgba(15,26,46,.65); margin:0 4px 18px;}
 
+  .lp-flow-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:30px;}
+  .lp-demo-note{margin-top:26px; padding:16px 20px; background:var(--paper-2); border:1px dashed var(--line); border-radius:12px; font-size:13.5px; color:rgba(15,26,46,.62); text-align:center;}
+
+  .lp-trust-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:30px;}
+  .lp-trust-item{
+    display:flex; align-items:center; gap:10px; background:var(--paper-2); border:1px solid var(--line);
+    border-radius:12px; padding:16px 18px; font-size:13.5px; font-weight:500; color:var(--ink);
+  }
+  .lp-trust-item .check{
+    flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--brass); color:#1c1206;
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;
+  }
+
   /* Preserved legacy section wrapper */
   .lp-legacy{background:var(--paper); border-top:1px dashed var(--line); padding-top:1vw;}
   .lp-legacy-intro{padding:5vw 5vw 1vw; max-width:680px;}
 
   /* Footer v2 */
   .lp-footer{padding:56px 5vw 28px; border-top:1px solid var(--line);}
-  .lp-footer-grid{display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:30px; margin-bottom:36px;}
+  .lp-footer-grid{display:grid; grid-template-columns:1.3fr 1fr 1fr 1fr 1fr; gap:26px; margin-bottom:36px;}
   .lp-footer-brand p{font-size:13.5px; color:rgba(15,26,46,.6); line-height:1.6; margin-top:12px; max-width:32ch;}
   .lp-footer-col h4{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:rgba(15,26,46,.45); margin:0 0 14px; font-weight:700;}
   .lp-footer-col a, .lp-footer-col button{
@@ -1004,11 +1017,15 @@
     .lp-why-grid{grid-template-columns:1fr 1fr;}
     .lp-plans-grid{grid-template-columns:1fr;}
     .lp-footer-grid{grid-template-columns:1fr 1fr; gap:26px;}
+    .lp-flow-grid{grid-template-columns:1fr 1fr;}
+    .lp-trust-grid{grid-template-columns:1fr 1fr;}
   }
   @media(max-width:520px){
     .lp-why-grid{grid-template-columns:1fr;}
     .lp-footer-grid{grid-template-columns:1fr;}
     .lp-legacy-intro > div{flex-direction:column; align-items:stretch;}
+    .lp-flow-grid{grid-template-columns:1fr;}
+    .lp-trust-grid{grid-template-columns:1fr;}
   }
 </style>
 
@@ -1117,6 +1134,36 @@
     </div>
   </section>
 
+  <section class="features">
+    <div class="section-head">
+      <span class="eyebrow">The problem</span>
+      <h2>Still managing your business documents manually?</h2>
+      <p>Invoice X Pro gives your business a simpler way to create professional documents and keep your sales records organized.</p>
+    </div>
+    <div class="lp-why-grid">
+      <div class="lp-why-card">
+        <span class="ico">📝</span>
+        <h3>Manual invoices</h3>
+        <p>Turn repetitive invoice creation into a faster digital workflow.</p>
+      </div>
+      <div class="lp-why-card">
+        <span class="ico">🗃️</span>
+        <h3>Unorganized records</h3>
+        <p>Keep customer and transaction information organized.</p>
+      </div>
+      <div class="lp-why-card">
+        <span class="ico">💸</span>
+        <h3>Payment confusion</h3>
+        <p>Clearly track what has been paid, what remains outstanding, and transaction details.</p>
+      </div>
+      <div class="lp-why-card">
+        <span class="ico">📄</span>
+        <h3>Unprofessional documents</h3>
+        <p>Give customers clean, professional business documents that represent your brand.</p>
+      </div>
+    </div>
+  </section>
+
   <section class="lp-categories" id="lpAbout">
     <div class="section-head">
       <span class="eyebrow">Who it's for</span>
@@ -1131,6 +1178,40 @@
       <div class="lp-cat-pill"><span class="ico">📦</span>Wholesalers</div>
       <div class="lp-cat-pill"><span class="ico">🧰</span>Service Businesses</div>
       <div class="lp-cat-pill"><span class="ico">🏢</span>SMEs</div>
+    </div>
+  </section>
+
+  <section class="features" id="demo">
+    <div class="section-head">
+      <span class="eyebrow">See it in action</span>
+      <h2>See Invoice X Pro in action</h2>
+      <p>From creating an invoice to generating a professional document, Invoice X Pro keeps the process simple.</p>
+    </div>
+    <div class="lp-flow-grid">
+      <div class="lp-step">
+        <div class="num">01</div>
+        <h3>Create</h3>
+        <p>Pick an invoice, receipt, or proforma invoice and add your customer and product details.</p>
+      </div>
+      <div class="lp-step">
+        <div class="num">02</div>
+        <h3>Review</h3>
+        <p>Check pricing, discounts, VAT, and payment terms before generating.</p>
+      </div>
+      <div class="lp-step">
+        <div class="num">03</div>
+        <h3>Generate</h3>
+        <p>Your branded, professional document is ready in seconds.</p>
+      </div>
+      <div class="lp-step">
+        <div class="num">04</div>
+        <h3>Print / Share</h3>
+        <p>Download, print, or share it with your customer right away.</p>
+      </div>
+    </div>
+    <div class="lp-demo-note">Every document is generated from your own business details, logo, and pricing — no sample or placeholder data is sent to customers.</div>
+    <div style="text-align:center; margin-top:26px;">
+      <button type="button" class="btn-brass" id="demoTryBtn">Try Invoice X Pro</button>
     </div>
   </section>
 
@@ -1251,6 +1332,23 @@
         <p>Create professional receipts and keep your payment records organized.</p>
         <button type="button" class="btn-brass lp-plan-cta">Get Started</button>
       </div>
+    </div>
+  </section>
+
+  <section class="features" id="trust">
+    <div class="section-head">
+      <span class="eyebrow">Built with businesses in mind</span>
+      <h2>Everything you need, nothing you don't</h2>
+    </div>
+    <div class="lp-trust-grid">
+      <div class="lp-trust-item"><span class="check">✓</span>Professional business documents</div>
+      <div class="lp-trust-item"><span class="check">✓</span>Secure account access</div>
+      <div class="lp-trust-item"><span class="check">✓</span>Organized customer information</div>
+      <div class="lp-trust-item"><span class="check">✓</span>Payment tracking</div>
+      <div class="lp-trust-item"><span class="check">✓</span>Your business branding on every document</div>
+      <div class="lp-trust-item"><span class="check">✓</span>Works in your browser, on any device</div>
+      <div class="lp-trust-item"><span class="check">✓</span>Digital document generation</div>
+      <div class="lp-trust-item"><span class="check">✓</span>Representative referral system</div>
     </div>
   </section>
 
@@ -1414,11 +1512,15 @@
         <button type="button" id="lpTermsLinkFooter">Terms of Service</button>
       </div>
       <div class="lp-footer-col">
+        <h4>Opportunities</h4>
+        <a href="#ixptLandingJobsSection">Join Our Team</a>
+        <a href="#partnershipMentorshipTitle">Partnerships</a>
+        <a href="#showcaseTitle">Our Partners</a>
+      </div>
+      <div class="lp-footer-col">
         <h4>Account</h4>
         <button type="button" id="footerSignUpBtn">Sign Up</button>
         <button type="button" id="footerLoginBtn">Login</button>
-        <a href="#partnershipMentorshipTitle">Partnerships</a>
-        <a href="#showcaseTitle">Our Partners</a>
       </div>
     </div>
     <div class="lp-footer-bottom">
@@ -3399,7 +3501,7 @@ $("signUpOverlay").addEventListener("click", (e)=>{ if(e.target.id === "signUpOv
 (function(){
   // Any extra Sign Up / Login triggers on the redesigned landing page reuse
   // the exact same openSignUp / openModal functions as the original nav buttons.
-  ["heroSignUpBtn","finalCtaSignUpBtn","footerSignUpBtn","lpMobileSignUpBtn"].forEach(id=>{
+  ["heroSignUpBtn","finalCtaSignUpBtn","footerSignUpBtn","lpMobileSignUpBtn","demoTryBtn"].forEach(id=>{
     const el = $(id); if(el) el.addEventListener("click", ()=> openSignUp("client"));
   });
   ["heroLoginBtn","finalCtaLoginBtn","footerLoginBtn","lpMobileLoginBtn"].forEach(id=>{
