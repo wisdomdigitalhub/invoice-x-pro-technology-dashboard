@@ -571,17 +571,6 @@
   .credit-pkg-option .pkg-credits{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--ink); opacity:.75; margin-top:4px; }
   .credit-pkg-option .pkg-price{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; color:var(--brass); margin:6px 0 2px; }
   .credit-pkg-option .pkg-docs{ font-size:12px; color:var(--ink); opacity:.65; margin-bottom:12px; }
-
-  /* ===== Credit system: custom-amount purchase (₦1 = 1 credit) ===== */
-  .credit-amount-card{ background:var(--paper-2); border:1.5px solid var(--line); border-radius:14px; padding:22px; }
-  .credit-amount-rule{ font-size:13px; color:rgba(15,26,46,.68); line-height:1.7; }
-  .credit-quick-row{ display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
-  .credit-quick-btn{ background:var(--paper); border:1.5px solid var(--line); border-radius:999px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink); transition:all .2s ease; }
-  .credit-quick-btn:hover{ border-color:var(--brass-light); background:rgba(217,174,108,0.14); }
-  .credit-amount-preview{ margin-top:14px; }
-  .credit-amount-preview .cap-row{ font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--ink); opacity:.75; }
-  .credit-amount-preview .cap-row.big{ font-family:'Fraunces',serif; font-size:22px; font-weight:700; color:var(--brass); opacity:1; margin:2px 0; }
-  .credit-amount-preview .cap-remainder{ font-family:'Inter',sans-serif; font-size:11.5px; opacity:.7; }
   .credit-history-row{ border-bottom:1px solid var(--line); padding:12px 0; font-size:13.5px; }
   .credit-history-row:last-child{ border-bottom:none; }
   .chr-top{ display:flex; justify-content:space-between; gap:10px; font-weight:700; }
@@ -2871,7 +2860,7 @@
 
             <form id="creditPurchaseForm" style="margin-top:20px;">
               <div class="grid-2">
-                <div class="field"><label>Credits &amp; Documents</label><input type="text" id="creditSelectedPkgLabel" readonly /></div>
+                <div class="field"><label>Package</label><input type="text" id="creditSelectedPkgLabel" readonly /></div>
                 <div class="field"><label>Amount to pay (₦)</label><input type="number" id="creditSelectedAmount" readonly /></div>
                 <div class="field"><label>Bank used to pay</label><input type="text" id="creditBankUsed" required /></div>
                 <div class="field"><label>Payment date</label><input type="date" id="creditPaymentDate" required /></div>
@@ -6403,7 +6392,6 @@ function initInvoiceGenerator(){
       return;
     }
     if(!canCreateDocument("invoice")){
-      toast(`You need ${CREDIT_COST_PER_DOC} credits to create a document. Please buy more credits to continue.`);
       showBuyCredits();
       return;
     }
@@ -6536,7 +6524,6 @@ function initReceiptGenerator(){
       return;
     }
     if(!canCreateDocument("receipt")){
-      toast(`You need ${CREDIT_COST_PER_DOC} credits to create a document. Please buy more credits to continue.`);
       showBuyCredits();
       return;
     }
@@ -6910,23 +6897,22 @@ $("notifMarkAllBtn").addEventListener("click", async ()=>{
 const STARTING_CREDITS = 1000;      // every new client starts with this many
 const CREDIT_COST_PER_DOC = 50;     // deducted for each invoice/receipt generated
 
-// ===================== CREDIT PRICING =====================
-// New pricing: ₦1 = 1 credit, 50 credits = 1 document (invoice or receipt).
-// Customers buy any custom amount at or above MIN_CREDIT_PURCHASE — there
-// are no fixed packages anymore. Quick-amount buttons below are just
-// shortcuts that fill in the custom amount field.
-const MIN_CREDIT_PURCHASE = 3000;        // minimum amount a customer may pay, in NGN
-const CREDIT_PER_NAIRA = 1;              // ₦1 = 1 credit
-const QUICK_CREDIT_AMOUNTS = [3000, 5000, 10000, 20000, 50000];
-function creditsForAmount(amountNaira){
-  return Math.floor(Number(amountNaira) || 0) * CREDIT_PER_NAIRA;
-}
-function documentsForCredits(credits){
-  return Math.floor((Number(credits) || 0) / CREDIT_COST_PER_DOC);
-}
+// ===================== CREDIT PACKAGES & DOCUMENT COSTS =====================
+// Centralized so new packages/document types can be added without touching
+// the purchase or consumption logic elsewhere. firestore.rules independently
+// re-validates these same values server-side (creditPackage() / the
+// DOCUMENT_CREATION amount check) — keep both in sync when you change these.
+const CREDIT_PACKAGES = {
+  starter:      { credits: 1000,  price: 2000,  currency: "NGN", label: "Starter",      docs: 20 },
+  standard:     { credits: 2500,  price: 4500,  currency: "NGN", label: "Standard",     docs: 50 },
+  business:     { credits: 5000,  price: 8000,  currency: "NGN", label: "Business",     docs: 100,  popular: true },
+  professional: { credits: 10000, price: 14000, currency: "NGN", label: "Professional", docs: 200 },
+  premium:      { credits: 25000, price: 30000, currency: "NGN", label: "Premium",      docs: 500 },
+  enterprise:   { credits: 50000, price: 50000, currency: "NGN", label: "Enterprise",   docs: 1000 }
+};
 const DOCUMENT_CREDIT_COSTS = { invoice: CREDIT_COST_PER_DOC, receipt: CREDIT_COST_PER_DOC }; // add future document types here
 const LOW_CREDIT_THRESHOLD = 500;
-let currentCreditAmount = 0;
+let selectedCreditPackageId = null;
 let currentCreditProofDataUrl = null;
 let creditUIWired = false;
 let unsubMyCreditTx = null;
@@ -7235,90 +7221,36 @@ function renderCreditSummary(){
 function renderBuyCreditsPackages(){
   const wrap = $("creditPackagesGrid");
   if(!wrap) return;
-  wrap.innerHTML = `
-    <div class="credit-amount-card">
-      <div class="credit-amount-rule">1 Credit = ₦1</div>
-      <div class="credit-amount-rule">50 Credits = 1 Invoice or Receipt</div>
-      <div class="credit-amount-rule">Minimum purchase: ₦${MIN_CREDIT_PURCHASE.toLocaleString()}</div>
-      <div class="credit-quick-row" id="creditQuickAmounts"></div>
-      <div class="field" style="margin-top:14px;">
-        <label>Enter amount (₦)</label>
-        <input type="number" id="creditAmountInput" min="${MIN_CREDIT_PURCHASE}" step="1" placeholder="e.g. 3500" />
-      </div>
-      <div class="credit-amount-preview" id="creditAmountPreview"></div>
-      <div class="form-msg" id="creditAmountMsg"></div>
-      <button type="button" class="btn-primary" id="creditAmountContinueBtn" style="max-width:240px; margin-top:12px;">Continue to payment</button>
-    </div>`;
-  const quickRow = $("creditQuickAmounts");
-  QUICK_CREDIT_AMOUNTS.forEach(amt=>{
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "credit-quick-btn";
-    btn.textContent = `₦${amt.toLocaleString()}`;
-    btn.addEventListener("click", ()=>{ $("creditAmountInput").value = amt; updateCreditAmountPreview(); });
-    quickRow.appendChild(btn);
+  wrap.innerHTML = "";
+  Object.entries(CREDIT_PACKAGES).forEach(([id, pkg])=>{
+    const div = document.createElement("div");
+    div.className = "credit-pkg-option" + (selectedCreditPackageId === id ? " active" : "") + (pkg.popular ? " popular" : "");
+    div.innerHTML = `
+      ${pkg.popular ? '<div class="pkg-badge">⭐ Most Popular</div>' : ""}
+      <div class="pkg-name">${pkg.label}</div>
+      <div class="pkg-credits">${pkg.credits.toLocaleString()} credits</div>
+      <div class="pkg-price">₦${pkg.price.toLocaleString()}</div>
+      <div class="pkg-docs">${pkg.docs.toLocaleString()} documents</div>
+      <button type="button" class="btn-sm confirm" data-pkg-id="${id}">Buy Credits</button>`;
+    div.querySelector("button").addEventListener("click", ()=> selectCreditPackage(id));
+    wrap.appendChild(div);
   });
-  $("creditAmountInput").addEventListener("input", updateCreditAmountPreview);
-  $("creditAmountContinueBtn").addEventListener("click", confirmCreditAmount);
-  updateCreditAmountPreview();
 }
 
-// Recomputes the live "X Credits / Y Documents" preview as the customer
-// types, and reports (without blocking typing) whether the amount entered
-// is currently valid so confirmCreditAmount() can re-check before continuing.
-function updateCreditAmountPreview(){
-  const input = $("creditAmountInput");
-  const preview = $("creditAmountPreview");
-  const msg = $("creditAmountMsg");
-  if(!input || !preview) return;
-  const raw = input.value;
-  setFormMsg(msg, "", "");
-  if(raw === ""){ preview.innerHTML = ""; return; }
-  const amount = Number(raw);
-  if(!Number.isFinite(amount) || Number.isNaN(amount) || amount <= 0){
-    preview.innerHTML = "";
-    setFormMsg(msg, "Please enter a valid amount.", "error");
-    return;
-  }
-  const credits = creditsForAmount(amount);
-  const documents = documentsForCredits(credits);
-  const remainder = credits - (documents * CREDIT_COST_PER_DOC);
-  preview.innerHTML = `
-    <div class="cap-row"><span>₦${amount.toLocaleString()}</span></div>
-    <div class="cap-row big">${credits.toLocaleString()} Credits</div>
-    <div class="cap-row">${documents.toLocaleString()} Document${documents === 1 ? "" : "s"}${remainder > 0 ? ` <span class="cap-remainder">(+${remainder} credits remaining)</span>` : ""}</div>`;
-  if(amount < MIN_CREDIT_PURCHASE){
-    setFormMsg(msg, `Minimum purchase is ₦${MIN_CREDIT_PURCHASE.toLocaleString()}.`, "error");
-  }
-}
-
-// Validates the entered amount and, once valid, opens the existing
-// bank-transfer proof-upload form pre-filled with the exact amount/credits.
-function confirmCreditAmount(){
-  const input = $("creditAmountInput");
-  const msg = $("creditAmountMsg");
-  const raw = input?.value;
-  const amount = Number(raw);
-  if(raw === "" || raw === undefined || !Number.isFinite(amount) || Number.isNaN(amount) || amount <= 0){
-    setFormMsg(msg, "Please enter a valid amount.", "error");
-    return;
-  }
-  if(amount < MIN_CREDIT_PURCHASE){
-    setFormMsg(msg, `Minimum purchase is ₦${MIN_CREDIT_PURCHASE.toLocaleString()}.`, "error");
-    return;
-  }
-  currentCreditAmount = Math.floor(amount);
-  const credits = creditsForAmount(currentCreditAmount);
-  const documents = documentsForCredits(credits);
+function selectCreditPackage(id){
+  const pkg = CREDIT_PACKAGES[id];
+  if(!pkg) return;
+  selectedCreditPackageId = id;
+  renderBuyCreditsPackages();
   $("creditPurchaseFormWrap").classList.remove("hidden");
-  $("creditSelectedPkgLabel").value = `${credits.toLocaleString()} Credits (${documents.toLocaleString()} documents)`;
-  $("creditSelectedAmount").value = currentCreditAmount;
+  $("creditSelectedPkgLabel").value = `${pkg.label} — ${pkg.credits.toLocaleString()} Credits (${pkg.docs.toLocaleString()} docs)`;
+  $("creditSelectedAmount").value = pkg.price;
   $("creditPaymentDate").value = new Date().toISOString().slice(0,10);
   $("creditPurchaseFormWrap").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function resetCreditPurchaseForm(){
-  currentCreditAmount = 0;
+  selectedCreditPackageId = null;
   currentCreditProofDataUrl = null;
   $("creditPurchaseFormWrap")?.classList.add("hidden");
   $("creditPurchaseForm")?.reset();
@@ -7330,10 +7262,8 @@ function resetCreditPurchaseForm(){
 
 async function submitCreditPurchase(e){
   e.preventDefault();
-  const amount = Math.floor(Number(currentCreditAmount) || 0);
-  if(!amount || amount <= 0 || Number.isNaN(amount)){ setFormMsg($("creditPurchaseMsg"), "Please enter a valid amount first.", "error"); return; }
-  if(amount < MIN_CREDIT_PURCHASE){ setFormMsg($("creditPurchaseMsg"), `Minimum purchase is ₦${MIN_CREDIT_PURCHASE.toLocaleString()}.`, "error"); return; }
-  const credits = creditsForAmount(amount);
+  if(!selectedCreditPackageId){ setFormMsg($("creditPurchaseMsg"), "Please choose a package first.", "error"); return; }
+  const pkg = CREDIT_PACKAGES[selectedCreditPackageId];
   if(!currentCreditProofDataUrl){ setFormMsg($("creditPurchaseMsg"), "Please upload your payment screenshot first.", "error"); return; }
   const btn = $("creditPurchaseSubmitBtn");
   btn.disabled = true; btn.textContent = "Submitting…";
@@ -7341,16 +7271,15 @@ async function submitCreditPurchase(e){
   try{
     // Credits are NEVER added here — this only files a Pending request.
     // They're added only once Admin verifies the payment (see
-    // handleCreditPurchaseAction's "approve" branch), and the credits
-    // awarded always exactly equal the amount paid (₦1 = 1 credit).
+    // handleCreditPurchaseAction's "approve" branch).
     await addDoc(collection(db, "creditPurchases"), {
       uid: currentUser.uid,
       customerName: currentUserDoc?.businessName || currentUserDoc?.fullName || currentUser.email,
       email: currentUser.email,
-      packageId: null,
-      credits: credits,
-      amount: amount,
-      currency: "NGN",
+      packageId: selectedCreditPackageId,
+      credits: pkg.credits,
+      amount: pkg.price,
+      currency: pkg.currency,
       status: "Pending",
       paymentReference: $("creditTxnRef").value.trim() || null,
       bankUsed: $("creditBankUsed").value.trim(),
@@ -7359,7 +7288,7 @@ async function submitCreditPurchase(e){
       createdAt: serverTimestamp()
     });
     sendNotification(currentUser.uid, "Credit purchase submitted",
-      `Your purchase of ${credits.toLocaleString()} credits (₦${amount.toLocaleString()}) has been submitted for verification.`, "credit-purchase-submitted");
+      `Your purchase of ${pkg.credits.toLocaleString()} credits (₦${pkg.price.toLocaleString()}) has been submitted for verification.`, "credit-purchase-submitted");
     toast("Purchase submitted — awaiting verification.");
     resetCreditPurchaseForm();
   }catch(err){
@@ -8378,12 +8307,13 @@ function renderCreditPurchasesAdmin(){
   $("creditPurchaseEmptyStateAdmin")?.classList.toggle("hidden", items.length > 0);
 
   for(const r of items){
+    const pkg = CREDIT_PACKAGES[r.packageId];
     const statusClass = r.status === "Approved" ? "approved" : (r.status === "Rejected" ? "rejected" : "pending");
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(r.customerName || "—")}</td>
       <td>${escapeHtml(r.email || "—")}</td>
-      <td>${escapeHtml(r.credits ? Number(r.credits).toLocaleString() + " Credits" : "—")}</td>
+      <td>${escapeHtml(pkg ? pkg.label : (r.credits ? Number(r.credits).toLocaleString() + " Credits" : "—"))}</td>
       <td class="mono">${ngn(r.amount)}</td>
       <td>${escapeHtml(r.paymentReference || "—")}</td>
       <td>${r.proof ? `<img class="premium-thumb" src="${r.proof}" data-action="view" />` : "—"}</td>
