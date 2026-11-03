@@ -1027,6 +1027,16 @@
     .lp-flow-grid{grid-template-columns:1fr;}
     .lp-trust-grid{grid-template-columns:1fr;}
   }
+
+/* ================================================================
+   INVOICE X PRO — MEDIA & PROMOTION HUB (separate from Video Studio)
+   ================================================================ */
+#ixpMediaLauncher{position:fixed;right:18px;bottom:20px;z-index:9000;border:0;border-radius:999px;padding:13px 18px;background:#102747;color:#fff;font-weight:800;box-shadow:0 12px 34px #06172b45;cursor:pointer}
+#ixpMediaOverlay{position:fixed;inset:0;z-index:9100;background:#f4f7fb;color:#17243a;overflow:auto;padding:18px;display:none}
+#ixpMediaOverlay.open{display:block}
+.ixpm-shell{max-width:1180px;margin:0 auto}.ixpm-head{background:linear-gradient(125deg,#0b1d35,#173e68);color:white;border-radius:22px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.ixpm-head h2{margin:0;font-size:clamp(23px,4vw,34px)}.ixpm-head p{margin:7px 0 0;color:#d8e5f4}.ixpm-actions{display:flex;gap:8px;flex-wrap:wrap}.ixpm-btn{border:0;border-radius:10px;padding:10px 14px;font-weight:750;cursor:pointer;background:#e8eef6;color:#102747}.ixpm-btn.primary{background:#d9b66b;color:#14243b}.ixpm-btn.dark{background:#102747;color:white}.ixpm-section{margin:20px 0}.ixpm-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.ixpm-toolbar input,.ixpm-toolbar select,.ixpm-form input,.ixpm-form textarea,.ixpm-form select{width:100%;border:1px solid #d5deea;border-radius:10px;padding:11px;background:white;color:#17243a}.ixpm-toolbar input{flex:1;min-width:180px}.ixpm-toolbar select{width:auto;min-width:190px}.ixpm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px}.ixpm-card{background:white;border:1px solid #e2e9f1;border-radius:17px;overflow:hidden;box-shadow:0 6px 20px #132b4810}.ixpm-thumb{aspect-ratio:16/9;background:#102747;display:grid;place-items:center;color:#fff;overflow:hidden}.ixpm-thumb img{width:100%;height:100%;object-fit:cover}.ixpm-cardbody{padding:14px}.ixpm-card h3{margin:0 0 7px;font-size:17px}.ixpm-card p{margin:0 0 12px;color:#65748a;font-size:13px;line-height:1.5}.ixpm-meta{font-size:11px;color:#738198;margin-bottom:10px}.ixpm-cardactions{display:flex;gap:7px;flex-wrap:wrap}.ixpm-empty{background:white;border:1px dashed #b9c7d8;border-radius:16px;padding:28px;text-align:center;color:#66768b}.ixpm-admin{background:white;border:1px solid #dfe7f0;border-radius:18px;padding:18px;margin:20px 0}.ixpm-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ixpm-form .wide{grid-column:1/-1}.ixpm-form label{display:block;font-size:12px;font-weight:800;margin:0 0 5px;color:#43536a}.ixpm-form textarea{min-height:82px;resize:vertical}.ixpm-checks{display:flex;gap:18px;flex-wrap:wrap;align-items:center}.ixpm-checks label{display:flex;gap:7px;align-items:center;margin:0}.ixpm-status{font-size:13px;margin-top:10px;color:#52647b}.ixpm-player{width:100%;max-height:70vh;background:#050b13;border-radius:14px}.ixpm-modal{position:fixed;inset:0;background:#071629d9;z-index:9200;display:none;place-items:center;padding:16px}.ixpm-modal.open{display:grid}.ixpm-modalbox{width:min(900px,100%);background:white;border-radius:18px;padding:16px}.ixpm-modalbox video{width:100%;max-height:70vh;background:#050b13}.ixpm-close{float:right}.ixpm-uploadbar{height:7px;background:#e6edf5;border-radius:9px;overflow:hidden;margin-top:8px}.ixpm-uploadbar span{display:block;height:100%;width:0;background:#1d6aab}
+@media(max-width:650px){#ixpMediaOverlay{padding:10px}.ixpm-head{padding:18px}.ixpm-form{grid-template-columns:1fr}.ixpm-form .wide{grid-column:auto}.ixpm-toolbar select{width:100%}#ixpMediaLauncher{right:10px;bottom:12px;font-size:12px}}
+
 </style>
 
 <style id="ixpTeamStyles">
@@ -3286,11 +3296,9 @@ import {
   deleteDoc, collection, query, where, serverTimestamp, onSnapshot, orderBy,
   runTransaction, limit
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-// Note: no Firebase Storage SDK is imported. Marketing materials and every
-// other file/image in this app (logos, payment screenshots) are stored as
-// compressed base64 data directly inside Firestore documents instead — this
-// keeps the whole app running on the free Firestore tier with no Storage
-// bucket, billing plan upgrade, or Storage security rules required.
+// NO FIREBASE STORAGE SDK: Video Studio stays local in IndexedDB. The public
+// Media Hub uploads promotional videos directly from the administrator browser
+// to Cloudinary using an unsigned upload preset, or accepts an existing video URL.
 
 const firebaseConfig = {
   apiKey: "AIzaSyB_wmCZ7i8ls7AIaqklmXYdpWgbSOMdfvw",
@@ -3298,7 +3306,7 @@ const firebaseConfig = {
   projectId: "invoice-x-pro-technology-rrm",
   messagingSenderId: "1076554149675",
   appId: "1:1076554149675:web:7f118ee7a42e4910cedf6e",
-  measurementId: "G-BXETKX480W"
+  measurementId: "G-BXETKX480W",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -3938,6 +3946,7 @@ onAuthStateChanged(auth, async (user)=>{
     }
     const data = userSnap.data();
     currentUserDoc = data;
+    window.dispatchEvent(new Event("ixp-user-profile-ready"));
     recordAppSeen();
     const standaloneNow = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
     if(standaloneNow && data.appInstalled !== true){ recordAppInstallation(); }
@@ -10360,7 +10369,77 @@ onAuthStateChanged(auth, async user=>{
   onAuthStateChanged(auth,user=>watchAccess(user));
 })();
 
+
+
+// ================= MEDIA & PROMOTION HUB =============================
+// Separate public library. Video bytes are uploaded directly to Cloudinary
+// (never Firebase Storage), or the admin can paste a hosted video URL.
+(function initMediaPromotionHub(){
+ const $m=id=>document.getElementById(id);
+ const overlay=$m('ixpMediaOverlay'); if(!overlay)return;
+ const categories=['Official Advertisements','Product Demonstrations','Business Promotion','Representative Promotion','Tutorials','Success Stories','Social Media Videos'];
+ let mediaItems=[],mediaAdminItems=[],mediaAdmin=false,editing=null;
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const msg=t=>{$m('ixpmStatus').textContent=t||''};
+ const isSafeUrl=v=>{try{const u=new URL(v);return u.protocol==='https:'||u.protocol==='http:'}catch(_){return false}};
+ const cloudCfgKey='ixp_media_cloudinary_config_v1';
+ function getCloudConfig(){try{return JSON.parse(localStorage.getItem(cloudCfgKey)||'{}')}catch(_){return {}}}
+ function loadCloudConfig(){const c=getCloudConfig();$m('ixpmCloudName').value=c.cloudName||'';$m('ixpmUploadPreset').value=c.uploadPreset||'';}
+ function saveCloudConfig(){const cloudName=$m('ixpmCloudName').value.trim(),uploadPreset=$m('ixpmUploadPreset').value.trim();if(!cloudName||!uploadPreset){msg('Enter both Cloudinary cloud name and unsigned upload preset to enable file uploads.');return false;}localStorage.setItem(cloudCfgKey,JSON.stringify({cloudName,uploadPreset}));msg('Cloudinary upload settings saved on this browser.');return true;}
+ function openHub(){overlay.classList.add('open');document.body.style.overflow='hidden';loadPublic();if(mediaAdmin)loadAdmin()}
+ function closeHub(){overlay.classList.remove('open');document.body.style.overflow=''}
+ async function loadPublic(){
+  const root=$m('ixpmVideoGrid');root.innerHTML='<div class="ixpm-empty">Loading videos…</div>';
+  try{const snap=await getDocs(query(collection(db,'promotionalVideos'),where('published','==',true)));mediaItems=[];snap.forEach(d=>mediaItems.push({id:d.id,...d.data()}));mediaItems.sort((a,b)=>(Number(!!b.featured)-Number(!!a.featured))||((b.sortOrder||0)-(a.sortOrder||0))||((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));renderPublic();}
+  catch(err){root.innerHTML='<div class="ixpm-empty">Could not load videos. Check the promotionalVideos Firestore read rule and published-video query. '+esc(err.message||'')+'</div>';}
+ }
+ function cardHtml(v,admin=false){const thumb=isSafeUrl(v.thumbnailUrl||'')?`<img loading="lazy" src="${esc(v.thumbnailUrl)}" alt="${esc(v.title)} thumbnail">`:'<span style="font-size:38px">▶</span>';return `<article class="ixpm-card"><div class="ixpm-thumb">${thumb}</div><div class="ixpm-cardbody"><div class="ixpm-meta">${esc(v.category||'Promotional video')}${v.featured?' · ★ FEATURED':''}${admin?' · '+(v.published?'PUBLISHED':'UNPUBLISHED'):''}</div><h3>${esc(v.title)}</h3><p>${esc(v.description||'Official Invoice X Pro promotional video.')}</p><div class="ixpm-cardactions"><button class="ixpm-btn dark" data-play="${esc(v.id)}" type="button">▶ Watch</button>${v.downloadEnabled&&v.videoUrl?`<a class="ixpm-btn" href="${esc(v.videoUrl)}" target="_blank" rel="noopener noreferrer" download>↓ Download / Open</a>`:''}${!admin?`<button class="ixpm-btn" data-share="${esc(v.id)}" type="button">Share</button>`:`<button class="ixpm-btn" data-edit="${esc(v.id)}" type="button">Edit</button><button class="ixpm-btn" data-delete="${esc(v.id)}" type="button">Delete</button>`}</div></div></article>`}
+ function renderPublic(){const term=$m('ixpmSearch').value.trim().toLowerCase(),cat=$m('ixpmCategory').value;const items=mediaItems.filter(v=>(!cat||v.category===cat)&&(!term||[v.title,v.description,v.category].join(' ').toLowerCase().includes(term)));$m('ixpmVideoGrid').innerHTML=items.length?items.map(v=>cardHtml(v)).join(''):'<div class="ixpm-empty">No published videos match your search yet. Please check back soon.</div>';}
+ async function loadAdmin(){if(!mediaAdmin)return;try{const snap=await getDocs(collection(db,'promotionalVideos'));const all=[];snap.forEach(d=>all.push({id:d.id,...d.data()}));mediaAdminItems=all.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));$m('ixpmAdminList').innerHTML=mediaAdminItems.length?mediaAdminItems.map(v=>cardHtml(v,true)).join(''):'<div class="ixpm-empty">No promotional videos have been added.</div>'; }catch(err){$m('ixpmAdminList').innerHTML='<div class="ixpm-empty">Admin list unavailable: '+esc(err.message||'')+'</div>';}}
+ function resetForm(){editing=null;$m('ixpmForm').reset();loadCloudConfig();$m('ixpmEditId').value='';$m('ixpmPublished').checked=true;$m('ixpmDownload').checked=true;$m('ixpmSave').textContent='Publish video';$m('ixpmProgress').style.width='0';msg('');}
+ function uploadToCloudinary(file){
+  const cfg=getCloudConfig();if(!cfg.cloudName||!cfg.uploadPreset) return Promise.reject(new Error('Configure Cloudinary cloud name and unsigned upload preset first.'));
+  return new Promise((resolve,reject)=>{
+   const endpoint='https://api.cloudinary.com/v1_1/'+encodeURIComponent(cfg.cloudName)+'/video/upload';
+   const form=new FormData();form.append('file',file);form.append('upload_preset',cfg.uploadPreset);form.append('folder','invoice-x-pro/promotional-videos');
+   const xhr=new XMLHttpRequest();xhr.open('POST',endpoint);xhr.upload.onprogress=e=>{if(e.lengthComputable){const pct=Math.round(e.loaded/e.total*100);$m('ixpmProgress').style.width=pct+'%';msg('Uploading to Cloudinary… '+pct+'%');}};
+   xhr.onload=()=>{let data={};try{data=JSON.parse(xhr.responseText||'{}')}catch(_){}if(xhr.status>=200&&xhr.status<300&&data.secure_url){resolve({url:data.secure_url,publicId:data.public_id||'',provider:'cloudinary'});}else reject(new Error(data.error?.message||'Cloudinary upload failed ('+xhr.status+'). Check your cloud name and unsigned preset.'));};
+   xhr.onerror=()=>reject(new Error('Network error while uploading to Cloudinary.'));xhr.onabort=()=>reject(new Error('Upload cancelled.'));xhr.send(form);
+  });
+ }
+ async function saveVideo(e){e.preventDefault();if(!mediaAdmin){msg('Administrator access is required.');return;}const title=$m('ixpmTitle').value.trim(),category=$m('ixpmCatInput').value,file=$m('ixpmVideoFile').files?.[0],url=$m('ixpmVideoUrl').value.trim();if(!title){msg('Enter a video title.');return;}if(!file&&!url&&!editing){msg('Choose a video file or provide an external video URL.');return;}if(file){if(!file.type.startsWith('video/')){msg('Please select a valid video file.');return;}if(file.size>250*1024*1024){msg('Video exceeds the 250 MB limit. Choose a smaller file.');return;}}
+  if(url&&!isSafeUrl(url)){msg('Use a valid HTTP or HTTPS video URL.');return;}if($m('ixpmThumb').value.trim()&&!isSafeUrl($m('ixpmThumb').value.trim())){msg('Thumbnail must be an HTTP or HTTPS URL.');return;}
+  const btn=$m('ixpmSave');btn.disabled=true;let videoUrl=url||(editing?.videoUrl||''),provider=url?'external':(editing?.provider||'external'),providerPublicId=url?'':(editing?.providerPublicId||'');
+  try{
+   if(file){const uploaded=await uploadToCloudinary(file);videoUrl=uploaded.url;provider=uploaded.provider;providerPublicId=uploaded.publicId;}
+   const data={title,category,description:$m('ixpmDescription').value.trim(),videoUrl,videoType:file?'upload':(editing?.videoType||'external'),provider,providerPublicId,thumbnailUrl:$m('ixpmThumb').value.trim(),caption:$m('ixpmCaption').value.trim(),published:$m('ixpmPublished').checked,featured:$m('ixpmFeatured').checked,downloadEnabled:$m('ixpmDownload').checked,sortOrder:Number($m('ixpmSortOrder').value||0),updatedAt:serverTimestamp(),updatedBy:currentUser?.uid||''};
+   if(editing){await updateDoc(doc(db,'promotionalVideos',editing.id),data);}else{data.createdAt=serverTimestamp();data.createdBy=currentUser?.uid||'';await addDoc(collection(db,'promotionalVideos'),data);}msg('Video saved successfully.');resetForm();await loadAdmin();await loadPublic();
+  }catch(err){msg('Could not save video: '+(err.message||err));}finally{btn.disabled=false;}
+ }
+ function playVideo(id){const v=mediaItems.find(x=>x.id===id);if(!v)return;const content=$m('ixpmPlayerContent');let src=v.videoUrl||'';if(!isSafeUrl(src)){content.textContent='This video has no valid playback URL.';}else if(/youtube\.com|youtu\.be|vimeo\.com/.test(src)){let embed=src;if(src.includes('youtu.be/'))embed='https://www.youtube.com/embed/'+src.split('youtu.be/')[1].split(/[?&]/)[0];else if(src.includes('youtube.com/watch'))embed='https://www.youtube.com/embed/'+(new URL(src).searchParams.get('v')||'');else if(src.includes('vimeo.com/'))embed='https://player.vimeo.com/video/'+src.split('vimeo.com/')[1].split(/[?&]/)[0];content.innerHTML='<iframe title="'+esc(v.title)+'" src="'+esc(embed)+'" style="width:100%;aspect-ratio:16/9;border:0;border-radius:12px" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';}else{content.innerHTML='<video class="ixpm-player" controls playsinline autoplay src="'+esc(src)+'"></video>';}const h=document.createElement('h3');h.textContent=v.title;content.appendChild(h);const p=document.createElement('p');p.textContent=v.description||'';content.appendChild(p);$m('ixpmPlayerModal').classList.add('open');}
+ async function editVideo(id){const v=mediaAdminItems.find(x=>x.id===id);if(!v)return;editing=v;$m('ixpmEditId').value=id;$m('ixpmTitle').value=v.title||'';$m('ixpmCatInput').value=v.category||categories[0];$m('ixpmDescription').value=v.description||'';$m('ixpmVideoUrl').value=v.videoType==='external'?v.videoUrl||'':'';$m('ixpmThumb').value=v.thumbnailUrl||'';$m('ixpmCaption').value=v.caption||'';$m('ixpmPublished').checked=!!v.published;$m('ixpmFeatured').checked=!!v.featured;$m('ixpmDownload').checked=!!v.downloadEnabled;$m('ixpmSortOrder').value=String(v.sortOrder||0);$m('ixpmSave').textContent='Save changes';$m('ixpmAdminPanel').scrollIntoView({behavior:'smooth'});msg('Editing '+v.title+'. Select a new file to replace the current video, paste a new URL, or leave both blank to keep the current video.');}
+ async function deleteVideo(id){const v=mediaAdminItems.find(x=>x.id===id);if(!v||!confirm('Remove “'+v.title+'” from the public Media Hub? The hosted file may need separate deletion in your video provider dashboard.'))return;try{await deleteDoc(doc(db,'promotionalVideos',id));await loadAdmin();await loadPublic();}catch(err){alert('Delete failed: '+(err.message||err));}}
+ async function shareVideo(id){const v=mediaItems.find(x=>x.id===id);if(!v)return;const shareUrl=location.href.split('#')[0]+'#media-'+encodeURIComponent(id);const text=[v.title,v.caption||v.description||'Discover Invoice X Pro.',shareUrl].filter(Boolean).join('\n\n');if(navigator.share){try{await navigator.share({title:v.title,text,url:shareUrl});return}catch(e){if(e.name==='AbortError')return}}try{await navigator.clipboard.writeText(text);alert('Promotional caption and link copied.')}catch(_){prompt('Copy this promotional text:',text)}}
+ $m('ixpMediaLauncher').addEventListener('click',openHub);$m('ixpmClose').addEventListener('click',closeHub);$m('ixpmOpenAdmin').addEventListener('click',()=>{$m('ixpmAdminPanel').style.display='block';loadCloudConfig();loadAdmin();});$m('ixpmHideAdmin').addEventListener('click',()=>{$m('ixpmAdminPanel').style.display='none'});$m('ixpmSearch').addEventListener('input',renderPublic);$m('ixpmCategory').addEventListener('change',renderPublic);$m('ixpmForm').addEventListener('submit',saveVideo);$m('ixpmReset').addEventListener('click',resetForm);$m('ixpmSaveCloudConfig').addEventListener('click',saveCloudConfig);$m('ixpmPlayerClose').addEventListener('click',()=>{$m('ixpmPlayerModal').classList.remove('open');$m('ixpmPlayerContent').innerHTML=''});
+ document.addEventListener('click',e=>{const b=e.target.closest('[data-play],[data-edit],[data-delete],[data-share]');if(!b)return;if(b.dataset.play)playVideo(b.dataset.play);if(b.dataset.edit)editVideo(b.dataset.edit);if(b.dataset.delete)deleteVideo(b.dataset.delete);if(b.dataset.share)shareVideo(b.dataset.share)});
+ function syncMediaAdmin(){mediaAdmin=!!(currentUser&&currentUserDoc?.role==='admin');$m('ixpmOpenAdmin').style.display=mediaAdmin?'inline-block':'none';if(mediaAdmin&&overlay.classList.contains('open'))loadAdmin();}
+ window.addEventListener('ixp-user-profile-ready',syncMediaAdmin);onAuthStateChanged(auth,user=>{if(!user){mediaAdmin=false;$m('ixpmOpenAdmin').style.display='none';}else syncMediaAdmin();});
+})();
 </script>
+
+
+<button id="ixpMediaLauncher" type="button">▶ Media & Promotion Hub</button>
+<div id="ixpMediaOverlay" aria-label="Invoice X Pro Media and Promotion Hub">
+ <div class="ixpm-shell">
+  <header class="ixpm-head"><div><div style="font-size:11px;letter-spacing:2px;font-weight:800;color:#e4c47e">OFFICIAL MEDIA LIBRARY</div><h2>INVOICE X PRO — MEDIA & PROMOTION HUB</h2><p>Watch, download and share official videos to help more businesses discover Invoice X Pro.</p></div><div class="ixpm-actions"><button class="ixpm-btn primary" id="ixpmOpenAdmin" type="button" style="display:none">Manage videos</button><button class="ixpm-btn" id="ixpmClose" type="button">Close ✕</button></div></header>
+  <section class="ixpm-section"><div class="ixpm-toolbar"><input id="ixpmSearch" type="search" placeholder="Search videos…"><select id="ixpmCategory"><option value="">All categories</option><option>Official Advertisements</option><option>Product Demonstrations</option><option>Business Promotion</option><option>Representative Promotion</option><option>Tutorials</option><option>Success Stories</option><option>Social Media Videos</option></select></div><div id="ixpmVideoGrid" class="ixpm-grid"><div class="ixpm-empty">Loading official videos…</div></div></section>
+  <section id="ixpmAdminPanel" class="ixpm-admin" style="display:none"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h3 style="margin:0">Admin video manager</h3><p style="margin:5px 0 14px;color:#68788d;font-size:13px">This manager is separate from the private Video Studio.</p></div><button class="ixpm-btn" id="ixpmHideAdmin" type="button">Hide manager</button></div>
+   <div class="ixpm-admin" style="margin:0 0 16px;background:#f5f8fc"><h4 style="margin:0 0 6px">Secure external upload setup (one-time per admin browser)</h4><p style="font-size:12px;color:#68788d">Create a Cloudinary account, create an <b>unsigned video upload preset</b>, then enter the cloud name and preset below. No Firebase Storage is used. Do not enter your Cloudinary API secret here.</p><div class="ixpm-form"><div><label for="ixpmCloudName">Cloudinary cloud name</label><input id="ixpmCloudName" autocomplete="off" placeholder="your-cloud-name"></div><div><label for="ixpmUploadPreset">Unsigned upload preset</label><input id="ixpmUploadPreset" autocomplete="off" placeholder="your_unsigned_preset"></div><div class="wide"><button class="ixpm-btn" id="ixpmSaveCloudConfig" type="button">Save upload settings on this device</button></div></div></div><form id="ixpmForm" class="ixpm-form"><input type="hidden" id="ixpmEditId"><div><label for="ixpmTitle">Video title *</label><input id="ixpmTitle" maxlength="150" required placeholder="e.g. Introducing Invoice X Pro"></div><div><label for="ixpmCatInput">Category *</label><select id="ixpmCatInput" required><option>Official Advertisements</option><option>Product Demonstrations</option><option>Business Promotion</option><option>Representative Promotion</option><option>Tutorials</option><option>Success Stories</option><option>Social Media Videos</option></select></div><div class="wide"><label for="ixpmDescription">Description</label><textarea id="ixpmDescription" maxlength="1200" placeholder="Tell viewers what this video is about"></textarea></div><div class="wide"><label for="ixpmVideoFile">Upload video file to Cloudinary (MP4, WebM or MOV; max 250 MB)</label><input id="ixpmVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime"></div><div class="wide"><label for="ixpmVideoUrl">Or paste an externally hosted video URL</label><input id="ixpmVideoUrl" type="url" placeholder="https://… (direct video URL or supported embed link)"></div><div><label for="ixpmSortOrder">Display order (higher appears first)</label><input id="ixpmSortOrder" type="number" min="0" max="9999" value="0"></div><div class="wide"><label for="ixpmThumb">Thumbnail image URL (optional)</label><input id="ixpmThumb" type="url" placeholder="https://…"></div><div class="wide"><label for="ixpmCaption">Ready-to-copy promotional caption</label><textarea id="ixpmCaption" maxlength="1500" placeholder="Copy this caption when sharing the video"></textarea></div><div class="wide ixpm-checks"><label><input id="ixpmPublished" type="checkbox" checked> Publish publicly</label><label><input id="ixpmFeatured" type="checkbox"> Feature this video</label><label><input id="ixpmDownload" type="checkbox" checked> Allow downloads</label></div><div class="wide"><button class="ixpm-btn primary" id="ixpmSave" type="submit">Publish video</button> <button class="ixpm-btn" id="ixpmReset" type="button">Clear form</button><div class="ixpm-uploadbar"><span id="ixpmProgress"></span></div><div id="ixpmStatus" class="ixpm-status" role="status"></div></div></form>
+   <div style="margin-top:20px"><h4>All promotional videos</h4><div id="ixpmAdminList" class="ixpm-grid"></div></div>
+  </section>
+ </div>
+</div>
+<div class="ixpm-modal" id="ixpmPlayerModal"><div class="ixpm-modalbox"><button class="ixpm-btn ixpm-close" id="ixpmPlayerClose" type="button">Close ✕</button><div id="ixpmPlayerContent" style="clear:both;padding-top:10px"></div></div></div>
 
 </body>
 </html>
