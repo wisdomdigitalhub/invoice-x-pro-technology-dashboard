@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* IXP build check: when this build is new on a device, drop the old service-worker cache once and reload. */
+(function(){try{
+  var BUILD="2026-11-04-form-applications-1";
+  console.info("Invoice X Pro build "+BUILD);
+  if(localStorage.getItem("ixpBuild")===BUILD)return;
+  localStorage.setItem("ixpBuild",BUILD);
+  if(!navigator.serviceWorker)return;
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    if(!regs.length)return;
+    return Promise.all(regs.map(function(r){return r.unregister();}))
+      .then(function(){return window.caches?caches.keys().then(function(k){return Promise.all(k.map(function(n){return caches.delete(n);}));}):null;})
+      .then(function(){location.reload();});
+  });
+}catch(e){}})();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Invoice X Pro — Professional Invoices & Receipts | Wisdom Digital Hub</title>
