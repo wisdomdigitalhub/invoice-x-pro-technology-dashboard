@@ -9773,6 +9773,7 @@ let ixpTeamMemberCache=null;
 async function ixpTeamLoadMember(){
   const root=ixpTeamEl("ixptMemberTeam");if(!root||!currentUser){if(root)root.innerHTML="";return;}
   try{
+    if(currentUserDoc?.role === "admin"){ root.innerHTML = ""; return; }
     const uid=currentUser.uid;
     const mSnap=await getDoc(doc(db,"teamMembers",uid));
     const aSnap=await getDocs(query(collection(db,"teamApplications"),where("applicantUid","==",uid)));
