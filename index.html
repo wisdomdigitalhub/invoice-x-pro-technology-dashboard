@@ -3707,7 +3707,7 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         email,
         phone: $("suPhone").value.trim(),
         branch: $("suBranch").value.trim(),
-        status: "accepted",
+        status: "pending",
         accountCode: genCode("REP"),
         createdBy: "self-signup",
         createdAt: serverTimestamp()
@@ -3722,8 +3722,8 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         }catch(profileErr){ console.error("repProfiles write failed:", profileErr); }
       }
       sendNotification("ADMIN_BROADCAST", "New representative sign-up",
-        `${$("suFullName").value.trim() || email} signed up and is already active.`, "rep-signup");
-      setFormMsg($("signUpMsg"), "Your representative account is created instantly. Start sharing your referral link and introducing businesses to Invoice X Pro. Don't forget to join the Representatives WhatsApp group from your dashboard.", "success");
+        `${$("suFullName").value.trim() || email} signed up and is awaiting your approval.`, "rep-signup");
+      setFormMsg($("signUpMsg"), "Your representative account has been created and is awaiting admin approval. You will get full access to your dashboard and referral tools once it is approved.", "success");
     } else {
       // Clients get instant dashboard access on signup, whether or not they
       // arrived through a representative's referral link. Account access is
@@ -3799,19 +3799,9 @@ $("forgotPasswordBtn").addEventListener("click", async ()=>{
 // is ever required. Once that account exists, future logins are a normal
 // sign-in. This only applies to the Admin tab; representative accounts must
 // still be created from the admin dashboard, by design.
-async function bootstrapAdminAccount(email, password){
-  const cred = await createUserWithEmailAndPassword(auth, email, password);
-  await setDoc(doc(db, "users", cred.user.uid), {
-    fullName: "Admin",
-    email,
-    phone: "",
-    branch: "",
-    role: "admin",
-    status: "accepted",
-    accountCode: genCode("ADMIN"),
-    createdBy: "self-provisioned",
-    createdAt: serverTimestamp()
-  });
+// Disabled for security: anyone could previously create an admin account here.
+async function bootstrapAdminAccount(){
+  throw new Error("Admin accounts cannot be created from the sign-in screen.");
 }
 
 $("loginForm").addEventListener("submit", async (e)=>{
@@ -3827,21 +3817,8 @@ $("loginForm").addEventListener("submit", async (e)=>{
     // routing handled by onAuthStateChanged
   }catch(err){
     const noSuchAccount = err.code === "auth/user-not-found" || err.code === "auth/invalid-credential";
-    if(selectedRole === "admin" && noSuchAccount){
-      try{
-        await bootstrapAdminAccount(email, password);
-        closeModal();
-        toast("Admin account created.");
-      }catch(bootstrapErr){
-        if(bootstrapErr.code === "auth/email-already-in-use"){
-          setFormMsg($("loginMsg"), "That account exists — check the password.", "error");
-        } else {
-          setFormMsg($("loginMsg"), bootstrapErr.message || "Could not create admin account.", "error");
-        }
-      }
-    } else {
-      setFormMsg($("loginMsg"), "Sign in failed — check your email and password.", "error");
-    }
+    // SECURITY: admin accounts are never created from the sign-in screen.
+    setFormMsg($("loginMsg"), "Sign in failed — check your email and password.", "error");
   }finally{
     btn.disabled = false; btn.textContent = "Sign in";
   }
@@ -4151,8 +4128,7 @@ $("createRepForm").addEventListener("submit", async (e)=>{
       accountCode,
       refNumber,
       createdBy: currentUser?.uid || "admin",
-      createdAt: serverTimestamp(),
-      ...(generatedPassword ? { demoPassword: password } : {})
+      createdAt: serverTimestamp()
     });
     try{
       await setDoc(doc(db, "repProfiles", accountCode), { uid, fullName: fullName || email, accountCode });
@@ -9755,7 +9731,7 @@ async function ixpTeamSubmitApplication(e,o){
       createdAt:serverTimestamp(),updatedAt:serverTimestamp()
     };
     const appRef=await addDoc(collection(db,"teamApplications"),application);
-    await updateDoc(doc(db,"teamOpportunities",o.id),{applicantCount:(Number(o.applicantCount)||0)+1});
+    try{await updateDoc(doc(db,"teamOpportunities",o.id),{applicantCount:(Number(o.applicantCount)||0)+1});}catch(_){/* cosmetic counter; never block a saved application */}
     try{await addDoc(collection(db,"notifications"),{userId:"ADMIN_BROADCAST",title:"New Team application",body:data.fullName+" applied for "+o.title+".",createdAt:serverTimestamp(),read:false,type:"team-application"});}catch(_){ }
     try{await ixpTeamLog("application_submitted",o.id,{applicationId:appRef.id,title:o.title,applicantUid:uid});}catch(_){ }
     msg.innerHTML=ixpTeamMsg(currentUser?"Application submitted. You can apply for other opportunities too.":"Application submitted successfully. Your Invoice X Pro login has been created. If selected, use this same email and password to access your Team dashboard.");
