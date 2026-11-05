@@ -6917,17 +6917,41 @@ function showOsNotification(title, body){
   }
 }
 
+let notifItemsCache = [];
+
 function initNotifications(uid, role){
   addPushOptInControl();
   notifSeenIds = new Set();
   notifFirstLoad = true;
+  notifItemsCache = [];
 
   if(unsubNotifications) unsubNotifications();
-  const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : (role === "rep" ? [uid, "REP_BROADCAST"] : [uid]);
-  const q = query(collection(db, "notifications"), where("userId", "in", targets), orderBy("createdAt", "desc"), limit(40));
+
+  const targets = role === "admin"
+    ? [uid, "ADMIN_BROADCAST"]
+    : role === "rep"
+      ? [uid, "REP_BROADCAST"]
+      : [uid];
+
+  // Keep the listener simple: sorting is done locally so this query does not
+  // depend on a composite index for userId + createdAt.
+  const q = query(
+    collection(db, "notifications"),
+    where("userId", "in", targets),
+    limit(100)
+  );
+
   unsubNotifications = onSnapshot(q, (snap)=>{
     const items = [];
     snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+
+    const millis = value => {
+      if(value && typeof value.toMillis === "function") return value.toMillis();
+      if(value instanceof Date) return value.getTime();
+      if(typeof value === "number") return value;
+      return 0;
+    };
+    items.sort((a, b)=> millis(b.createdAt) - millis(a.createdAt));
 
     if(!notifFirstLoad){
       snap.docChanges().forEach(change=>{
@@ -6938,11 +6962,31 @@ function initNotifications(uid, role){
         }
       });
     }
+
     notifFirstLoad = false;
     items.forEach(it=> notifSeenIds.add(it.id));
-
+    notifItemsCache = items;
     renderNotifications(items);
-  }, (err)=> console.error(err));
+  }, (err)=>{
+    console.error("Invoice X Pro notification listener error:", err);
+    const list = $("notifList");
+    const empty = $("notifEmptyState");
+    const badge = $("notifBadge");
+
+    list.innerHTML = "";
+    const message = document.createElement("div");
+    message.style.cssText = "padding:18px;color:#b42318;font-size:13px;line-height:1.5;";
+    const heading = document.createElement("strong");
+    heading.textContent = "Unable to load notifications.";
+    const detail = document.createElement("p");
+    detail.textContent = err?.message || "Firestore could not read the notifications collection.";
+    const hint = document.createElement("p");
+    hint.textContent = "Check the notifications read permission in your Firestore security rules.";
+    message.append(heading, detail, hint);
+    list.appendChild(message);
+    if(empty) empty.classList.add("hidden");
+    if(badge) badge.classList.add("hidden");
+  });
 }
 
 function renderNotifications(items){
@@ -6989,17 +7033,25 @@ document.addEventListener("click", (e)=>{
   }
 });
 $("notifMarkAllBtn").addEventListener("click", async ()=>{
-  const unread = document.querySelectorAll(".notif-item.unread");
-  const ids = [];
-  // Re-query current items from the last render via list DOM is unreliable for IDs,
-  // so mark-all re-reads the live query once and updates every unread doc.
+  if(!currentUser) return;
+  const unreadItems = notifItemsCache.filter(item => !item.read);
+
+  if(!unreadItems.length){
+    toast("You have no unread notifications.");
+    return;
+  }
+
   try{
-    const targets = currentUserDoc?.role === "admin" ? [currentUser.uid, "ADMIN_BROADCAST"] : (currentUserDoc?.role === "rep" ? [currentUser.uid, "REP_BROADCAST"] : [currentUser.uid]);
-    const snap = await getDocs(query(collection(db, "notifications"), where("userId", "in", targets), where("read", "==", false)));
-    const updates = [];
-    snap.forEach(d => updates.push(updateDoc(doc(db, "notifications", d.id), { read: true })));
-    await Promise.all(updates);
-  }catch(err){ console.error(err); toast("Could not mark all as read."); }
+    // Use the documents already received by the live listener. This avoids a
+    // second compound Firestore query and keeps the bell in sync via onSnapshot.
+    await Promise.all(unreadItems.map(item =>
+      updateDoc(doc(db, "notifications", item.id), { read: true })
+    ));
+    toast("All notifications marked as read.");
+  }catch(err){
+    console.error("Mark all notifications error:", err);
+    toast("Could not mark all as read: " + (err?.message || "Please try again."));
+  }
 });
 
 // ================= FREEMIUM / PREMIUM SYSTEM (credit-based) =================
