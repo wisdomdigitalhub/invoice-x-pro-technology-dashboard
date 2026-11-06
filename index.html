@@ -1250,6 +1250,68 @@
 :where(img, video, iframe, canvas, svg) { max-width: 100%; }
 
 </style>
+
+<style id="ixp-mobile-representatives-fix">
+/* Keep the representative list readable on narrow screens: cards instead of compressed columns. */
+@media (max-width: 760px) {
+  #repTableBody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px 16px;
+    padding: 15px 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin: 0 0 12px;
+    background: var(--paper-2);
+  }
+  #repTableBody td {
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    line-height: 1.45;
+  }
+  #repTableBody td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 4px;
+    color: rgba(15,26,46,.48);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  #repTableBody td:first-child { grid-column: 1 / -1; }
+  #repTableBody td.rep-actions-cell {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  #repTableBody td.rep-actions-cell::before {
+    flex: 0 0 100%;
+    margin-bottom: 0;
+  }
+  #repTableBody td.rep-actions-cell .btn-sm {
+    margin: 0;
+    flex: 1 1 105px;
+    min-height: 38px;
+    white-space: normal;
+  }
+  .table-wrap:has(#repTableBody) { overflow: visible; }
+  .table-wrap:has(#repTableBody) table { min-width: 0 !important; }
+  .table-wrap:has(#repTableBody) thead { display: none; }
+}
+@media (max-width: 380px) {
+  #repTableBody tr { gap: 10px 12px; padding: 13px 10px; }
+  #repTableBody td.rep-actions-cell .btn-sm { flex-basis: 100%; }
+}
+</style>
+
 </head>
 <body>
 
@@ -4482,12 +4544,12 @@ function renderRepTable(reps){
   for(const r of reps){
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(r.fullName||"—")}<div style="font-size:11px;color:rgba(15,26,46,.45)">${escapeHtml(r.email||"")}</div></td>
-      <td class="mono">${escapeHtml(r.accountCode||"—")}</td>
-      <td>${escapeHtml(r.branch||"—")}</td>
-      <td><span class="status-chip ${r.status==="accepted"?"approved":"pending"}">${r.status||"pending"}</span></td>
-      <td>₦${(Number(r.wallet)||0).toLocaleString()}</td>
-      <td style="white-space:nowrap;">
+      <td data-label="Name">${escapeHtml(r.fullName||"—")}<div style="font-size:11px;color:rgba(15,26,46,.55);overflow-wrap:anywhere">${escapeHtml(r.email||"")}</div></td>
+      <td class="mono" data-label="Code">${escapeHtml(r.accountCode||"—")}</td>
+      <td data-label="Branch">${escapeHtml(r.branch||"—")}</td>
+      <td data-label="Status"><span class="status-chip ${r.status==="accepted"?"approved":"pending"}">${r.status||"pending"}</span></td>
+      <td data-label="Wallet">₦${(Number(r.wallet)||0).toLocaleString()}</td>
+      <td data-label="Actions" class="rep-actions-cell">
         ${r.status === "accepted"
           ? `<button class="btn-sm reject" data-uid="${r.id}" data-action="hold">Hold</button>`
           : `<button class="btn-sm confirm" data-uid="${r.id}" data-action="accept">Accept</button>`}
