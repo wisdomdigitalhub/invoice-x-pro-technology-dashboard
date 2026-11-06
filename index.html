@@ -1312,6 +1312,165 @@
 }
 </style>
 
+
+<style id="ixp-complete-device-responsiveness">
+/* Additional responsive hardening only: preserve existing features and page structure. */
+html, body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+body, #app, main, section, article, aside, header, footer, nav,
+.dashboard, .dashboard-layout, .app-layout, .app-shell, .main-content,
+.content, .content-area, .workspace, .page-content, .container,
+.panel, .card, .modal, .modal-content, form {
+  min-width: 0;
+  max-width: 100%;
+}
+img, video, iframe, canvas, svg {
+  max-width: 100%;
+}
+pre, code, .mono, .url, .email, .long-text {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+input, select, textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+button, .btn, a.btn {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.table-wrap, .ixpt-table-wrap, .showcase-table-wrap,
+.table-responsive, .table-container, .data-table-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+table {
+  max-width: 100%;
+}
+.table-wrap table, .ixpt-table-wrap table, .showcase-table-wrap table,
+.table-responsive table, .table-container table, .data-table-wrap table {
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+}
+.panel-head, .section-head, .toolbar, .actions-row, .form-actions {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.panel-head > *, .section-head > *, .toolbar > *,
+.actions-row > *, .form-actions > * {
+  min-width: 0;
+  max-width: 100%;
+}
+@media (max-width: 1100px) {
+  .ixpc-shell { grid-template-columns: 220px minmax(0,1fr); }
+  .dashboard-grid, .stats-grid, .stat-grid, .overview-grid,
+  .admin-grid, .client-grid, .rep-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+  }
+  .content, .content-area, .workspace, .page-content {
+    min-width: 0;
+  }
+}
+@media (max-width: 800px) {
+  .ixpc-shell, .dashboard-layout, .app-layout, .app-shell {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .dashboard-grid, .stats-grid, .stat-grid, .overview-grid,
+  .admin-grid, .client-grid, .rep-grid, .grid-3, .grid-4 {
+    grid-template-columns: repeat(2,minmax(0,1fr)) !important;
+  }
+  .sidebar, .dashboard-sidebar {
+    width: 100%;
+    max-width: 100%;
+  }
+  .main-content, .content-area, .workspace, .page-content {
+    width: 100%;
+    padding-left: clamp(12px,3vw,24px);
+    padding-right: clamp(12px,3vw,24px);
+  }
+  .modal, .modal-content, .dialog, .dialog-content {
+    width: min(96vw, 720px);
+    max-width: 96vw;
+    max-height: 92dvh;
+    overflow: auto;
+  }
+  /* Keep the existing install action available when desktop navigation collapses. */
+  .lp-nav-desktop-actions {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+  }
+  .lp-nav-desktop-actions #clientLoginNavBtn,
+  .lp-nav-desktop-actions #signUpNavBtn {
+    display: none !important;
+  }
+  #installAppBtn {
+    flex: 0 0 auto;
+    padding: 9px 14px !important;
+    font-size: 12px !important;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 560px) {
+  .dashboard-grid, .stats-grid, .stat-grid, .overview-grid,
+  .admin-grid, .client-grid, .rep-grid, .grid-2, .grid-3, .grid-4 {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .main-content, .content-area, .workspace, .page-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .panel, .card, .stat-card {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .panel-head, .section-head, .toolbar, .actions-row, .form-actions {
+    align-items: stretch;
+    gap: 8px;
+  }
+  .panel-head > *, .section-head > *, .toolbar > *,
+  .actions-row > *, .form-actions > * {
+    flex: 1 1 auto;
+  }
+  .form-row, .form-grid, .input-grid, .filter-row {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .form-row > *, .form-grid > *, .input-grid > *, .filter-row > * {
+    width: 100%;
+    min-width: 0;
+  }
+  .table-wrap table, .ixpt-table-wrap table, .showcase-table-wrap table,
+  .table-responsive table, .table-container table, .data-table-wrap table {
+    min-width: 620px;
+  }
+  .modal, .modal-content, .dialog, .dialog-content {
+    width: calc(100vw - 16px);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    margin: 8px auto;
+    padding: 14px;
+  }
+  #installAppBtn {
+    padding: 8px 11px !important;
+    font-size: 11px !important;
+  }
+}
+@media (max-width: 360px) {
+  .logo-text { max-width: 130px; }
+  .panel, .card { padding-left: 10px; padding-right: 10px; }
+  #installAppBtn { padding: 7px 9px !important; font-size: 10px !important; }
+}
+</style>
+
 </head>
 <body>
 
