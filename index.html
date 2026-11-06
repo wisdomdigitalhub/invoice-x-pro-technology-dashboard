@@ -4,7 +4,7 @@
 <script>
 /* IXP build check: when this build is new on a device, drop the old service-worker cache once and reload. */
 (function(){try{
-  var BUILD="2026-11-05-notifications-diagnostics-1";
+  var BUILD="2026-11-06-notifications-admin-test-fix-2";
   console.info("Invoice X Pro build "+BUILD);
   if(localStorage.getItem("ixpBuild")===BUILD)return;
   localStorage.setItem("ixpBuild",BUILD);
@@ -7219,7 +7219,7 @@ async function enableInvoiceXProPush(){
   return result;
 }
 
-async function testInvoiceXProPush(){
+async async function testInvoiceXProPush(){
   if(!currentUser || currentUserDoc?.role !== "admin") throw new Error("Only an administrator can run this test.");
   const button = $("ixpTestPushBtn");
   const status = $("ixpPushTestStatus");
@@ -7249,29 +7249,54 @@ async function testInvoiceXProPush(){
 
 function addPushOptInControl(){
   const panel = $("notifPanel");
-  if(!panel || $("ixpEnablePushBtn")) return;
-  const button = document.createElement("button");
-  button.id = "ixpEnablePushBtn";
-  button.type = "button";
-  button.textContent = Notification.permission === "granted" ? "Enable push on this device" : "Enable phone / browser notifications";
-  button.style.cssText = "display:block;width:calc(100% - 24px);margin:10px 12px;padding:10px 12px;border:1px solid rgba(184,134,62,.45);border-radius:10px;background:#0F1A2E;color:#FDFCF8;font-weight:600;font-size:12px;";
-  button.addEventListener("click", async ()=>{
-    button.disabled = true; button.textContent = "Enabling…";
-    try{ await enableInvoiceXProPush(); }
-    catch(err){ button.disabled = false; button.textContent = "Try enabling notifications again"; toast(err.message || "Push setup failed"); console.error(err); }
-  });
-  panel.insertBefore(button, $("notifList"));
+  if(!panel) return;
+  const list = $("notifList");
 
-  if(currentUserDoc?.role === "admin" && !$("ixpTestPushBtn")){
-    const test = document.createElement("button");
-    test.id = "ixpTestPushBtn"; test.type = "button";
-    test.textContent = "Test Push Notification";
-    test.style.cssText = "display:block;width:calc(100% - 24px);margin:0 12px 8px;padding:10px 12px;border:1px solid #c99b50;border-radius:10px;background:#fff;color:#17243a;font-weight:700;font-size:12px;";
-    test.addEventListener("click", async ()=>{ try{ await testInvoiceXProPush(); }catch(err){ toast(err.message || "Push test failed"); } });
-    panel.insertBefore(test, $("notifList"));
-    const status = document.createElement("div"); status.id = "ixpPushTestStatus";
-    status.style.cssText = "padding:0 12px 10px;font-size:11px;line-height:1.45;color:#68788d;";
-    panel.insertBefore(status, $("notifList"));
+  // Keep device opt-in independent from the admin test control. The old
+  // early-return skipped the admin control whenever the opt-in button existed.
+  if(!$("ixpEnablePushBtn")){
+    const button = document.createElement("button");
+    button.id = "ixpEnablePushBtn";
+    button.type = "button";
+    button.textContent = ("Notification" in window && Notification.permission === "granted")
+      ? "Enable push on this device"
+      : "Enable phone / browser notifications";
+    button.style.cssText = "display:block;width:calc(100% - 24px);margin:10px 12px;padding:10px 12px;border:1px solid rgba(184,134,62,.45);border-radius:10px;background:#0F1A2E;color:#FDFCF8;font-weight:600;font-size:12px;";
+    button.addEventListener("click", async ()=>{
+      button.disabled = true; button.textContent = "Enabling…";
+      try{
+        await enableInvoiceXProPush();
+        button.textContent = "Push enabled on this device";
+      }catch(err){
+        button.disabled = false;
+        button.textContent = "Try enabling notifications again";
+        toast(err.message || "Push setup failed");
+        console.error(err);
+      }
+    });
+    panel.insertBefore(button, list || null);
+  }
+
+  // Only authenticated administrators receive the server-side test control.
+  if(currentUserDoc?.role === "admin"){
+    if(!$("ixpTestPushBtn")){
+      const test = document.createElement("button");
+      test.id = "ixpTestPushBtn";
+      test.type = "button";
+      test.textContent = "Test Push Notification";
+      test.style.cssText = "display:block;width:calc(100% - 24px);margin:0 12px 8px;padding:10px 12px;border:1px solid #c99b50;border-radius:10px;background:#fff;color:#17243a;font-weight:700;font-size:12px;";
+      test.addEventListener("click", async ()=>{
+        try{ await testInvoiceXProPush(); }
+        catch(err){ toast(err.message || "Push test failed"); }
+      });
+      panel.insertBefore(test, list || null);
+    }
+    if(!$("ixpPushTestStatus")){
+      const status = document.createElement("div");
+      status.id = "ixpPushTestStatus";
+      status.style.cssText = "padding:0 12px 10px;font-size:11px;line-height:1.45;color:#68788d;";
+      panel.insertBefore(status, list || null);
+    }
   }
 }
 
