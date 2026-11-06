@@ -4,7 +4,7 @@
 <script>
 /* IXP build check: when this build is new on a device, drop the old service-worker cache once and reload. */
 (function(){try{
-  var BUILD="2026-11-06-notifications-admin-test-fix-2";
+  var BUILD="2026-11-06-notifications-complete-inbox-fix-4";
   console.info("Invoice X Pro build "+BUILD);
   if(localStorage.getItem("ixpBuild")===BUILD)return;
   localStorage.setItem("ixpBuild",BUILD);
@@ -270,7 +270,7 @@
   }
   .notif-panel{
     position:absolute; top:48px; right:0; width:340px; max-width:88vw; background:var(--paper-2); color:var(--ink);
-    border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); z-index:200; overflow:hidden;
+    border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); z-index:200; overflow-y:auto; max-height:80vh;
   }
   .notif-panel-head{
     display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line);
@@ -2188,6 +2188,10 @@
           </div>
           <div class="notif-list" id="notifList"></div>
           <div class="empty-state hidden" id="notifEmptyState" style="padding:24px 16px;">No notifications yet.</div>
+          <div id="notifHistorySection" style="border-top:1px solid #e3e9f0;margin-top:8px;padding-top:8px;">
+            <div style="padding:8px 12px;font-size:11px;font-weight:800;letter-spacing:.5px;color:#8a672d;text-transform:uppercase;">Previous client &amp; representative registrations</div>
+            <div id="notifHistoryList" style="max-height:220px;overflow:auto;font-size:12px;color:#68788d;">Open notifications to load registration history.</div>
+          </div>
         </div>
       </div>
       <button class="btn-ghost" id="logoutBtn">Sign out</button>
@@ -4123,6 +4127,7 @@ $("signUpForm").addEventListener("submit", async (e)=>{
         clientDoc.referredAt = serverTimestamp();
       }
       await setDoc(doc(db, "users", uid), clientDoc);
+      sendNotification("ADMIN_BROADCAST", "New client registration", `${clientDoc.businessName || email} created a new Invoice X Pro client account.`, "client-signup");
       if(referralRep){
         sendNotification(referralRep.id, "New referral 🎉",
           `${clientDoc.businessName || email} signed up through your referral link. You'll earn a commission when they go Premium.`, "referral-signup");
@@ -7219,7 +7224,7 @@ async function enableInvoiceXProPush(){
   return result;
 }
 
-async async function testInvoiceXProPush(){
+async function testInvoiceXProPush(){
   if(!currentUser || currentUserDoc?.role !== "admin") throw new Error("Only an administrator can run this test.");
   const button = $("ixpTestPushBtn");
   const status = $("ixpPushTestStatus");
@@ -7300,6 +7305,133 @@ function addPushOptInControl(){
   }
 }
 
+// Render the notification inbox safely. Notification text is inserted with
+// textContent/escaped HTML so user-supplied names and messages cannot inject markup.
+function renderNotifications(items){
+  const list = $("notifList");
+  const empty = $("notifEmptyState");
+  const badge = $("notifBadge");
+  if(!list) return;
+  list.innerHTML = "";
+  const unread = (items || []).filter(item => item.read !== true).length;
+  if(badge){
+    badge.textContent = unread > 99 ? "99+" : String(unread);
+    badge.classList.toggle("hidden", unread === 0);
+  }
+  if(!(items || []).length){
+    if(empty) empty.classList.remove("hidden");
+    return;
+  }
+  if(empty) empty.classList.add("hidden");
+  (items || []).forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "ixp-notification-item" + (item.read === true ? " is-read" : " is-unread");
+    card.style.cssText = "padding:12px 14px;border-bottom:1px solid #e8edf3;background:"+(item.read===true?"#fff":"#f8fbff")+";";
+    const title = document.createElement("div");
+    title.textContent = item.title || "Invoice X Pro notification";
+    title.style.cssText = "font-size:13px;font-weight:750;color:#17243a;line-height:1.4;";
+    const body = document.createElement("div");
+    body.textContent = item.body || "";
+    body.style.cssText = "font-size:12px;color:#536277;line-height:1.5;margin-top:4px;white-space:pre-wrap;overflow-wrap:anywhere;";
+    const meta = document.createElement("div");
+    const date = item.createdAt?.toDate ? item.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : null);
+    meta.textContent = (date && !Number.isNaN(date.getTime()) ? date.toLocaleString() : "Date unavailable") + (item.type ? " · "+item.type : "");
+    meta.style.cssText = "font-size:10px;color:#8793a3;margin-top:6px;";
+    card.append(title, body, meta);
+    if(item.read !== true){
+      const readBtn = document.createElement("button");
+      readBtn.type = "button";
+      readBtn.textContent = "Mark as read";
+      readBtn.style.cssText = "margin-top:7px;border:0;background:transparent;color:#8a672d;font-size:11px;font-weight:700;padding:3px 0;cursor:pointer;";
+      readBtn.addEventListener("click", async()=>{
+        readBtn.disabled = true;
+        try{
+          await updateDoc(doc(db,"notifications",item.id),{read:true,readAt:serverTimestamp()});
+        }catch(err){
+          console.error("Could not mark notification as read:",err);
+          toast(err.message || "Could not update notification.");
+          readBtn.disabled = false;
+        }
+      });
+      card.appendChild(readBtn);
+    }
+    list.appendChild(card);
+  });
+}
+
+let notifHistoricalRegistrations = [];
+async function loadHistoricalRegistrations(){
+  if(currentUserDoc?.role !== "admin") return;
+  const historyBox = $("notifHistoryList");
+  if(historyBox) historyBox.textContent = "Loading previous registrations…";
+  try{
+    // Read-only history: show existing user profiles without creating duplicate
+    // notification documents or sending push messages to old users.
+    const snap = await getDocs(query(collection(db,"users"),where("role","in",["client","rep"])));
+    const records=[];
+    snap.forEach(d=>{
+      const u=d.data()||{};
+      records.push({id:d.id,role:u.role,fullName:u.fullName||u.businessName||"Unnamed account",email:u.email||"",status:u.status||"",createdAt:u.createdAt||null,createdBy:u.createdBy||""});
+    });
+    const millis=v=>v?.toMillis?v.toMillis():(v?new Date(v).getTime():0);
+    records.sort((a,b)=>millis(b.createdAt)-millis(a.createdAt));
+    notifHistoricalRegistrations=records;
+    renderHistoricalRegistrations();
+  }catch(err){
+    console.error("Historical registration list could not be loaded:",err);
+    if(historyBox) historyBox.textContent="Previous registrations could not be loaded: "+(err.message||"Check Firestore user-read permissions.");
+  }
+}
+function renderHistoricalRegistrations(){
+  const root=$("notifHistoryList");
+  if(!root) return;
+  root.innerHTML="";
+  if(!notifHistoricalRegistrations.length){root.textContent="No existing client or representative accounts were found.";return;}
+  notifHistoricalRegistrations.forEach(u=>{
+    const row=document.createElement("div");
+    row.style.cssText="padding:9px 12px;border-bottom:1px solid #e8edf3;";
+    const name=document.createElement("div");name.textContent=u.fullName;name.style.cssText="font-size:12px;font-weight:700;color:#17243a;";
+    const detail=document.createElement("div");detail.textContent=(u.role==="rep"?"Representative":"Client")+(u.email?" · "+u.email:"")+(u.status?" · "+u.status:"");detail.style.cssText="font-size:11px;color:#5d6b7e;margin-top:3px;overflow-wrap:anywhere;";
+    const date=document.createElement("div");const d=u.createdAt?.toDate?u.createdAt.toDate():(u.createdAt?new Date(u.createdAt):null);date.textContent=d&&!Number.isNaN(d.getTime())?"Registered "+d.toLocaleString():"Registration date unavailable";date.style.cssText="font-size:10px;color:#8793a3;margin-top:3px;";
+    row.append(name,detail,date);root.appendChild(row);
+  });
+}
+
+function wireNotificationControls(){
+  const bell=$("notifBellBtn"),panel=$("notifPanel"),markAll=$("notifMarkAllBtn");
+  if(bell && !bell.dataset.ixpWired){
+    bell.dataset.ixpWired="1";
+    bell.addEventListener("click",()=>{
+      if(!panel) return;
+      const opening=panel.classList.contains("hidden");
+      panel.classList.toggle("hidden",!opening);
+      bell.setAttribute("aria-expanded",opening?"true":"false");
+      if(opening && currentUserDoc?.role==="admin") loadHistoricalRegistrations();
+    });
+    document.addEventListener("click",e=>{
+      const wrap=bell.closest(".notif-wrap");
+      if(panel && !panel.classList.contains("hidden") && wrap && !wrap.contains(e.target)) panel.classList.add("hidden");
+    });
+  }
+  if(markAll && !markAll.dataset.ixpWired){
+    markAll.dataset.ixpWired="1";
+    markAll.addEventListener("click",async()=>{
+      const pending=(notifItemsCache||[]).filter(x=>x.read!==true);
+      if(!pending.length){toast("All notifications are already read.");return;}
+      markAll.disabled=true;
+      try{
+        for(let i=0;i<pending.length;i+=450){
+          const batch=writeBatch(db);
+          pending.slice(i,i+450).forEach(x=>batch.update(doc(db,"notifications",x.id),{read:true,readAt:serverTimestamp()}));
+          await batch.commit();
+        }
+        toast("All notifications marked as read.");
+      }catch(err){console.error("Mark all notifications failed:",err);toast(err.message||"Could not mark all as read.");}
+      finally{markAll.disabled=false;}
+    });
+  }
+}
+
 function showOsNotification(title, body){
   if(!("Notification" in window) || Notification.permission !== "granted") return;
   if(navigator.serviceWorker && navigator.serviceWorker.getRegistration){
@@ -7311,6 +7443,9 @@ function showOsNotification(title, body){
 }
 
 function initNotifications(uid, role){
+  wireNotificationControls();
+  const historySection=$("notifHistorySection");
+  if(historySection) historySection.style.display = role === "admin" ? "" : "none";
   addPushOptInControl();
   notifSeenIds = new Set();
   notifFirstLoad = true;
@@ -7318,7 +7453,7 @@ function initNotifications(uid, role){
   if(unsubNotifications) unsubNotifications();
   const targets = role === "admin" ? [uid, "ADMIN_BROADCAST"] : (role === "rep" ? [uid, "REP_BROADCAST"] : [uid]);
   // Avoid requiring a composite Firestore index; sort the small result set locally.
-  const q = query(collection(db, "notifications"), where("userId", "in", targets), limit(100));
+  const q = query(collection(db, "notifications"), where("userId", "in", targets));
   unsubNotifications = onSnapshot(q, (snap)=>{
     const items = [];
     snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
