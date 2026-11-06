@@ -1164,6 +1164,92 @@
   }
 </style>
 
+<style id="ixp-responsive-refinements">
+
+/* Responsive layout refinements — layout only */
+@media (max-width: 1024px) {
+  .hero { grid-template-columns: minmax(0,1fr) !important; }
+  .cards-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .lp-footer-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .ixpc-shell { grid-template-columns: 230px minmax(0,1fr); }
+  .doc-item-row { grid-template-columns: minmax(0,2fr) repeat(2,minmax(0,1fr)); }
+  .doc-item-row > :last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 760px) {
+  html, body { min-width: 320px; }
+  body { overflow-x: hidden; }
+  .nav, .lp-nav, .lp-nav-inner, .panel-head, .ixpt-top, .ixpm-head,
+  .ixps-top, .showcase-head, .partnership-mentorship .pm-grid {
+    flex-wrap: wrap;
+  }
+  .nav { align-items: center; }
+  .hero, .features, .lp-section, .lp-categories { max-width: 100%; }
+  .grid-2, .inv-info-grid, .inv-bottom-grid, .ixps-grid,
+  .partnership-mentorship .pm-grid { grid-template-columns: minmax(0,1fr) !important; }
+  .features-grid, .lp-features-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .doc-item-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .doc-item-row > * { min-width: 0; }
+  .doc-item-row > :last-child { grid-column: 1 / -1; }
+  .doc-preview { width: 100% !important; max-width: 100% !important; padding: clamp(14px,4vw,30px) !important; }
+  .doc-preview.receipt-doc { width: 100% !important; max-width: 100% !important; }
+  .table-wrap, .ixpt-table-wrap, .showcase-table-wrap,
+  .ixpc-content, .ixpc-page { min-width: 0; }
+  .table-wrap table, .ixpt-table-wrap table, .showcase-table-wrap table {
+    min-width: 560px;
+  }
+  .ixpc-shell { grid-template-columns: minmax(0,1fr); grid-template-rows: auto minmax(0,1fr); }
+  .ixpc-sidebar { min-width: 0; }
+  .ixpc-navlist { max-width: 100%; }
+  #ixpCompanyCentre { padding: 0; }
+  .ixpc-shell { width: 100%; height: 100dvh; border-radius: 0; }
+  #ixpMediaOverlay { padding: 10px; }
+  .ixpm-form { grid-template-columns: minmax(0,1fr); }
+  .ixpm-form .wide { grid-column: auto; }
+  .ixpm-toolbar select { width: 100%; }
+  .ixpm-modal { padding: 8px; }
+  .ixpm-modalbox { max-height: calc(100dvh - 16px); overflow: auto; }
+  .ixpm-player, .ixpm-modalbox video { max-height: 60dvh; }
+}
+@media (max-width: 520px) {
+  .cards-row, .features-grid, .lp-features-grid,
+  .lp-why-grid, .lp-cat-grid, .lp-plans-grid, .lp-steps,
+  .lp-flow-grid, .lp-trust-grid, .ixpc-grid {
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  .lp-footer-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .hero { padding-left: 16px !important; padding-right: 16px !important; }
+  .hero h1 { font-size: clamp(1.8rem,8vw,2.45rem); }
+  .panel, .ixps-card, .ixpc-card { min-width: 0; }
+  .panel-head { gap: 10px; }
+  .panel-head > * { min-width: 0; }
+  .ixpc-topbar { flex-wrap: wrap; }
+  .ixpc-content { padding: 16px 12px 28px; }
+  .ixpt-grid, .ixpt-two, .ixpt-detail-list { grid-template-columns: minmax(0,1fr) !important; }
+  .ixpt-statgrid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+  .ixpm-grid { grid-template-columns: minmax(0,1fr); }
+  .ixpm-head { align-items: flex-start; }
+  .ixpm-actions, .ixpm-cardactions { width: 100%; }
+  .ixpm-actions > *, .ixpm-cardactions > * { flex: 1 1 auto; }
+  .doc-item-row { grid-template-columns: minmax(0,1fr); }
+  .doc-item-row > :last-child { grid-column: auto; }
+  .lp-footer-grid { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 360px) {
+  .nav { gap: 6px; }
+  .logo-text { font-size: 13px; }
+  .hero h1 { font-size: 1.75rem; }
+  .panel { padding: 12px; }
+  .ixpt-statgrid { grid-template-columns: minmax(0,1fr) !important; }
+}
+/* Prevent long content and controls from forcing page-wide horizontal scrolling. */
+:where(main, section, article, aside, header, footer, nav, form, .panel, .card,
+       [class*="grid"], [class*="row"], [class*="wrap"], [class*="modal"]) {
+  min-width: 0;
+}
+:where(input, select, textarea, button) { max-width: 100%; }
+:where(img, video, iframe, canvas, svg) { max-width: 100%; }
+
+</style>
 </head>
 <body>
 
