@@ -1600,6 +1600,138 @@ table {
 }
 </style>
 
+
+<style id="ixp-final-mobile-table-repair">
+/* Final override: repair the Admin > Representatives table without changing app logic. */
+@media screen and (max-width: 1100px) {
+  .table-wrap:has(> table > #repTableBody),
+  .table-wrap:has(#repTableBody) {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow:visible !important;
+  }
+  .table-wrap:has(#repTableBody) > table {
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    table-layout:auto !important;
+    border-collapse:separate !important;
+    border-spacing:0 !important;
+  }
+  .table-wrap:has(#repTableBody) > table > thead {
+    display:none !important;
+  }
+  .table-wrap:has(#repTableBody) > table > tbody#repTableBody {
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+  }
+  #repTableBody > tr {
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    align-items:start !important;
+    gap:12px 16px !important;
+    width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    padding:15px 12px !important;
+    margin:0 0 12px !important;
+    border:1px solid var(--line, #e2e6ed) !important;
+    border-radius:12px !important;
+    background:var(--paper-2, #fff) !important;
+  }
+  #repTableBody > tr > td {
+    display:block !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    padding:0 !important;
+    margin:0 !important;
+    border:0 !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+    word-break:normal !important;
+    line-height:1.45 !important;
+    font-size:14px !important;
+  }
+  #repTableBody > tr > td::before {
+    content:attr(data-label) !important;
+    display:block !important;
+    margin:0 0 4px !important;
+    color:rgba(15,26,46,.52) !important;
+    font-size:10px !important;
+    line-height:1.2 !important;
+    font-weight:700 !important;
+    letter-spacing:.06em !important;
+    text-transform:uppercase !important;
+    white-space:normal !important;
+  }
+  #repTableBody > tr > td:first-child,
+  #repTableBody > tr > td.rep-actions-cell {
+    grid-column:1 / -1 !important;
+  }
+  #repTableBody > tr > td.rep-actions-cell {
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    gap:8px !important;
+    padding-top:10px !important;
+    border-top:1px solid var(--line, #e2e6ed) !important;
+  }
+  #repTableBody > tr > td.rep-actions-cell::before {
+    flex:0 0 100% !important;
+    width:100% !important;
+  }
+  #repTableBody > tr > td.rep-actions-cell button {
+    flex:1 1 120px !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    min-height:40px !important;
+    margin:0 !important;
+    padding:8px 10px !important;
+    white-space:normal !important;
+    overflow-wrap:anywhere !important;
+  }
+  /* Every other data table stays a real table and can be swiped horizontally. */
+  .table-wrap:not(:has(#repTableBody)),
+  .ixpt-table-wrap,
+  .showcase-table-wrap,
+  .table-responsive,
+  .table-container,
+  .data-table-wrap {
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    overflow-x:auto !important;
+    overflow-y:hidden !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+  .table-wrap:not(:has(#repTableBody)) > table,
+  .ixpt-table-wrap > table,
+  .showcase-table-wrap > table,
+  .table-responsive > table,
+  .table-container > table,
+  .data-table-wrap > table {
+    width:max-content !important;
+    min-width:620px !important;
+    max-width:none !important;
+    table-layout:auto !important;
+  }
+}
+@media screen and (max-width:420px) {
+  #repTableBody > tr { grid-template-columns:minmax(0,1fr) !important; gap:10px !important; }
+  #repTableBody > tr > td:first-child,
+  #repTableBody > tr > td.rep-actions-cell { grid-column:1 / -1 !important; }
+  #repTableBody > tr > td.rep-actions-cell button { flex-basis:100% !important; }
+}
+</style>
+
 </head>
 <body>
 
