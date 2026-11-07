@@ -4,7 +4,7 @@
 <script>
 /* IXP build check: when this build is new on a device, drop the old service-worker cache once and reload. */
 (function(){try{
-  var BUILD="2026-11-07-global-responsive-layout-fix-1";
+  var BUILD="2026-11-07-global-responsive-layout-fix-2";
   console.info("Invoice X Pro build "+BUILD);
   if(localStorage.getItem("ixpBuild")===BUILD)return;
   localStorage.setItem("ixpBuild",BUILD);
@@ -1552,14 +1552,63 @@ html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody
  .ixp-responsive-table-shell table { width:max-content; min-width:680px; max-width:none; table-layout:auto; }
 }
 </style>
+
+<style id="ixp-responsive-final-override">
+/* Final mobile override: ensure phone layout wins over legacy table rules. */
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table {
+  width:100% !important; max-width:100% !important; overflow:visible !important;
+}
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table table {
+  display:block !important; width:100% !important; min-width:0 !important; max-width:100% !important;
+  table-layout:auto !important;
+}
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table colgroup,
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table thead { display:none !important; }
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody {
+  display:grid !important; width:100% !important; min-width:0 !important;
+  grid-template-columns:minmax(0,1fr) !important; gap:12px !important;
+}
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody tr {
+  display:grid !important; width:100% !important; min-width:0 !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important; box-sizing:border-box !important;
+}
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody td {
+  display:block !important; width:auto !important; min-width:0 !important; max-width:100% !important;
+  white-space:normal !important; overflow-wrap:anywhere !important; word-break:normal !important;
+}
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody td:before {
+  content:attr(data-label) !important; display:block !important; white-space:normal !important;
+}
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody td.rep-actions-cell {
+  display:flex !important; flex-wrap:wrap !important; grid-column:1/-1 !important;
+}
+html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody td.rep-actions-cell button {
+  flex:1 1 120px !important; min-width:0 !important; white-space:normal !important;
+}
+@media(max-width:800px) {
+  .ixp-responsive-table-shell { width:100% !important; max-width:100% !important; }
+  .ixp-responsive-table-shell:not(.ixp-representative-table) { overflow-x:auto !important; }
+  .ixp-responsive-table-shell:not(.ixp-representative-table) table { min-width:680px !important; }
+}
+</style>
 <script id="ixp-global-responsive-runtime">
 (function(){
   function applyDeviceLayout(){
     try {
-      var physicalWidth = Math.min(window.screen && window.screen.width || 9999, window.screen && window.screen.availWidth || 9999);
-      var narrow = physicalWidth <= 800 || window.innerWidth <= 800;
+      var dpr = Math.max(1, Number(window.devicePixelRatio) || 1);
+      var screenWidth = Math.min(
+        Number(window.screen && window.screen.width) || 9999,
+        Number(window.screen && window.screen.availWidth) || 9999
+      );
+      /* Android Chrome Desktop-site mode often reports a ~980px CSS viewport.
+         Divide the reported screen width by DPR to recover the phone-sized layout width. */
+      var estimatedDeviceCssWidth = screenWidth / dpr;
+      var narrow = estimatedDeviceCssWidth <= 800 || window.innerWidth <= 800 ||
+                   (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && screenWidth <= 1200);
       document.documentElement.classList.toggle('ixp-phone-layout', narrow);
-    } catch(e) {}
+    } catch(e) {
+      if (window.innerWidth <= 800) document.documentElement.classList.add('ixp-phone-layout');
+    }
   }
   function prepareTables(root){
     if(!root || !root.querySelectorAll) return;
@@ -1595,6 +1644,70 @@ html.ixp-phone-layout .ixp-responsive-table-shell.ixp-representative-table tbody
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded',start,{once:true}); else start();
 })();
 </script>
+
+
+<style id="ixp-small-phone-complete-layout">
+/* Responsive foundation: make every component fit from 320px upward. */
+*,*::before,*::after{box-sizing:border-box}
+html,body{width:100%;max-width:100%;min-height:100%;margin:0}
+body{overflow-x:hidden}
+img,video,canvas,iframe,svg{max-width:100%}
+input,select,textarea,button{max-width:100%;font:inherit}
+button{touch-action:manipulation}
+@media(max-width:800px){
+ html,body{width:100%!important;max-width:100%!important;overflow-x:hidden!important}
+ body{font-size:14px}
+ body *{min-width:0}
+ body :where(div,section,article,main,header,footer,nav,aside,form,fieldset){max-width:100%}
+ body :where(.dash,.container,.main,.main-content,.content,.content-area,.workspace,.page-content,.dashboard,.dashboard-content,.app-content,.section,.panel,.card,.modal-content){width:100%;max-width:100%;min-width:0}
+ body :where(.dash,.main-content,.content-area,.workspace,.page-content,.dashboard-content){padding-left:clamp(8px,3vw,16px)!important;padding-right:clamp(8px,3vw,16px)!important}
+ body :where(.grid,.dashboard-grid,.stats-grid,.stat-grid,.overview-grid,.admin-grid,.client-grid,.rep-grid,.grid-2,.grid-3,.grid-4,.ixpc-grid,.ixpm-grid,.ixpt-two,.ixpm-form){grid-template-columns:minmax(0,1fr)!important}
+ body :where(.flex,.row,.toolbar,.actions,.dash-head,.section-head,.card-head,.ixpm-head,.ixpm-toolbar){flex-wrap:wrap;min-width:0}
+ body :where(input,select,textarea){width:100%;min-width:0}
+ body :where(table){max-width:none}
+ body :where(.table-wrap,.table-responsive,.table-container,.ixpr-scroll,.ixpt-table-wrap){max-width:100%;min-width:0;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+ body :where(.ixp-responsive-table-shell){width:100%!important;max-width:100%!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior-x:contain}
+ body :where(.ixp-responsive-table-shell:not(.ixp-representative-table) table){width:max-content!important;min-width:640px!important;max-width:none!important;table-layout:auto!important}
+ body :where(.ixp-responsive-table-shell:not(.ixp-representative-table) th,.ixp-responsive-table-shell:not(.ixp-representative-table) td){white-space:normal!important;overflow-wrap:anywhere;vertical-align:top}
+ body :where(.ixp-responsive-table-shell button,.ixp-responsive-table-shell .btn){white-space:normal!important}
+ body :where(.modal,.modal-dialog,.modal-content,.ixpm-shell,.ixpm-modalbox,.ixpr-modal,.ixpr-modalbox){width:calc(100% - 16px)!important;max-width:calc(100% - 16px)!important;min-width:0!important;margin-left:auto!important;margin-right:auto!important}
+ body :where(.modal,.modal-overlay,.overlay,.ixpm-modal){padding:8px!important}
+ body :where(.dash-head h1,.dash-head h2,h1){font-size:clamp(20px,5vw,27px)}
+ body :where(.dash-head p,p){overflow-wrap:anywhere}
+ /* Notification inbox: anchor to the viewport, not the narrow header/bell container. */
+ .notif-wrap{position:static!important}
+ #notifPanel,.notif-panel{
+   position:fixed!important;top:max(64px,env(safe-area-inset-top) + 56px)!important;
+   left:8px!important;right:8px!important;width:auto!important;max-width:none!important;
+   max-height:calc(100dvh - 80px - env(safe-area-inset-top))!important;
+   overflow-y:auto!important;overflow-x:hidden!important;z-index:999999!important;
+   border-radius:14px!important;box-shadow:0 16px 44px rgba(0,0,0,.28)!important;
+ }
+ #notifPanel .notif-panel-head,.notif-panel .notif-panel-head{gap:8px;flex-wrap:wrap;padding:12px!important}
+ #notifPanel .notif-list,.notif-panel .notif-list{max-height:34dvh!important;overflow:auto!important}
+ #notifHistorySection{max-width:100%;overflow:hidden}
+ #notifHistoryList{max-height:22dvh!important;overflow:auto!important;overflow-wrap:anywhere}
+ .notif-panel :where(button,.notif-title,.notif-body,.notif-time){overflow-wrap:anywhere}
+}
+@media(max-width:420px){
+ body{font-size:13px}
+ body :where(.dash,.main-content,.content-area,.workspace,.page-content,.dashboard-content){padding-left:8px!important;padding-right:8px!important}
+ body :where(.card,.panel,.section,.ixpc-card,.ixpt-card){padding:12px!important;border-radius:12px}
+ body :where(button,.btn,.ixpt-btn,.ixpr-btn,.ixpm-btn){min-height:38px;padding:8px 11px}
+ body :where(.toolbar,.actions,.ixpm-actions){gap:7px!important}
+ #notifPanel,.notif-panel{left:6px!important;right:6px!important;top:max(60px,env(safe-area-inset-top) + 52px)!important;max-height:calc(100dvh - 72px - env(safe-area-inset-top))!important}
+}
+@media(max-width:360px){
+ body{font-size:12px}
+ body :where(.card,.panel,.section,.ixpc-card,.ixpt-card){padding:10px!important}
+ body :where(.dash-head h2){font-size:19px!important}
+ body :where(.ixp-responsive-table-shell:not(.ixp-representative-table) table){min-width:600px!important}
+ #notifPanel,.notif-panel{left:5px!important;right:5px!important}
+}
+@media(min-width:801px) and (max-width:1100px){
+ body :where(.dashboard-grid,.stats-grid,.stat-grid,.overview-grid,.admin-grid,.client-grid,.rep-grid,.grid-4){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
 
 </head>
 <body>
